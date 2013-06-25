@@ -7,7 +7,7 @@ from scipy import io
 import pdb
 
 # Imports from this project
-import CellECT.seg_tool.seg_io.load_xml
+from CellECT.seg_tool.seg_io import load_xml
 import CellECT.seg_tool.globals
 
 """

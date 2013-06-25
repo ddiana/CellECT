@@ -9,9 +9,8 @@ import pylab
 from termcolor import colored
 
 # Import from this project
-import CellECT.seg_tool.seg_io.save_xml
+from CellECT.seg_tool.seg_io import save_xml 
 import CellECT.seg_tool.globals
-
 
 """
 Functions to save the current status.
@@ -50,7 +49,7 @@ def save_seg_to_mat(watershed):
 
 	"Save label map to .mat file."
 
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
 	io.savemat(file_name, {"ws": watershed})
 	print "....... Saved label mat at:", file_name
 
@@ -63,10 +62,10 @@ def save_seg_slices(seg):
 
 	for i in xrange (seg.shape[2]):
 		seg_slice = sp.misc.toimage(seg[:,:,i], high = seg[:,:,i].max(), low = seg[:,:,i].min(), mode = 'I')
-		seg_slice.save(globals.DEFAULT_PARAMETER["save_location_prefix"] + "z_" + str(i) + "_seg.png")
+		seg_slice.save(CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "z_" + str(i) + "_seg.png")
 		
 
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "z_"+ "***" + "_seg.png"	
-	print "....... Saved label map PNG slices at:", globals.DEFAULT_PARAMETER["save_location_prefix"]
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "z_"+ "***" + "_seg.png"	
+	print "....... Saved label map PNG slices at:", CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"]
 
 
