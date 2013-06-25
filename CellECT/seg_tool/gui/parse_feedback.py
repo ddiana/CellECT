@@ -9,8 +9,8 @@ import time
 from termcolor import colored
 
 # Imports from this project
-from nuclei_collection import nuclei_collection as nc
-from seed_collection import seed_collection as seedc
+from CellECT.seg_tool.nuclei_collection import nuclei_collection as nc
+from CellECT.seg_tool.seed_collection import seed_collection as seedc
 
 
 """
@@ -53,7 +53,7 @@ def make_new_nucleus_and_return_index(user_mouse_click,box, nuclei_collection, a
 	asc_coords = user_mouse_click.asc_coordinates
 	
 	nucleus_index = nuclei_collection.nuclei_list[-1].index +1
-	new_nucleus = Nucleus( asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin,  nucleus_index, added_by_user)
+	new_nucleus = nc.Nucleus( asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin,  nucleus_index, added_by_user)
 	
 	nuclei_collection.add_nucleus (new_nucleus)
 	

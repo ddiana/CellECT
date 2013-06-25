@@ -9,9 +9,9 @@ from termcolor import colored
 import xml.etree.ElementTree as ET
 
 # Imports from this project
-import globals
-from nuclei_collection import nuclei_collection as nc
-from seed_collection import seed_collection as sc
+import CellECT.seg_tool.globals
+from CellECT.seg_tool.nuclei_collection import nuclei_collection as nc
+from CellECT.seg_tool.seed_collection import seed_collection as sc
 
 """
 Functions to load saved data from xml files.
@@ -21,7 +21,7 @@ def load_nuclei_from_xml():
 
 	"Load nuclei collection from xml file."
 
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
 	print colored("Loading nuclei from "+ file_name, "cyan")
 	tree = ET.parse(file_name)
 
@@ -59,7 +59,7 @@ def load_seeds_from_xml():
 
 	"Load seed collection from xml file."
 
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
 
 	print colored("Loading seeds from "+ file_name, "cyan")
 	tree = ET.parse(file_name)

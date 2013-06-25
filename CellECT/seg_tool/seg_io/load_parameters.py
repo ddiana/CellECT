@@ -6,7 +6,7 @@ import pdb
 import re
 
 # Imports from this project
-import globals
+import CellECT.seg_tool.globals 
 
 
 def read_program_parameters(config_file_path):
@@ -21,7 +21,7 @@ def read_program_parameters(config_file_path):
 		if matches:
 			key = matches.group(1).strip()
 			val = matches.group(2).strip()
-			globals.DEFAULT_PARAMETER[key] = val
+			CellECT.seg_tool.globals.DEFAULT_PARAMETER[key] = val
 		else:
 			print "ERROR reading config file"
 		line = f.readline()

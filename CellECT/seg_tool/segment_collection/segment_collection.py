@@ -7,7 +7,7 @@ import pdb
 import time
 
 # Imports from this project
-from seg_utils import bounding_box as bbx
+from CellECT.seg_tool.seg_utils import bounding_box as bbx
 
 
 """

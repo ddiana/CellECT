@@ -6,7 +6,7 @@ import pdb
 import xml.etree.ElementTree as ET
 
 # Imports from this project
-import globals
+import CellECT.seg_tool.globals
 
 """
 Functions to save xml info: nuclei, segments, seeds, seed_segments.
@@ -30,7 +30,7 @@ def save_xml_file_nuclei(nuclei_collection):
 	
 	tree = ET.ElementTree(root)
 	
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
 	tree.write(file_name)
 	print "....... Nuclei XML file at:", file_name
 	
@@ -46,7 +46,7 @@ def save_xml_file_seeds(seed_collection):
 		nucleusElem = ET.SubElement(root,"seed", attrib=attributes)
 
 	tree = ET.ElementTree(root)
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
 	tree.write(file_name)
 	print "....... Seeds XML file at:", file_name
 
@@ -93,7 +93,7 @@ def save_xml_file_segment_props(segment_collection):
 
 
 	tree = ET.ElementTree(root)
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "segment_props.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "segment_props.xml"
 	tree.write(file_name)
 	print "....... Segment properties XML file at:", file_name
 
@@ -132,7 +132,7 @@ def save_xml_file_seed_segment_props(seed_segment_collection):
 
 
 	tree = ET.ElementTree(root)
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "seed_segment_props.xml"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "seed_segment_props.xml"
 	tree.write(file_name)
 	print "....... Seed segment properties XML file at:", file_name
 

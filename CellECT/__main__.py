@@ -1,6 +1,9 @@
-import os
-import sys
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
 
-print "Calling seg_tool app."
+# Module information
+import CellECT.CellECT
+import pdb
 
-os.system("python CellECT/seg_tool " + sys.argv[1])
+
+CellECT.main()

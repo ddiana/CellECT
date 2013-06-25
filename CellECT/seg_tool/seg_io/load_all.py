@@ -7,8 +7,8 @@ from scipy import io
 import pdb
 
 # Imports from this project
-import load_xml
-import globals
+import CellECT.seg_tool.seg_io.load_xml
+import CellECT.seg_tool.globals
 
 """
 Functions to load last save.
@@ -21,7 +21,7 @@ def load_last_save():
 	nuclei_collection = load_xml.load_nuclei_from_xml()
 	seed_collection = load_xml.load_seeds_from_xml()
 
-	file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
 	watershed = io.loadmat(file_name)["ws"]
 
 	return nuclei_collection, seed_collection, watershed

@@ -14,7 +14,7 @@ from matplotlib.widgets import Button
 
 
 # Imports from this project
-import globals
+import CellECT.seg_tool.globals
 
 
 """
@@ -119,29 +119,28 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL"])
 
 
-	global current_button_task 
-	current_button_task= "NO_TASK_SELECTED"
+	CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 
 
 	class ButtonCallback(object):
 	
 		def seed_old_label(self,event):
-			globals.current_button_task = "ADD_SEEDS_TO_EXISTING_LABEL"
-			globals.task_index += 1
+			CellECT.seg_tool.globals.current_button_task = "ADD_SEEDS_TO_EXISTING_LABEL"
+			CellECT.seg_tool.globals.task_index += 1
 			print "--------------------------------------------------------------------------------"
 			print colored("ADD SEEDS FOR EXISTING LABEL: Right click to choose label, Left click to put seeds.","blue")
 			#print colored("(Only the latest right click counts. All the left clicks count)", "grey")
 					
 		def seed_new_label(self,event):
-			globals.current_button_task  = "ADD_SEEDS_TO_NEW_LABEL" 
-			globals.task_index += 1
+			CellECT.seg_tool.globals.current_button_task  = "ADD_SEEDS_TO_NEW_LABEL" 
+			CellECT.seg_tool.globals.task_index += 1
 			print "--------------------------------------------------------------------------------"
 			print colored("ADD ONE SEED FOR A NEW LABEL: Left click to put one seed.","blue")
 			print colored("(Only latest left click counts)", "grey")
 			
 		def merge_two_labels(self, event):			
-			globals.task_index += 1
-			globals.current_button_task = "MERGE_TWO_LABELS"
+			CellECT.seg_tool.globals.task_index += 1
+			CellECT.seg_tool.globals.current_button_task = "MERGE_TWO_LABELS"
 			print "--------------------------------------------------------------------------------"
 			print colored("MERGE TWO LABELS: Right click for first label, Right click for second label.","blue")
 			print colored("(Only latest two right clicks count)", "grey")
@@ -149,7 +148,7 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 
 			
 		def clear_task(self, event):
-			globals.current_button_task = "NO_TASK_SELECTED"
+			CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 			print "--------------------------------------------------------------------------------"
 			print colored("NO BUTTON TASK SELECTED: You can left/right click anywhere to get info.","blue")
 	
@@ -416,7 +415,7 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 			
 			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
 			
-			if globals.current_button_task != "NO_TASK_SELECTED":
+			if CellECT.seg_tool.globals.current_button_task != "NO_TASK_SELECTED":
 				
 				if int(s_z.val) == zval:
 					seed_coords.append ((int(xval), int(yval), int(zval)))
@@ -432,8 +431,8 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 
 
 		if event.mouseevent.button in set([1,3]):
-			if globals.current_button_task in button_tasks:
-				list_of_mouse_events_in_ascidian.append( MouseEventInAscidian( asc_coordinates, globals.current_button_task, mouse_event, globals.task_index ) )
+			if CellECT.seg_tool.globals.current_button_task in button_tasks:
+				list_of_mouse_events_in_ascidian.append( MouseEventInAscidian( asc_coordinates, CellECT.seg_tool.globals.current_button_task, mouse_event, CellECT.seg_tool.globals.task_index ) )
 			
 	
 	
@@ -449,3 +448,5 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	pylab.show()
 
 	return list_of_mouse_events_in_ascidian
+
+

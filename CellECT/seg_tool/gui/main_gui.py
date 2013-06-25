@@ -13,10 +13,10 @@ from matplotlib.widgets import Button
 import os
 
 # Imports from this project
-from gui import correct_segment_gui as seg_gui
-from seg_io import save_all
+from CellECT.seg_tool.gui import correct_segment_gui as seg_gui
+from CellECT.seg_tool.seg_io import save_all
 
-import globals
+import CellECT.seg_tool.globals
 
 
 """
@@ -74,7 +74,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	
 
 
-	globals.task_index = 0
+	CellECT.seg_tool.globals.task_index = 0
 	
 	fig = pylab.figure(figsize=(15,8))
 	fig.canvas.set_window_title("Cell Confidence Map")
@@ -150,21 +150,21 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	def load_last_save_callback(event):
 	
 		can_load = False
-		file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+		file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
 		if 	os.path.exists(file_name):
-			file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+			file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
 			if os.path.exists(file_name):
-				file_name = globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+				file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
 				if os.path.exists(file_name):
 					can_load = True
 
-		globals.should_load_last_save
+		CellECT.seg_tool.globals.should_load_last_save
 
 		if can_load:
-			globals.should_load_last_save = True
+			CellECT.seg_tool.globals.should_load_last_save = True
 		else:
 			print "Cannot load previous state. Files missing."
-			globals.should_load_last_save = False
+			CellECT.seg_tool.globals.should_load_last_save = False
 
 		pylab.close()
 

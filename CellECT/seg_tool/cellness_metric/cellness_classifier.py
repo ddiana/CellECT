@@ -14,12 +14,12 @@ from PyML.classifiers.svm import loadSVM
 import os
 
 # Imports from this project
-from seg_io import load_all
-from nuclei_collection import nuclei_collection as nc
-from features import segment_features as feat
-from seg_utils import call_silent
+from CellECT.seg_tool.seg_io import load_all
+from CellECT.seg_tool.nuclei_collection import nuclei_collection as nc
+from CellECT.seg_tool.features import segment_features as feat
+from CellECT.seg_tool.seg_utils import call_silent
 
-import globals
+import CellECT.seg_tool.globals
 
 
 """
@@ -39,18 +39,18 @@ def learn_classifier():
 
 
 	# Reading trainign volume
-	vol = load_all.load_from_mat(globals.DEFAULT_PARAMETER["training_vol_mat_path"], globals.DEFAULT_PARAMETER["training_vol_mat_var"])
+	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_var"])
 	
 	# Reading training nuclei
-	nuclei_collection = nc.NucleusCollection(globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"], globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_var"])
+	nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_var"])
 	
 
 	#### positive segment collection
 	
-	ground_truth = load_all.load_from_mat(globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"], globals.DEFAULT_PARAMETER["training_positive_seg_mat_var"])
+	ground_truth = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_var"])
 	
 
-	list_of_labels_in_gt = load_all.load_from_mat(globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"], globals.DEFAULT_PARAMETER["training_positive_labels_mat_var"])
+	list_of_labels_in_gt = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_var"])
 	# converting to right format
 	
 	list_of_labels_in_gt = [elem[0] for elem in list_of_labels_in_gt]
@@ -72,8 +72,8 @@ def learn_classifier():
 	
 	#### negative segment collection
 
-	bad_watershed = load_all.load_from_mat(globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"], globals.DEFAULT_PARAMETER["training_negative_seg_mat_var"])
-	set_of_labels_for_negative_examples = load_all.load_from_mat(globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"], globals.DEFAULT_PARAMETER["training_negative_labels_mat_var"])
+	bad_watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_var"])
+	set_of_labels_for_negative_examples = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_var"])
 	set_of_labels_for_negative_examples = [elem[0] for elem in set_of_labels_for_negative_examples]
 	set_of_labels_for_negative_examples = set(np.unique(set_of_labels_for_negative_examples))
 	
@@ -134,13 +134,13 @@ def prepare_test_data(collection_of_segments):
 
 	for segment in collection_of_segments.list_of_segments:
 		vector = []
-		if int(globals.DEFAULT_PARAMETER["use_border_distance"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
-		if int(globals.DEFAULT_PARAMETER["use_size"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			vector.append (segment.feature_dict["size"])
-		if int(globals.DEFAULT_PARAMETER["use_border_distance"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
 		test_vectors.append(vector)
 		
@@ -159,8 +159,8 @@ def normalize_test_data( test_vectors):
 	per_dim =  zip(*test_vectors)
 
 	for i in xrange(len(per_dim)):
-		per_dim[i] -= globals._mean_per_dim[i]
-		per_dim[i] /= globals._std_per_dim[i]
+		per_dim[i] -= CellECT.seg_tool.globals._mean_per_dim[i]
+		per_dim[i] /= CellECT.seg_tool.globals._std_per_dim[i]
 		
 
 	test_vectors = zip(*per_dim)
@@ -188,8 +188,8 @@ def normalize_train_data( training_vectors):
 		per_dim[i] -= m
 		per_dim[i] /= s
 		
-		globals._mean_per_dim.append(m)
-		globals._std_per_dim.append(s)
+		CellECT.seg_tool.globals._mean_per_dim.append(m)
+		CellECT.seg_tool.globals._std_per_dim.append(s)
 	
 	training_vectors = zip(*per_dim)
 	for i in xrange(len(training_vectors)):
@@ -213,13 +213,13 @@ def prepare_training_data(collection_of_positive_segments, collection_of_negativ
 
 	for segment in collection_of_positive_segments.list_of_segments:
 		vector = []
-		if int(globals.DEFAULT_PARAMETER["use_border_distance"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
-		if int(globals.DEFAULT_PARAMETER["use_size"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			vector.append (segment.feature_dict["size"])
-		if int(globals.DEFAULT_PARAMETER["use_border_intensity"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
 
 		training_labels.append("Correct")
@@ -228,13 +228,13 @@ def prepare_training_data(collection_of_positive_segments, collection_of_negativ
 		
 	for segment in collection_of_negative_segments.list_of_segments:
 		vector = []
-		if int(globals.DEFAULT_PARAMETER["use_border_distance"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
 			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
-		if int(globals.DEFAULT_PARAMETER["use_size"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			vector.append (segment.feature_dict["size"])
-		if int(globals.DEFAULT_PARAMETER["use_border_intensity"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
 
 		training_labels.append("Incorrect")

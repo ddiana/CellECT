@@ -8,9 +8,9 @@ from scipy import ndimage
 import time
 
 # Imports from this project
-from seg_utils import misc
-from segment_collection import segment_collection as segc
-import globals
+from CellECT.seg_tool.seg_utils import misc
+from CellECT.seg_tool.segment_collection import segment_collection as segc
+import CellECT.seg_tool.globals
 
 
 """
@@ -184,13 +184,13 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
 
 	for segment in segment_collection.list_of_segments:
-		if int(globals.DEFAULT_PARAMETER["use_size"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			segment.add_feature("size", len(segment.list_of_voxel_tuples))
 		
-		if int(globals.DEFAULT_PARAMETER["use_border_intensity"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 			segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
 
-		if int(globals.DEFAULT_PARAMETER["use_border_distance"]):
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			dist_vector = segment_border_to_nucleus(segment)
 			segment.add_feature("border_to_nucleus_distance",dist_vector)
 		

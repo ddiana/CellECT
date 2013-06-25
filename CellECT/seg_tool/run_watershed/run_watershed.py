@@ -8,6 +8,7 @@ import time
 import numpy as np
 
 
+import CellECT.seg_tool.globals
 
 """
 This module prepares input and calls watershed from Matlab.
@@ -23,7 +24,7 @@ def run_watershed(vol, init_pts):
 	"""
 	
 	print "\nRunning seeded watershed....\n"
-	has_bg = int(globals.DEFAULT_PARAMETER["has_bg"])
+	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
 	spio.savemat("temp/watershed_input.mat", {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
 	import subprocess
 	import os

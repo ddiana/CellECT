@@ -9,8 +9,8 @@ import pylab
 from termcolor import colored
 
 # Import from this project
-import save_xml
-import globals
+import CellECT.seg_tool.seg_io.save_xml
+import CellECT.seg_tool.globals
 
 
 """

@@ -8,9 +8,9 @@ import pdb
 import time
 
 # Imports from this project
-from seg_utils import union_find
-from features import segment_features as feat
-from seg_utils import voxel
+from CellECT.seg_tool.seg_utils import union_find
+from CellECT.seg_tool.features import segment_features as feat
+from CellECT.seg_tool.seg_utils import voxel
 
 
 
