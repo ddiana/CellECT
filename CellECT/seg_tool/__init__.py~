@@ -1,0 +1,7 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
+
+# Module Information.
+from module_info import *
+
+print __usage__

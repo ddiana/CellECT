@@ -1,0 +1,21 @@
+// gcc -fPIC -shared -o watershed.so watershed.cpp
+
+#include <stdio.h>
+#include <queue>
+
+extern "C"  //Tells the compile to use C-linkage for the next scope.
+{
+
+	void cfun(const void * indatav, int rowcount, int colcount, int depthcount, void * outdatav) {
+		//void cfun(const double * indata, int rowcount, int colcount, double * outdata) {
+		const double * indata = (double *) indatav;
+		double * outdata = (double *) outdatav;
+		int i;
+		puts("Here we go!");
+		for (i = 0; i < rowcount * colcount *depthcount; ++i) {
+		    outdata[i] = indata[i] * 2;
+		}
+		puts("Done!");
+	}
+
+} //End C linkage scope.

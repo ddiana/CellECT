@@ -1,0 +1,2811 @@
+import numpy as np
+import scipy as sp
+from numpy import random
+from scipy import io
+import pdb
+import pylab
+from scipy import ndimage
+from PyML import VectorDataSet
+from PyML.classifiers.svm import SVM, loadSVM
+from matplotlib.widgets import Slider
+from PyML.classifiers.svm import loadSVM
+import copy
+import time
+import sys
+from matplotlib.lines import Line2D
+import re
+from termcolor import colored
+from matplotlib.widgets import Button
+import xml.etree.ElementTree as ET
+import os
+from cStringIO import StringIO
+
+sys.path.append("./utils")
+import watershed_wrapper
+
+
+# Module Information.
+__version__     = "0.01"
+__author__      = "Diana Delibaltov"
+__url__         = "http://ece.ucsb.edu/~diana, http://vision.ece.ucsb.edu"
+__copyright__   = "(c) 2013 Diana Delibaltov, Vision Research Lab, UCSB"
+__license__     = "UCSB License"
+__description__ = "Cell segmentation tool for confocal microscopy membrane/nuclei images. Works with cell_tracker.py."
+
+
+
+
+
+########## globals:
+
+DEFAULT_PARAMETER = {}
+
+CONFIG_FILE_PATH = "config_file.cnf"
+
+_mean_per_dim = []
+_std_per_dim = []
+
+
+################################################################################
+######################## INTERACTIVE SEGMENTATION SETUP ########################
+################################################################################
+
+
+
+
+class SegmentCollection(object):
+
+	def __init__ (self, set_of_labels, label_map, name_of_parent):
+
+		self.name_of_parent = name_of_parent
+
+		self.list_of_segments = []
+		
+		self.add_segments_to_collection(label_map, set_of_labels, name_of_parent)
+
+	
+	def add_segments_to_collection(self, label_map, set_of_labels, name_of_parent):
+		
+		# prepares list of segments voxels for every segment
+
+		label_map = label_map.astype("int32")
+		
+		t1 = time.time()
+
+		reverse_index = {label: [] for label in set_of_labels}
+
+		it = np.nditer(label_map, flags=['multi_index'])
+		
+		while not it.finished:
+			label = int(it[0])
+			if label in set_of_labels:
+				reverse_index[label].append(it.multi_index)
+
+			it.iternext()
+		
+
+		print ".......",  time.time() - t1, "sec          "
+		
+		
+		for label in set_of_labels:
+			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent))	
+
+		
+	def add_segment_using_mask(self, label_map, label, name_of_parent):
+	
+		mask = (label_map == label)
+		voxels = zip(*dld_nonzero3d(mask))
+		
+		
+		self.list_of_segments.append(Segment(label, voxels, name_of_parent))
+		
+
+	def update_index_dict(self):
+
+		self.segment_label_to_list_index_dict = dict((segment.label, index) for index, segment in enumerate(self.list_of_segments))
+
+
+
+	def get_feature_values_in_list(self, feature_name):
+		
+		feat_list = [segment.feature_dict[feature_name] for segment in self.list_of_segments]
+		return feat_list
+		
+
+
+
+class Segment(object):
+
+	def __init__ (self, label, voxel_location_tuples, name_of_parent):
+
+		self.label = label
+		self.list_of_voxel_tuples = voxel_location_tuples
+		self.name_of_parent = name_of_parent
+		self.feature_dict = {}
+		self.nucleus_list = []
+		self.bounding_box = self.get_boundaries()
+		
+	
+
+	def add_feature(self,feat_name, feat_value):
+
+		# TODO check if exists
+		self.feature_dict[feat_name] = feat_value		
+
+
+	def get_boundaries(self):
+
+		#x,y,z = zip(*self.list_of_voxel_tuples)
+
+		(xmin, ymin, zmin) = reduce(lambda a,b: (min(a[0],b[0]), min(a[1], b[1]), min(a[2], b[2])), self.list_of_voxel_tuples)		
+		(xmax, ymax, zmax) = reduce(lambda a,b: (max(a[0],b[0]), max(a[1], b[1]), max(a[2], b[2])), self.list_of_voxel_tuples)		
+
+
+		box_bounds = BoundingBox( xmin, xmax, ymin, ymax, zmin, zmax)
+
+		return box_bounds	
+
+	def add_nucleus(self, nucleus):
+		self.nucleus_list.append(nucleus)
+
+
+
+class BoundingBox(object):
+
+
+	def __init__(self,xmin,xmax, ymin, ymax, zmin, zmax):
+
+		self.xmin = xmin
+		self.ymin = ymin
+		self.zmin = zmin
+		self.xmax = xmax
+		self.ymax = ymax
+		self.zmax = zmax
+
+	def extend_by(self, N, max_values):
+
+		self.xmin = max ( [self.xmin - N, 0])
+		self.xmax = min ( [self.xmax + 5, max_values[0]-1])
+		self.ymin = max ( [self.ymin - N, 0])
+		self.ymax = min ( [self.ymax + N, max_values[1]-1])
+		self.zmin = max ( [self.zmin - N, 0])
+		self.zmax = min ( [self.zmax + N, max_values[2]-1])
+
+
+
+class Nucleus(object):
+	
+	def __init__(self, x, y, z, index, is_added_by_user = False): #, t, confidence, index):
+
+		self.x = x
+		self.y = y
+		self.z = z
+#		self.t = t
+#		self.confidence = confidence
+		self.index = index
+		self.added_by_user = is_added_by_user
+
+
+
+
+
+class NucleusCollection(object):
+
+
+	def __init__(self, mat_path = None, mat_var = None):
+
+		self.union_find = UnionFind(0)
+
+		if mat_path and mat_var:
+			self.__read_nuclei(mat_path, mat_var)
+		else:
+			self.nuclei_list = []
+		
+
+
+	def __read_nuclei(self,mat_path, mat_var):
+			
+		nuclei_coords = sp.io.loadmat(mat_path)[mat_var]
+		
+		#Nucleus = namedtuple("Nucleus", "x y z t confidence index")
+		self.nuclei_list = []
+	
+		for i in xrange(nuclei_coords.shape[1]):
+			x = int(nuclei_coords[0,i])
+			y = int(nuclei_coords[1,i])
+			z = int(nuclei_coords[2,i])
+			self.nuclei_list.append(Nucleus(x,y,z, i))
+	
+
+		self.union_find = UnionFind(len(self.nuclei_list))
+		
+		self.nucleus_index_to_list_pos = dict((list_pos, nucleus.index) for list_pos, nucleus in enumerate(self.nuclei_list))
+		
+	def get_head_nucleus_in_its_set(self, nucleus):
+
+		nucleus_list_pos = self.nucleus_index_to_list_pos[nucleus.index]
+		head_nucleus_list_pos = self.union_find.find(nucleus_list_pos)
+		return self.nuclei_list[head_nucleus_list_pos]
+
+
+	def add_nucleus (self, nucleus):
+	
+		self.nuclei_list.append(nucleus)
+		self.nucleus_index_to_list_pos = dict((list_pos, nucleus.index) for list_pos, nucleus in enumerate(self.nuclei_list))
+		self.union_find.add_one_item_to_union()
+
+
+	def find_what_segment_each_nucleus_is_in(self, label_map):
+
+		list_of_segment_labels = []
+
+		for nucleus in self.nuclei_list:
+
+			list_of_segment_labels.append (label_map[nucleus.x, nucleus.y, nucleus.z])
+
+		return list_of_segment_labels
+
+		
+	def find_closest_nucleus_to_segment(self, segment):
+	
+		#x,y,z = zip(*segment.list_of_voxel_tuples)
+
+		(xsum, ysum, zsum) = reduce(lambda a,b: (a[0]+b[0], a[1] + b[1], a[2] + b[2]), segment.list_of_voxel_tuples)		
+
+		length = float(len(segment.list_of_voxel_tuples))
+		cx = xsum / length
+		cy = ysum / length
+		cz = zsum / length
+		
+		min_dist = 10000
+		min_nucleus = self.nuclei_list[0]
+		
+		for nucleus in self.nuclei_list:
+			dist = euclidian_distance(Voxel(cx,cy,cz), nucleus)
+			if dist < min_dist:
+				min_dist = dist
+				min_nucleus = nucleus
+
+		return min_nucleus
+
+	def merge_two_nuclei (self, nucleus1, nucleus2):
+		nucleus_list_pos1 = self.nucleus_index_to_list_pos[nucleus1.index]
+		nucleus_list_pos2 = self.nucleus_index_to_list_pos[nucleus2.index]
+		
+		self.union_find.union(nucleus_list_pos1, nucleus_list_pos2)
+		
+
+
+
+
+class Voxel(object):
+
+	def __init__(self,x,y,z,val=-1):
+
+		self.x = x
+		self.y = y
+		self.z = z
+		self.val = val
+
+
+
+
+class SeedSegmentCollection(object):
+
+	def __init__(self):
+
+		self.list_of_seed_segments = []
+		self.index_to_list_index_dict = {}
+
+
+	def update_seed_segment_collection(self,seed_segment_collection, label_map, seed_collection):
+
+		# prepares list of segments voxels for every segment
+		
+
+		label_map = label_map.astype("int32")
+		
+		t1 = time.time()
+
+		reverse_index = {int(label_map[seed.x, seed.y, seed.z]): [] for seed in seed_collection.list_of_seeds}
+		print "Making seed-segment collection of", len (reverse_index), "segments from seeds..."
+
+		it = np.nditer(label_map, flags=['multi_index'])
+		labels_of_interest = set(reverse_index.keys())
+		while not it.finished:
+			label = int(it[0])
+			if label in labels_of_interest:
+				reverse_index[label].append(it.multi_index)
+			it.iternext()
+
+		for seed in seed_collection.list_of_seeds:
+			label = label_map[seed.x, seed.y, seed.z]
+			self.list_of_seed_segments.append(SeedSegment(seed, reverse_index[label]))	
+
+
+		self.seed_index_to_seed_segment_list_index_dict = dict(( seed_segment.seed.index, index) for index, seed_segment in enumerate(self.list_of_seed_segments))
+	
+				
+		
+		print ".......",  time.time() - t1, "sec          "
+		
+
+
+
+class SeedSegment(object):
+
+	def __init__ (self, seed, list_of_voxel_tuples):
+		self.seed = copy.deepcopy(seed)
+		self.list_of_voxel_tuples = copy.deepcopy(list_of_voxel_tuples)
+		self.bounding_box = self.get_boundaries()
+
+
+	def get_boundaries(self):
+
+		#x,y,z = zip(*self.list_of_voxel_tuples)
+
+		(xmin, ymin, zmin) = reduce(lambda a,b: (min(a[0],b[0]), min(a[1], b[1]), min(a[2], b[2])), self.list_of_voxel_tuples)		
+		(xmax, ymax, zmax) = reduce(lambda a,b: (max(a[0],b[0]), max(a[1], b[1]), max(a[2], b[2])), self.list_of_voxel_tuples)		
+
+
+		box_bounds = BoundingBox( xmin, xmax, ymin, ymax, zmin, zmax)
+
+		return box_bounds	
+	
+
+
+class Seed(object):
+
+	# additional seed to an existing nucleus
+	
+	def __init__ (self, x,y,z,nucleus_index, index):
+	
+		self.x = x
+		self.y = y
+		self.z = z
+		self.nucleus_index = nucleus_index	
+		self.index = index
+
+class SeedCollection(object):
+
+	def __init__ (self, list_of_seeds):
+	
+		self.list_of_seeds = list_of_seeds
+		
+	def add_seed (self, new_seed):
+	
+		self.list_of_seeds.append(new_seed)
+	
+
+
+
+
+
+
+################################################################################
+########################             UTILS              ########################
+################################################################################
+
+
+class UnionFind(object):
+
+	def __init__ (self, number_lements):
+		self.parents = range(number_lements)
+		self.set_size = [0] * number_lements
+
+	def add_one_item_to_union(self):
+		self.parents.append(len(self.parents))
+		self.set_size.append(0)
+	
+	def find(self, element):
+		while (self.parents[element] != element):
+			element = self.parents[element]
+		return element
+
+	# TODO check if you need to call find for set size.	
+	def union (self, element1, element2):
+
+		root_element1 = self.find(element1)
+		root_element2 = self.find(element2)
+
+		if root_element1 != root_element2:
+			if self.set_size[root_element1] < self.set_size[root_element2]:
+				self.parents[root_element1] = root_element2
+			elif self.set_size[root_element1] > self.set_size[root_element2]:
+				self.parents[root_element2] = root_element1
+			else:
+				self.parents[root_element2] = root_element1
+				self.set_size[root_element1] = self.set_size[root_element1] +1
+
+# 				self.set_size[root_element1] += self.set_size[root_element2]
+#				self.perents[root_element2] = root_element1
+#			else:
+#				self.set_size[root_element1] += self.set_size[root_element2]
+#				self.parents[root_element2] = root_element1
+
+
+
+def call_silent(f, *args, **kw_args):
+	old_stdout = sys.stdout
+	sys.stdout = open('/dev/null', 'w')
+	r1 = f(*args, **kw_args)
+	sys.stdout.close()
+	sys.stdout = old_stdout
+	return r1
+
+def call_silent_err(f, *args, **kw_args):
+	old_stderr = sys.stderr
+	sys.stderr = open('/dev/null', 'w')
+	r1 = f(*args, **kw_args)
+	sys.stderr.close()
+	sys.stderr = old_stderr
+	return r1
+
+
+def call_silent_process(f, *args, **kw_args):
+	#devnull = open('/dev/null', 'w')
+	#oldstdout_fno = os.dup(sys.stdout.fileno())
+	#os.dup2(devnull.fileno(), 1)
+	#r1 = f(*args, **kw_args)
+	#os.dup2(oldstdout_fno, 1)
+	#devnull.close()
+	
+#	so, sys.stdout = sys.stdout, StringIO()
+	r1 = f(*args, **kw_args)
+#	sys.stdout = so
+
+	return r1
+
+def call_silent_process_err(f, *args, **kw_args):
+	devnull = open('/dev/null', 'w')
+	oldstderr_fno = os.dup(sys.stderr.fileno())
+	os.dup2(devnull.fileno(), 1)
+	r1 = f(*args, **kw_args)
+	os.dup2(oldstderr_fno, 1)
+	devnull.close()
+	return r1
+
+def dld_nonzero3d(mat):
+# good for very sparse matrix where the nonzeros are in a bunch, such as supervoxel mask.
+
+	xcoords = []
+	ycoords = []
+	zcoords = []
+
+
+	for z in xrange(mat.shape[2]):
+
+		if mat[:,:,z].sum() >0:
+			(xs, ys) = np.nonzero(mat[:,:,z])
+			zcoords.extend(np.ones(len(xs))*z)
+			xcoords.extend(xs)
+			ycoords.extend(ys)
+
+	return (np.array(xcoords), np.array(ycoords), np.array(zcoords))
+
+
+
+def load_from_mat(file_name, var_name):
+
+	return sp.io.loadmat(file_name)[var_name]
+
+
+
+def print_progress(counter, total):
+
+	progress = counter/float(total) *100
+	try:
+		sys.stdout.write("....... Progress: %f%%   \r" % (progress) )
+		sys.stdout.flush()	
+	except:
+		import sys
+		sys.stdout.write("....... Progress: %f%%   \r" % (progress) )
+		sys.stdout.flush()	
+
+
+
+def display_volume(vol):
+
+	from matplotlib.widgets import Slider
+	
+
+
+	ax = pylab.subplot(111)
+	pylab.subplots_adjust(bottom=0.25)
+
+	z0 = int(np.floor(vol.shape[2]/2))
+
+
+	l =  pylab.imshow(vol[:,:,z0], interpolation="nearest", cmap = "gist_heat")
+	#pylab.axis([0, vol.shape[0], 0, vol.shape[1]])
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
+
+	s_z = Slider(ax_z, 'z', 0, vol.shape[2]-1, valinit=z0)
+
+	def update(val):
+		z = s_z.val
+		l.set_data(vol[:,:,z])
+		pylab.draw()
+	
+	s_z.on_changed(update)
+	pylab.show()
+		
+
+
+def display_volume_two(vol1, vol2, z_default = -1):
+
+
+	from matplotlib.widgets import Slider
+
+	fig = pylab.figure()
+
+	if z_default > -1:
+		z0 = z_default
+	else:
+		z0 = int(np.floor(vol1.shape[2]/2))
+
+	ax1 = pylab.subplot(121)
+	pylab.subplots_adjust(bottom=0.25)
+	l1 =  pylab.imshow(vol1[:,:,z0], interpolation="nearest", cmap = "gist_heat")
+	#pylab.axis([0, vol1.shape[0], 0, vol1.shape[1]])
+
+	ax2 = pylab.subplot(122)
+	pylab.subplots_adjust(bottom=0.25)
+	l2 =  pylab.imshow(vol2[:,:,z0], interpolation="nearest", cmap = "spectral")
+	#pylab.axis([0, vol2.shape[0], 0, vol2.shape[1]])
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
+
+	s_z = Slider(ax_z, 'z-slice', 0, vol1.shape[2]-1, valinit=z0)
+
+	def update(val):
+		z = s_z.val
+		l1.set_data(vol1[:,:,z])
+		l2.set_data(vol2[:,:,z])
+		pylab.draw()
+	
+	s_z.on_changed(update)
+	pylab.show()
+	
+	
+	
+		
+	
+def display_volume_two_get_clicks(vol1, vol2, z_default = -1):
+
+
+
+	fig = pylab.figure(figsize=(17,16))
+	
+	
+	class MouseEvent:
+		def __init__(self, button, xval, yval, zval):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.zval = zval
+			
+		def setInfo(self, button, xval, yval,zval):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.zval = zval
+	
+
+	if z_default > -1:
+		z0 = z_default
+	else:
+		z0 = int(np.floor(vol1.shape[2]/2))
+
+	ax1 = pylab.subplot(121)
+	pylab.subplots_adjust(bottom=0.25)
+	l1 =  pylab.imshow(vol1[:,:,z0], interpolation="nearest", cmap = "gist_heat")  
+	pylab.axis()#[0, vol1.shape[0], 0, vol1.shape[1]])
+
+	ax2 = pylab.subplot(122)
+	pylab.subplots_adjust(bottom=0.25)
+	l2 =  pylab.imshow(vol2[:,:,z0], interpolation="nearest",  cmap = "gist_heat", picker = True)   #cax = l2
+	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
+
+	s_z = Slider(ax_z, 'z-slice', 0, vol1.shape[2]-1, valinit=z0)
+
+	def update(val):
+		z = s_z.val
+		l1.set_data(vol1[:,:,z])
+		l2.set_data(vol2[:,:,z])
+		pylab.draw()
+	
+	s_z.on_changed(update)
+	
+	merge_mouse_event1 = MouseEvent(-2,0,0,0)
+	merge_mouse_event2 = MouseEvent(-2,0,0,0)
+	split_mouse_event  = MouseEvent(-2,0,0,0)
+	
+	
+	def onpick(event):
+
+		xval = event.mouseevent.xdata
+		yval = event.mouseevent.ydata
+		zval = s_z.val
+		
+		if event.mouseevent.button != 1:
+			print "To merge: ", "x =", int(yval), "y =", int(xval), "z =", int(zval)
+			if merge_mouse_event1.xval == 0:
+				merge_mouse_event1.setInfo(event.mouseevent.button, int(yval), int(xval), int(zval))			
+			else:
+				merge_mouse_event2.setInfo(event.mouseevent.button, int(yval), int(xval), int(zval))
+			
+		else:
+			print "To split: ", "x =", int(yval), "y =", int(xval), "z =", int(zval)
+			split_mouse_event.setInfo(event.mouseevent.button, int(yval), int(xval), int(zval))
+		# note x,y values switched for gui
+		
+#		if event.mouseevent.button != 1:
+#			# always remember the last left node click, if current click is right, the print edge with last left
+#			# leftNodeFromMouse.lastLeftNode = nodeName
+#		#else:
+#			if lastMouseEvent.button == 1 and lastMouseEvent.button !=-2 :
+#				print yval, xval
+				# note x,y values switched for gui
+				
+		#lastMouseEvent.setInfo(event.mouseevent.button, xval, yval)
+	
+	
+	fig.canvas.mpl_connect('pick_event', onpick)
+	pylab.show()
+	
+	
+	return split_mouse_event, merge_mouse_event1, merge_mouse_event2
+	
+	
+	
+
+
+
+def euclidian_distance(pixel, nucleus):
+	
+
+	zscale = 5
+	return np.sqrt((pixel.x - nucleus.x)**2 + (pixel.y - nucleus.y)**2 + (zscale*pixel.z - zscale*nucleus.z)**2)
+
+
+
+def avg_intensity(vol, mask):
+
+	sum_intensity = (vol*mask).sum()
+	sum_voxels = mask.sum()
+	
+	return float(sum_intensity) / sum_voxels
+
+
+
+def dld_meshgrid_3d(arr_x, arr_y, arr_z):
+
+	X = Y = Z = np.zeros((len(arr_x) , len(arr_y), len(arr_z)))
+
+	x_slice, y_slice = np.meshgrid(arr_x, arr_y)	
+
+	for z in xrange(len(arr_z)):
+		X[:,:,z] = x_slice
+		Y[:,:,z] = z_slice
+		Z[:,:,z] = np.ones(x_slice.shape) * arr_z[z]
+
+	return X,Y,Z
+
+
+
+
+
+
+
+################################################################################
+########################               GUI              ########################
+################################################################################
+
+
+
+
+
+def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = []):
+
+	#print "Nuclei in this cropped section: ", nuclei_coords
+	seed_coords = []
+	
+	fig = pylab.figure(figsize=(12,8))
+	fig.canvas.set_window_title("Segment Correction")	
+	
+	#color_map = pylab.cm.to_rgba(watershed.unique())
+	
+	print "--------------------------------------------------------------------------------"
+	print colored("NO BUTTON TASK SELECTED","blue")
+	
+	class MouseEvent:
+		def __init__(self, button, xval, yval, axis):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.axis = axis			
+			
+		def setInfo(self, button, xval, yval,axis):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.axis = axis
+	
+	class AscidianCoordinates:
+		def __init__(self, x = -1,y = -1,z =-1):
+			self.xval = int(x)
+			self.yval = int(y)
+			self.zval = int(z)
+		def set_coordinates (self, x,y,z):
+			self.xval = int(x)
+			self.yval = int(y)
+			self.zval = int(z)
+			
+	class MouseEventInAscidian:	
+		def __init__ (self, asc_coordinates, button_task, mouse_event, task_index):		
+			self.asc_coordinates = asc_coordinates
+			self.right_click = mouse_event.button != 1
+			self.button_task = button_task
+			self.task_index = task_index
+			
+	list_of_mouse_events_in_ascidian = []
+
+	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL"])
+
+
+	global current_button_task 
+	current_button_task= "NO_TASK_SELECTED"
+
+
+	class ButtonCallback(object):
+	
+		def seed_old_label(self,event):
+			global current_button_task 
+			global task_index
+			task_index += 1
+			current_button_task = "ADD_SEEDS_TO_EXISTING_LABEL"
+			print "--------------------------------------------------------------------------------"
+			print colored("ADD SEEDS FOR EXISTING LABEL: Right click to choose label, Left click to put seeds.","blue")
+			#print colored("(Only the latest right click counts. All the left clicks count)", "grey")
+					
+		def seed_new_label(self,event):
+			global current_button_task  
+			global task_index
+			task_index += 1			
+			current_button_task = "ADD_SEEDS_TO_NEW_LABEL"
+			print "--------------------------------------------------------------------------------"
+			print colored("ADD ONE SEED FOR A NEW LABEL: Left click to put one seed.","blue")
+			print colored("(Only latest left click counts)", "grey")
+			
+		def merge_two_labels(self, event):			
+			global current_button_task  
+			global task_index
+			task_index += 1
+			current_button_task = "MERGE_TWO_LABELS"
+			print "--------------------------------------------------------------------------------"
+			print colored("MERGE TWO LABELS: Right click for first label, Right click for second label.","blue")
+			print colored("(Only latest two right clicks count)", "grey")
+			
+
+			
+		def clear_task(self, event):
+			global current_button_task
+			current_button_task = "NO_TASK_SELECTED"
+			print "--------------------------------------------------------------------------------"
+			print colored("NO BUTTON TASK SELECTED: You can left/right click anywhere to get info.","blue")
+	
+	
+	def get_nuclei_at_z(nuclei_coords, z):
+	
+		nuclei_at_z = filter(lambda x: x[2] == z, nuclei_coords )
+		return nuclei_at_z
+		
+		
+	def get_nuclei_at_y(nuclei_coords, y):
+	
+		nuclei_at_y = filter(lambda x: x[1]== y, nuclei_coords)	
+		return nuclei_at_y
+
+	callback = ButtonCallback()
+	a_seed_old_label = pylab.axes([0.1, 0.05, 0.22, 0.05])
+	a_seed_new_label = pylab.axes([0.34, 0.05, 0.22, 0.05])
+	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.18, 0.05])
+	a_clear_task = pylab.axes( [0.78, 0.05, 0.12, 0.05 ])
+	
+	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for an old label')
+	b_seed_old_label.on_clicked(callback.seed_old_label)
+	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for a new label")
+	b_seed_new_label.on_clicked(callback.seed_new_label)
+	b_merge_two_labels = Button(a_merge_two_labels, 'Merge two labels')
+	b_merge_two_labels.on_clicked(callback.merge_two_labels)
+	b_clear_task = Button(a_clear_task, "Clear task")
+	b_clear_task.on_clicked(callback.clear_task)
+
+
+	if z_default > -1:
+		z0 = z_default
+	else:		
+		z0 = int(np.floor(watershed.shape[2]/2))
+		
+	y0 = int(watershed.shape[1]/2)
+	
+	aspect1 = abs(watershed.shape[1]/float(watershed.shape[0]))
+	aspect2 = abs(watershed.shape[2]/float(watershed.shape[0]))
+	
+	line1 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)
+	line11 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                    
+	line2 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                     
+	line22 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)
+	 
+	z0 = int(z0) 
+	
+# x-y plane, volume
+	ax1 = pylab.subplot(221)	
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_vol = vol.min()
+	max_var_cmap_vol = vol.max()
+	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat")  
+	ax1.add_line(line1)  
+	ax1.set_aspect(aspect1)
+	ax1.axis([0, vol.shape[1], 0, vol.shape[0]])
+	ax1.set_autoscale_on(False)
+	ax1.invert_yaxis()
+	ax1.set_title("x-y slice")
+
+# x-y plane, watershed
+	ax2 = pylab.subplot(223)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_ws = watershed.min()
+	max_var_cmap_ws = watershed.max()
+
+	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = "spectral", vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	ax2.add_line(line11) 	
+	ax2.set_aspect(aspect1)
+	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
+	if seeds_at_z :
+		seeds_at_z = zip(*seeds_at_z)
+		ax2.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax2.axis([0, vol.shape[1], 0, vol.shape[0]])
+	ax2.set_autoscale_on(False)
+	ax2.invert_yaxis()
+	
+# x-z plane, volume
+	ax3 = pylab.subplot(222)
+	ax3.set_aspect(aspect2)
+	pylab.subplots_adjust(bottom=0.25)
+	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat")  
+	ax3.add_line(line2) 
+	ax3.set_aspect(aspect2)
+	ax3.axis([0, vol.shape[2], 0, vol.shape[0]])
+	ax3.set_autoscale_on(False)
+	ax3.invert_yaxis()
+	ax3.set_title("x-z slice")
+
+# x-z plane, watershed
+	ax4 = pylab.subplot(224)
+	ax4.set_aspect(aspect2)
+	pylab.subplots_adjust(bottom=0.25)
+	l4 =  pylab.imshow(watershed[:,y0,:], interpolation="nearest", cmap = "spectral", vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	ax4.add_line(line22) 
+	ax4.set_aspect(aspect2)
+	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
+	if seeds_at_y :
+		seeds_at_y = zip(*seeds_at_y)
+		ax4.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax4.axis([0, vol.shape[2], 0, vol.shape[0]])
+	ax4.set_autoscale_on(False)
+	ax4.invert_yaxis()
+	
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
+	s_z = Slider(ax_z, 'z-slice', 0, vol.shape[2]-1, valinit=z0)
+
+	ax_y = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
+	s_y = Slider(ax_y, 'y-slice', 0, vol.shape[1]-1, valinit=y0)
+
+	def update_z(val):
+		z = s_z.val
+		# draw lines
+		l1.set_data(vol[:,:,z])
+		l2.set_data(watershed[:,:,z])
+		line2 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5) 
+		del ax3.lines[0]
+		ax3.add_line(line2)
+		line22 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5) 
+		
+		
+		try:
+			while True:
+				del ax4.lines[0]
+		except:
+			pass
+		
+		
+		# to remove old dots from current view
+		
+		any_left = True
+		while any_left :
+			any_left = False
+			for i in xrange (len(ax2.lines)):
+				if len(ax2.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
+					ax2.lines.pop(i)
+					any_left = True
+					break
+				else:  # check if it is the vertical line
+					coords = ax2.lines[i].get_xydata()
+					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
+						ax2.lines.pop(i)
+						any_left = True
+						break
+						
+						
+		ax4.add_line(line22)
+		
+		# draw nuclei
+		seeds_at_z = get_nuclei_at_z(nuclei_coords, int(z))
+		if seeds_at_z :
+			seeds_at_z = zip(*seeds_at_z)
+			ax2.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			#print "seeds at z: ", seeds_at_z
+		# draw user seeds
+		user_seeds_at_z = get_nuclei_at_z(seed_coords, int(z))
+		if user_seeds_at_z :
+			user_seeds_at_z = zip(*user_seeds_at_z)
+			ax2.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+		pylab.draw()
+		
+	def update_y(val):
+		y = s_y.val
+		# draw lines
+		# draw image
+		l4.set_data(watershed[:,y,:])
+		l3.set_data(vol[:,y,:])
+		line1 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5)  
+		l3.set_data(vol[:,y,:])
+		# to remove the dots and the vertical line from the other view (cross view)
+		try:
+			while True:
+				del ax2.lines[0]				
+		except:
+			pass
+			
+
+		any_left = True
+		while any_left :
+			any_left = False
+			for i in xrange (len(ax4.lines)):				
+				if len(ax4.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
+					ax4.lines.pop(i)
+					any_left = True
+					break
+				else:  # check if it is the vertical line
+					coords = ax4.lines[i].get_xydata()
+					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
+						ax4.lines.pop(i)
+						any_left = True
+						break
+
+#		
+		ax1.add_line(line1)
+		line11 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5) 
+		del ax1.lines[0]
+		ax2.add_line(line11)
+			
+		# draw nuclei
+		seeds_at_y = get_nuclei_at_y(nuclei_coords, int(y))
+		if seeds_at_y :
+			seeds_at_y = zip(*seeds_at_y)
+			ax4.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			#print "seeds at y: ", seeds_at_y
+		# draw user seeds 
+		user_seeds_at_y = get_nuclei_at_y(seed_coords, int(y))
+		if user_seeds_at_y :
+			user_seeds_at_y = zip(*user_seeds_at_y)
+			ax4.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+			
+		pylab.draw()
+	
+	s_z.on_changed(update_z)
+	s_y.on_changed(update_y)
+	
+	mouse_event = MouseEvent(-2,0,0,0)
+	
+
+	list_of_all_mouse_events = []
+	
+	
+	def onpick(event):
+
+		axClicked = event.artist.axes
+
+		
+		asc_coordinates = AscidianCoordinates()
+		
+		# which subplot was clicked:
+		if axClicked == ax2:   # the x-y plane
+			xval = event.mouseevent.ydata
+			yval = event.mouseevent.xdata
+			zval = s_z.val
+			asc_coordinates.set_coordinates(xval,yval,zval)
+		
+		elif axClicked == ax4:    # the x-z plane
+			xval = event.mouseevent.ydata
+			yval = s_y.val
+			zval = event.mouseevent.xdata
+			asc_coordinates.set_coordinates(xval,yval,zval)
+			
+		
+		xval = asc_coordinates.xval
+		yval = asc_coordinates.yval
+		zval = asc_coordinates.zval
+				
+		mouse_event = MouseEvent(event.mouseevent.button, event.mouseevent.xdata, event.mouseevent.ydata, axClicked)	
+		
+
+		if event.mouseevent.button == 3:
+			# right			
+			print "Label", watershed[int(xval), int(yval), int(zval)], "@ (" + str(int(xval)) + ", " + str( int(yval)) + ", " + str( int(zval)) +")"
+
+		elif event.mouseevent.button == 1: 
+			# left
+			
+			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
+			
+			if current_button_task != "NO_TASK_SELECTED":
+				
+				if int(s_z.val) == zval:
+					seed_coords.append ((int(xval), int(yval), int(zval)))
+					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					pylab.draw()
+				if int(s_y.val) == yval:
+					seed_coords.append ((int(xval), int(yval), int(zval)))
+					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					pylab.draw()
+				
+			print "Seed at: (" + str(int(xval)) + ", " + str(int(yval)) + ", " + str(int(zval)) + ")"
+
+
+		if event.mouseevent.button in set([1,3]):
+			if current_button_task in button_tasks:
+				list_of_mouse_events_in_ascidian.append( MouseEventInAscidian( asc_coordinates, current_button_task, mouse_event, task_index ) )
+			
+	
+	
+	fig.canvas.mpl_connect('pick_event', onpick)
+	pylab.show()
+	
+#	for ev in list_of_mouse_events_in_ascidian:
+#		print ev.asc_coordinates.xval
+#	print '.......'
+	
+	return list_of_mouse_events_in_ascidian
+	
+
+
+def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, z_default = -1	):
+
+
+	print colored("============================== START USER FEEDBACK =============================", "yellow")
+
+	nuclei_coords = [ (nucleus.x, nucleus.y, nucleus.z) for nucleus in nuclei_collection.nuclei_list ]
+
+	uncertainty_map = get_segment_uncertainty_map(watershed, segment_collection, classified_segments)
+	
+
+
+	global task_index
+	task_index = 0
+	
+	fig = pylab.figure(figsize=(15,8))
+	fig.canvas.set_window_title("Cell Confidence Map")
+	
+	list_of_all_mouse_events = []
+	class MouseEvent:
+		def __init__(self, button, xval, yval, zval):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.zval = zval
+			
+		def setInfo(self, button, xval, yval,zval):
+			self.button = button # left or right
+			self.xval = xval
+			self.yval = yval
+			self.zval = zval
+	
+	class MouseEventsFromSegmentGUI(object):
+	
+		def __init__ (self, bounding_box, list_of_mouse_events_in_cropped_ascidian):
+		
+			self.bounding_box = bounding_box
+			self.list_of_cropped_ascidian_events = list_of_mouse_events_in_cropped_ascidian
+
+
+	if z_default > -1:
+		z0 = z_default
+	else:
+		z0 = int(np.floor(watershed.shape[2]/2))
+
+	ax1 = pylab.subplot(141)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_vol = vol.min()
+	max_var_cmap_vol = vol.max()
+	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", cmap = "gist_heat", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol)  
+	pylab.axis()#[0, vol1.shape[0], 0, vol1.shape[1]])
+	ax1.set_title("Input Volume")
+	
+
+	ax2 = pylab.subplot(142)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_uncert = uncertainty_map.min()
+	max_var_cmap_uncert = uncertainty_map.max()
+	l2 =  pylab.imshow(uncertainty_map[:,:,z0], interpolation="nearest", cmap = "PRGn", vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
+	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
+	ax2.set_title("Uncertainty Map")
+
+	ax3 = pylab.subplot(143)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_uncert = watershed.min()
+	max_var_cmap_uncert = watershed.max()
+	l3 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = "spectral", vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
+	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
+	ax3.set_title("Segmentation Label Map")
+
+	dif_watershed = (watershed==0).astype("int32") - (watershed_old==0).astype("int32")
+	ax4 = pylab.subplot(144)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_uncert = dif_watershed .min()
+	max_var_cmap_uncert = dif_watershed .max()
+	l4 =  pylab.imshow(dif_watershed [:,:,z0], interpolation="nearest", cmap = "RdYlGn", vmin= -1, vmax = 1)   #cax = l2
+	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
+	ax4.set_title("Difference From Previous")
+
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.15, 0.65, 0.03], axisbg=axcolor)
+
+	s_z = Slider(ax_z, 'z-slice', 0, vol.shape[2]-1, valinit=z0)
+
+
+	def load_last_save_callback(event):
+	
+		can_load = False
+		file_name = DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+		if 	os.path.exists(file_name):
+			file_name = DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+			if os.path.exists(file_name):
+				file_name = DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+				if os.path.exists(file_name):
+					can_load = True
+
+		global should_load_last_save
+
+		if can_load:
+			should_load_last_save = True
+		else:
+			print "Cannot load previous state. Files missing."
+			should_load_last_save = False
+
+		pylab.close()
+
+	def save_current_status_callback(event):
+		save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed)
+
+	a_load = pylab.axes([0.2, 0.05, 0.3, 0.05])
+	a_save = pylab.axes([0.55, 0.05, 0.3, 0.05])
+	
+	b_load = Button(a_load, 'Load last save (if any)')
+	b_load.on_clicked(load_last_save_callback)
+	b_save = Button(a_save, "Save current state")
+	b_save.on_clicked(save_current_status_callback)
+
+
+
+
+
+	def update(val):
+		z = s_z.val
+		l1.set_data(vol[:,:,z])
+		l2.set_data(uncertainty_map[:,:,z])
+		l3.set_data(watershed[:,:,z])
+		l4.set_data(dif_watershed[:,:,z])
+		pylab.draw()
+	
+	s_z.on_changed(update)
+	
+	mouse_event = MouseEvent(-2,0,0,0)
+	
+	
+	def onpick(event):
+
+
+		xval = event.mouseevent.xdata
+		yval = event.mouseevent.ydata
+		zval = s_z.val
+
+		label = watershed[int(yval), int(xval), int(zval)]
+
+		if label < 2:
+			print "Border/Backdround selected. Try again."
+		
+		else:
+			if event.mouseevent.button != 1:
+				# right click to mark as correct
+				print "Correct segment: ", label, "@", int(yval), int(xval), int(zval)
+			
+				# TODO: KEEP CORRECT LABEL INFORMATION
+			
+			else:
+			
+				print "Opening GUI for segment: Label", label, "@ (" + str(int(yval)) + ", " + str( int(xval)) + ", " + str( int(zval)) +")"
+			
+			
+				segment_index = segment_collection.segment_label_to_list_index_dict[label]
+			
+				bounding_box = segment_collection.list_of_segments[segment_index].bounding_box
+				bounding_box.extend_by(10,vol.shape)
+			
+				cropped_nuclei_coords = filter(lambda nucl: nucl[0] > bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] > bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] > bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
+				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]
+			
+				cropped_vol = vol[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
+				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
+
+				list_of_mouse_events_in_cropped_ascidian = correct_segment_gui (cropped_vol, cropped_watershed, label, z_default = zval - bounding_box.zmin, nuclei_coords =  cropped_nuclei_coords)
+
+				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))
+
+			
+	
+	fig.canvas.mpl_connect('pick_event', onpick)
+	pylab.show()
+	
+	print colored("=============================== END USER FEEDBACK ==============================","yellow")
+
+	return list_of_all_mouse_events
+
+
+
+
+
+
+	
+
+def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback):
+
+	task_index = -1
+	
+	no_task = True
+	new_nucleus = Nucleus (-1,-1,-1,-1)
+
+	
+	# for list in list of lists
+	for segment_gui_feedback in all_user_feedback:
+		# for mouse event in list (a list for every segment gui)
+		box = segment_gui_feedback.bounding_box
+		
+		for user_mouse_click in segment_gui_feedback.list_of_cropped_ascidian_events:
+		
+			if user_mouse_click.task_index != task_index:
+			# if we found new task, initialize each task accordingly
+				task_index = user_mouse_click.task_index
+#				print "task_index", task_index
+#				print "task:", user_mouse_click.button_task
+				
+				# what is that new task?
+				if user_mouse_click.button_task == "NO_TASK_SELECTED":
+				 	no_task = True
+				 	continue
+				 
+				elif user_mouse_click.button_task == "ADD_SEEDS_TO_EXISTING_LABEL":
+			
+					no_task = False
+					# get the nucleus corresponding to the latest right mouse clicked segment				
+					nucleus_index_list = get_nucleus_index_of_intended_label(segment_gui_feedback,  task_index, label_map, segment_collection) 
+			
+					if len(nucleus_index_list) >0:					
+						nucleus_index = nucleus_index_list[-1]
+					else:
+						print  "Warning: Cannnot perform add seed to old label task. Bad or no label."
+
+	
+				elif user_mouse_click.button_task == "ADD_SEEDS_TO_NEW_LABEL":
+				
+					no_task = False
+					# make a new nucleus at the position of this seed:
+					nucleus_index = make_new_nucleus_and_return_index(user_mouse_click, box,  nuclei_collection, added_by_user=True)
+					
+				elif user_mouse_click.button_task == "MERGE_TWO_LABELS":
+			
+					no_task = False
+					# get nucleus index of each intended label (last 2 right clicks):
+					#print "task index", task_index
+					nucleus_index_list = get_nucleus_index_of_intended_label(segment_gui_feedback, task_index, label_map, segment_collection)
+					#print nucleus_index_list		
+	
+					if len(nucleus_index_list) >= 2:
+						nucleus_index1 = nucleus_index_list[-1]
+						nucleus_index2 = nucleus_index_list[-2]
+	
+						nucleus1 = nuclei_collection.nuclei_list[nucleus_index1]
+						nucleus2 = nuclei_collection.nuclei_list[nucleus_index2]
+					
+						nuclei_collection.merge_two_nuclei(nucleus1, nucleus2)
+					else:
+						print "Warning: Cannot perform merge labels task. Bad or no labels."
+					
+				else:
+				
+					print "GOT BAD BUTTON TASK"
+					pdb.set_trace()
+					
+			else:   # if not a new task
+				
+				# what task were were working on?
+				
+				if user_mouse_click.button_task == "NO_TASK_SELECTED":
+				 	continue   # skip to next
+				 
+				elif user_mouse_click.button_task == "ADD_SEEDS_TO_EXISTING_LABEL":
+					# these are both the same..
+					# because seeds to new nucleus already had a new nucleus created. so every after it, gets attached to that nucleus index
+				
+					# increment the index of the largest seed
+					try: 
+						seed_index = seed_collection.list_of_seeds[-1].index +1
+					except:
+						seed_index = 0
+					new_seed = make_new_seed(user_mouse_click, box, nucleus_index, seed_index )
+					seed_collection.add_seed(new_seed)
+
+				elif user_mouse_click.button_task == "ADD_SEEDS_TO_NEW_LABEL":
+					pass
+					
+				elif user_mouse_click.button_task == "MERGE_TWO_LABELS":
+				
+					pass
+					# TODO
+				else:
+				
+					print "========================================GOT BAD BUTTON TASK"
+					pdb.set_trace()
+					
+
+
+
+
+################################################################################
+########################               I/O              ########################
+################################################################################
+
+
+
+def save_seg_to_mat(watershed):
+
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+	io.savemat(file_name, {"ws": watershed})
+	print "....... Saved label mat at:", file_name
+
+
+
+def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map):
+	
+	print colored("Saving XML for nuclei...", "cyan")
+	save_xml_file_nuclei(nuclei_collection)
+
+	print colored("Saving XML for seeds...", "cyan")
+	save_xml_file_seeds(seed_collection)	
+
+	print colored("Saving XML for segment properties...", "cyan")
+	save_xml_file_segment_props(segment_collection)
+
+	print colored("Saving XML for seed-segment properties...", "cyan")
+	save_xml_file_seed_segment_props(seed_segment_collection)
+
+	print colored("Saving label map in MAT file...", "cyan")
+	save_seg_to_mat(label_map)
+
+	print colored("Saving segmentation slices as PNG files...", "cyan")
+	save_seg_slices(label_map)
+
+
+	print colored("Done saving!", "cyan")
+
+
+def load_nuclei_from_xml():
+
+
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+	print colored("Loading nuclei from "+ file_name, "cyan")
+	tree = ET.parse(file_name)
+
+	root = tree.getroot()
+
+	nuclei_collection = NucleusCollection([])
+
+	for child in root:
+		if child.tag == "nucleus":
+			x = int(child.attrib["x"])
+			y = int(child.attrib["y"])
+			z = int(child.attrib["z"])
+			index = int(child.attrib["index"])
+			added_by_user = False
+			if child.attrib["added_by_user"] == "True":
+				added_by_user = True
+			nucleus = nuclei_collection.add_nucleus(Nucleus(x,y,z,index,added_by_user))
+
+	union_find_field = tree.findall("union_find")
+	parents_string = union_find_field[0][0].text
+	parents_string = re.findall("(\d+)", parents_string)
+	parents = [int(val) for val in parents_string]
+	set_size_string = union_find_field[0][0].text
+	set_size_string = re.findall("(\d+)", set_size_string)
+	set_size = [int(val) for val in set_size_string]
+
+	nuclei_collection.union_find.parents = parents
+	nuclei_collection.union_find.set_size = set_size
+
+
+	return nuclei_collection
+
+
+def load_seeds_from_xml():
+
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+
+	print colored("Loading seeds from "+ file_name, "cyan")
+	tree = ET.parse(file_name)
+
+	root = tree.getroot()
+
+	seed_collection = SeedCollection([])
+
+	for child in root:
+		if child.tag == "seed":
+			x = int(child.attrib["x"])
+			y = int(child.attrib["y"])
+			z = int(child.attrib["z"])
+			index = int(child.attrib["index"])
+			nucleus_index = int(child.attrib["nucleus_index"])
+
+			nucleus = seed_collection.add_seed(Seed(x,y,z,index,nucleus_index))
+
+
+	return seed_collection
+
+
+
+def load_last_save():
+	
+	nuclei_collection = load_nuclei_from_xml()
+	seed_collection = load_seeds_from_xml()
+
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
+	watershed = io.loadmat(file_name)["ws"]
+
+	return nuclei_collection, seed_collection, watershed
+
+
+
+
+
+
+def read_program_parameters():
+
+
+	f = open(CONFIG_FILE_PATH)
+	line = f.readline()
+	
+	while (line != ""):
+		matches = re.match("(.*)=(.*)", line)
+		if matches:
+			key = matches.group(1).strip()
+			val = matches.group(2).strip()
+			DEFAULT_PARAMETER[key] = val
+		else:
+			print "ERROR reading config file"
+		line = f.readline()
+	
+	
+
+def save_xml_file_nuclei(nuclei_collection):
+
+	
+	root = ET.Element("nuclei_collection")
+	
+	for nucleus in nuclei_collection.nuclei_list:
+		attributes = {"x": str(nucleus.x), "y": str(nucleus.y), "z": str(nucleus.z), "index": str(nucleus.index), "added_by_user": str(nucleus.added_by_user)}
+		nucleusElem = ET.SubElement(root,"nucleus", attrib=attributes)
+
+	union_find = ET.SubElement(root,"union_find")	
+	union_find_parents = ET.SubElement(union_find, "parents")
+	union_find_parents.text = str(nuclei_collection.union_find.parents)
+	union_find_set_size = ET.SubElement(union_find, "set_size")
+	union_find_set_size.text = str(nuclei_collection.union_find.set_size)
+	
+	tree = ET.ElementTree(root)
+	
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+	tree.write(file_name)
+	print "....... Nuclei XML file at:", file_name
+	
+
+def save_xml_file_seeds(seed_collection):
+
+	
+	root = ET.Element("seed_collection")
+	
+	for seed in seed_collection.list_of_seeds:
+		attributes = {"x": str(seed.x), "y": str(seed.y), "z": str(seed.z), "index": str(seed.index), "nucleus_index": str(seed.nucleus_index)}
+		nucleusElem = ET.SubElement(root,"seed", attrib=attributes)
+
+	tree = ET.ElementTree(root)
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
+	tree.write(file_name)
+	print "....... Seeds XML file at:", file_name
+
+	
+def save_xml_file_segment_props(segment_collection):
+
+
+	root = ET.Element("segment_collection")
+	
+	info = ET.SubElement(root,"info")
+	parent_field = ET.SubElement(info,"name_of_parent")
+	parent_field.text = segment_collection.name_of_parent
+
+	list_of_segments_field = ET.SubElement(root, "list_of_segments")
+	
+	for segment in segment_collection.list_of_segments:
+		segment_field = ET.SubElement(list_of_segments_field, "segment")
+		segment_field.set("label", str(segment.label))
+
+		
+		nucleus_field = ET.SubElement(segment_field, "nucleus")
+		nucleus_field.set("x",str( segment.nucleus_list[0].x))
+		nucleus_field.set("y",str( segment.nucleus_list[0].y))
+		nucleus_field.set("z",str( segment.nucleus_list[0].z))
+		nucleus_field.set("index",str( segment.nucleus_list[0].index))
+		nucleus_field.set("added_by_user",str( segment.nucleus_list[0].added_by_user))
+
+		bounding_box_field = ET.SubElement(segment_field, "bounding_box")
+		bounding_box_field.set("xmin", str(segment.bounding_box.xmin))
+		bounding_box_field.set("xmax", str(segment.bounding_box.xmax))
+		bounding_box_field.set("ymin", str(segment.bounding_box.ymin))
+		bounding_box_field.set("ymax", str(segment.bounding_box.ymax))
+		bounding_box_field.set("zmin", str(segment.bounding_box.zmin))
+		bounding_box_field.set("zmax", str(segment.bounding_box.zmax))
+	
+
+		feature_dict = ET.SubElement(segment_field, "feature_dictionary")
+		
+		for key in segment.feature_dict.keys():
+			feature_field = ET.SubElement(feature_dict, "feature")
+			feature_field.set("name", key )
+			feature_field.text = str(segment.feature_dict[key])
+
+
+	tree = ET.ElementTree(root)
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "segment_props.xml"
+	tree.write(file_name)
+	print "....... Segment properties XML file at:", file_name
+
+
+def save_xml_file_seed_segment_props(seed_segment_collection):
+
+
+	root = ET.Element("segment_collection")
+	
+	info = ET.SubElement(root,"info")
+
+	list_of_seed_segments_field = ET.SubElement(root, "list_of_seed_segments")
+	
+	for seed_segment in seed_segment_collection.list_of_seed_segments:
+		seed_segment_field = ET.SubElement(list_of_seed_segments_field, "seed_segment")
+
+		
+		seed_field = ET.SubElement(seed_segment_field, "seed")
+		seed_field.set("x",str( seed_segment.seed.x))
+		seed_field.set("y",str( seed_segment.seed.y))
+		seed_field.set("z",str( seed_segment.seed.z))
+		seed_field.set("index",str( seed_segment.seed.index))
+		seed_field.set("nucleus_index",str( seed_segment.seed.nucleus_index))
+	
+		bounding_box_field = ET.SubElement(seed_segment_field, "bounding_box")
+		bounding_box_field.set("xmin", str(seed_segment.bounding_box.xmin))
+		bounding_box_field.set("xmax", str(seed_segment.bounding_box.xmax))
+		bounding_box_field.set("ymin", str(seed_segment.bounding_box.ymin))
+		bounding_box_field.set("ymax", str(seed_segment.bounding_box.ymax))
+		bounding_box_field.set("zmin", str(seed_segment.bounding_box.zmin))
+		bounding_box_field.set("zmax", str(seed_segment.bounding_box.zmax))
+
+		feature_dict = ET.SubElement(seed_segment_field, "feature_dictionary")
+		
+
+
+	tree = ET.ElementTree(root)
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "seed_segment_props.xml"
+	tree.write(file_name)
+	print "....... Seed segment properties XML file at:", file_name
+
+
+def save_seg_slices(seg):
+
+	for i in xrange (seg.shape[2]):
+		seg_slice = sp.misc.toimage(seg[:,:,i], high = seg[:,:,i].max(), low = seg[:,:,i].min(), mode = 'I')
+		seg_slice.save(DEFAULT_PARAMETER["save_location_prefix"] + "z_" + str(i) + "_seg.png")
+
+	file_name = DEFAULT_PARAMETER["save_location_prefix"] + "z_"+ "***" + "_seg.png"	
+	print "....... Saved label map PNG slices at:", DEFAULT_PARAMETER["save_location_prefix"]
+
+
+
+
+
+################################################################################
+########################               MAIN             ########################
+################################################################################
+
+
+
+
+def segment_border_to_nucleus(segment):
+
+
+	box_bounds = segment.bounding_box
+
+	nucleus = Voxel(segment.nucleus_list[0].x - box_bounds.xmin, segment.nucleus_list[0].y - box_bounds.ymin, segment.nucleus_list[0].z-box_bounds.zmin)
+
+	cropped_mask = np.zeros((box_bounds.xmax - box_bounds.xmin+1, box_bounds.ymax - box_bounds.ymin+1, box_bounds.zmax - box_bounds.zmin+1))
+
+	for voxel in segment.list_of_voxel_tuples:
+		cropped_mask[voxel[0] - box_bounds.xmin, voxel[1] - box_bounds.ymin, voxel[2] - box_bounds.zmin] = 1
+		
+	cropped_mask_eroded = ndimage.morphology.binary_erosion(cropped_mask )
+	cropped_mask_border = cropped_mask - cropped_mask_eroded
+
+	[x,y,z] = np.nonzero(cropped_mask_border)
+
+	dist_values = []
+
+	for i in xrange(len(x)):
+
+		dist_values.append( euclidian_distance( Voxel(x[i], y[i], z[i]), nucleus ))
+
+
+	return dist_values
+
+
+
+
+def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
+
+	# first run through nuclei and pick segment they are in
+
+	segment_collection.update_index_dict()
+
+	for nucleus in nuclei_collection.nuclei_list:
+
+		segment_label = label_map[nucleus.x, nucleus.y, nucleus.z]
+
+		# if it's not on the border, or no data (ground truth map)
+		if segment_label > 0:
+			# if the segment has been included in this segment collection
+			if segment_collection.segment_label_to_list_index_dict.has_key(segment_label):
+				segment_index = segment_collection.segment_label_to_list_index_dict[segment_label]
+
+				segment_collection.list_of_segments[segment_index].add_nucleus( nucleus)
+		
+
+	# if any segments are left without nuclei, pick the closest nucleus from outside the segment
+
+	for segment in segment_collection.list_of_segments:
+		try:
+			segment.nucleus_list[0]
+		except:
+			nucleus = nuclei_collection.find_closest_nucleus_to_segment(segment)
+			segment.add_nucleus(nucleus)
+			
+
+
+
+def segment_border_to_interior_intensity(vol, segment, label_map):
+
+
+	box_bounds = segment.bounding_box
+
+	box_bounds.extend_by (5, vol.shape)
+	
+	cropped_vol = vol[box_bounds.xmin:box_bounds.xmax, box_bounds.ymin:box_bounds.ymax, box_bounds.zmin:box_bounds.zmax]
+	
+	
+	#cropped_mask = np.zeros((box_bounds.xmax - box_bounds.xmin, box_bounds.ymax - box_bounds.ymin, box_bounds.zmax - box_bounds.zmin))
+	
+	
+	cropped_mask = label_map[box_bounds.xmin:box_bounds.xmax, box_bounds.ymin:box_bounds.ymax, box_bounds.zmin:box_bounds.zmax] == segment.label
+	
+	#for voxel in segment.list_of_voxel_tuples:
+	#	cropped_mask[voxel[0] - box_bounds.xmin-1, voxel[1] - box_bounds.ymin-1, voxel[2] - box_bounds.zmin-1] = 1
+
+	cropped_mask_dilated = ndimage.morphology.binary_dilation(cropped_mask )
+	cropped_mask_eroded = ndimage.morphology.binary_erosion(cropped_mask )
+	
+	if cropped_mask_eroded.sum() < 10:
+		cropped_mask_eroded = cropped_mask
+	
+	cropped_mask_border = cropped_mask_dilated - cropped_mask_eroded
+
+	interior_intensity = avg_intensity(cropped_vol,cropped_mask_eroded)	
+	border_intensity = avg_intensity(cropped_vol,cropped_mask_border)
+	
+	if interior_intensity < 0.000001:
+		interior_intensity = 0.001
+
+
+	return border_intensity / interior_intensity	
+
+
+	
+
+
+
+
+def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
+
+		#X, Y = np.meshgrid(range(vol.shape[0]), range(vol.shape[1]))
+
+
+	list_of_segments  = []
+
+	total = len(set_of_labels)
+	counter = 0
+	
+
+	print "Making segment collection of", len(set_of_labels), "segments from", name_of_parent ,"..."
+
+	segment_collection = SegmentCollection(set_of_labels, label_map, name_of_parent)
+
+	print "Getting properties for", len(set_of_labels), "segments from", name_of_parent ,"..."
+
+	t1 = time.time()
+	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
+
+	for segment in segment_collection.list_of_segments:
+		if int(DEFAULT_PARAMETER["use_size"]):
+			segment.add_feature("size", len(segment.list_of_voxel_tuples))
+		
+		if int(DEFAULT_PARAMETER["use_border_intensity"]):
+			segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
+
+		if int(DEFAULT_PARAMETER["use_border_distance"]):
+			dist_vector = segment_border_to_nucleus(segment)
+			segment.add_feature("border_to_nucleus_distance",dist_vector)
+		
+			dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
+			# if the segment is tiny:
+			if dist_hist[0].sum() == 0:
+				dist_hist = dist_hist[0]
+				dist_hist[0] = 1.0
+			else:
+				dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
+			segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
+			segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
+			segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
+		
+		counter += 1
+		print_progress(counter, total)
+
+		#print np.mean(segment.feature_dict["border_to_nucleus_distance"]), segment.nucleus.index
+	t2 = time.time()
+	print ".......", t2-t1, "sec         "
+
+	return segment_collection
+
+
+
+def prepare_test_data(collection_of_segments):
+
+		
+	print "Preparing test data...           "
+
+	test_vectors = []
+
+	for segment in collection_of_segments.list_of_segments:
+		vector = []
+		if int(DEFAULT_PARAMETER["use_border_distance"]):
+			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
+		if int(DEFAULT_PARAMETER["use_size"]):
+			vector.append (segment.feature_dict["size"])
+		if int(DEFAULT_PARAMETER["use_border_distance"]):
+			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
+		test_vectors.append(vector)
+		
+	test_vectors = normalize_test_data(test_vectors)	
+		
+	
+	return test_vectors
+
+def normalize_test_data( test_vectors):
+
+	per_dim =  zip(*test_vectors)
+
+	for i in xrange(len(per_dim)):
+		per_dim[i] -= _mean_per_dim[i]
+		per_dim[i] /= _std_per_dim[i]
+		
+
+	test_vectors = zip(*per_dim)
+
+	for i in xrange(len(test_vectors)):
+		test_vectors[i] = list(test_vectors[i])
+	
+	
+	return test_vectors
+		
+
+
+def normalize_train_data( training_vectors):
+
+	per_dim = zip(*training_vectors)
+
+	for i in xrange(len(per_dim)):
+		
+		m = np.float64(sum (per_dim[i]) / float (len(per_dim[i])))
+		s = np.std(per_dim[i])
+		per_dim[i] -= m
+		per_dim[i] /= s
+		
+		_mean_per_dim.append(m)
+		_std_per_dim.append(s)
+	
+	training_vectors = zip(*per_dim)
+	for i in xrange(len(training_vectors)):
+		training_vectors[i] = list(training_vectors[i])
+
+	return training_vectors
+		
+
+def prepare_training_data(collection_of_positive_segments, collection_of_negative_segments):
+
+	print "Preparing training data..."
+
+	training_vectors = []
+	training_labels = []
+
+
+	for segment in collection_of_positive_segments.list_of_segments:
+		vector = []
+		if int(DEFAULT_PARAMETER["use_border_distance"]):
+			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
+		if int(DEFAULT_PARAMETER["use_size"]):
+			vector.append (segment.feature_dict["size"])
+		if int(DEFAULT_PARAMETER["use_border_intensity"]):
+			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
+
+		training_labels.append("Correct")
+		training_vectors.append(vector)
+		
+		
+	for segment in collection_of_negative_segments.list_of_segments:
+		vector = []
+		if int(DEFAULT_PARAMETER["use_border_distance"]):
+			vector.extend (segment.feature_dict["border_to_nucleus_distance_hist"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_mean"])
+			vector.append (segment.feature_dict["border_to_nucleus_distance_std"])
+		if int(DEFAULT_PARAMETER["use_size"]):
+			vector.append (segment.feature_dict["size"])
+		if int(DEFAULT_PARAMETER["use_border_intensity"]):
+			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
+
+		training_labels.append("Incorrect")
+		training_vectors.append(vector)
+		
+	
+	training_vectors = normalize_train_data(training_vectors)
+	
+		
+	data = VectorDataSet(training_vectors,L=training_labels)
+		
+
+	return data
+	
+def prepare_SVM(data):
+
+	data.attachKernel("gaussian")
+	classif = SVM(optimizer="libsvm")
+	
+	classif.train(data)
+
+
+	return classif
+
+
+
+def save_training_data_in_mat(col_pos, col_neg):
+
+	if int(DEFAULT_PARAMETER["use_border_intensity"]):
+		border_intensity_pos = col_pos.get_feature_values_in_list("border_to_interior_intensity_ratio")
+		border_intensity_neg = col_neg.get_feature_values_in_list("border_to_interior_intensity_ratio")
+
+	if int(DEFAULT_PARAMETER["use_border_distance"]):
+		border_dist_mean_pos = col_pos.get_feature_values_in_list("border_to_nucleus_distance_mean")
+		border_dist_mean_neg = col_neg.get_feature_values_in_list("border_to_nucleus_distance_mean")
+
+		border_dist_std_pos = col_pos.get_feature_values_in_list("border_to_nucleus_distance_std")
+		border_dist_std_neg = col_neg.get_feature_values_in_list("border_to_nucleus_distance_std")
+
+		border_dist_hist_pos = col_pos.get_feature_values_in_list("border_to_nucleus_distance_hist")
+		border_dist_hist_neg = col_neg.get_feature_values_in_list("border_to_nucleus_distance_hist")
+
+	if int(DEFAULT_PARAMETER["use_size"]):
+		size_pos = col_pos.get_feature_values_in_list("size")
+		size_neg = col_neg.get_feature_values_in_list("size")
+
+
+#	plot_features(border_intensity_pos, size_pos, border_intensity_neg, size_neg, "Border To Interior Intensity", "Size")
+#	plot_features(border_dist_mean_pos, border_dist_std_pos, border_dist_mean_neg, border_dist_std_neg, "Border Distance To Nucleus, Mean", "Border Distance To Nucleus, StDev")
+
+	pdb.set_trace()
+
+	io.savemat("training.mat", {"border_intensity_pos": border_intensity_pos,"border_intensity_neg":border_intensity_neg,"border_dist_mean_pos":border_dist_mean_pos,"border_dist_mean_neg":border_dist_mean_neg,"border_dist_std_pos":border_dist_std_pos,"border_dist_std_neg":border_dist_std_neg,"size_pos":size_pos,"size_neg":size_neg})
+
+
+
+def plot_features(vec1pos, vec2pos, vec1neg, vec2neg, name1, name2):
+
+	pylab.plot(vec1pos, vec2pos, "*b", label = "Correct Segments")
+	pylab.hold(True)
+	pylab.plot(vec1neg, vec2neg, "or", label ="Incorrect Segments")
+	pylab.xlabel(name1)
+	pylab.ylabel(name2)
+	pylab.legend(numpoints=1)
+	pylab.show()
+
+
+
+
+def display_segment_to_correct(vol, label_map, segment):
+
+
+	#x,y,z = zip(*segment.list_of_voxel_tuples)	
+
+	zsum = reduce(lambda a,b: a[2] + b[2], self.list_of_voxel_tuples)		
+
+	box_bounds = segment.bounding_box
+
+	z_mean = int(zsum / len(segment.list_of_voxel_tuples))
+	
+	
+	pattern = np.zeros( (box_bounds.xmax - box_bounds.xmin, box_bounds.ymax - box_bounds.ymin, box_bounds.zmax - box_bounds.zmin))	
+	pattern[::2,::2,:]  = 1
+	pattern[1::2, 1::2, :] = 1
+	
+	cropped_label_map = label_map[ box_bounds.xmin: box_bounds.xmax, box_bounds.ymin: box_bounds.ymax, box_bounds.zmin:box_bounds.zmax] 
+	cropped_label_map_copy = copy.deepcopy(cropped_label_map)
+
+	cropped_label_map = np.double(cropped_label_map == segment.label) * pattern * (segment.label+50) +  np.double(cropped_label_map != segment.label) * cropped_label_map
+
+	label_map[ box_bounds.xmin: box_bounds.xmax, box_bounds.ymin: box_bounds.ymax, box_bounds.zmin:box_bounds.zmax] = cropped_label_map
+
+	split_mouse_event, merge_mouse_event1, merge_mouse_event2 = display_volume_two_get_clicks(vol, label_map, z_default = z_mean)
+
+	label_map[ box_bounds.xmin: box_bounds.xmax, box_bounds.ymin: box_bounds.ymax, box_bounds.zmin:box_bounds.zmax] = cropped_label_map_copy
+	return split_mouse_event, merge_mouse_event1, merge_mouse_event2
+
+
+
+def get_segment_uncertainty_map(watershed, collection_of_segments, classified_segments):
+
+	# classified_segments = [ (label, class_prediction, discriminant_value ) ]
+
+	uncertainty_map = np.zeros(watershed.shape)
+	
+	for i in xrange(len(classified_segments[0])):
+	
+		for voxel in collection_of_segments.list_of_segments[i].list_of_voxel_tuples:
+			uncertainty_map[voxel] = classified_segments[2][i]
+
+
+	minval = uncertainty_map.min()
+	uncertainty_map -= minval
+	uncertainty_map = (uncertainty_map != abs(minval)) * (uncertainty_map.max() - uncertainty_map)
+	
+#	uncertainty_map = (uncertainty_map == 0) * np.min(uncertainty_map) + (uncertainty_map !=0) * uncertainty_map
+#	uncertainty_map += np.min(uncertainty_map)
+#	uncertainty_map /= float(np.max(uncertainty_map))
+#	uncertainty_map *= 255
+	
+	
+
+	return uncertainty_map
+
+
+def get_user_corrections( vol, label_map, collection_of_segments, classification, set_of_labels ):
+
+	mouse_events = []
+
+	counter = 1
+	
+	total = len(np.nonzero(classification))
+	collection_of_segments.update_index_dict()
+	
+	for index in len(np.nonzero(classification)):
+	
+		print "------------- Segment", counter, "of", total, "---------------"
+	
+		label = set_of_labels[index]
+		list_index = collection_of_segments.segment_label_to_list_index_dict[label]
+		
+		(s, m1, m2) = display_segment_to_correct(vol, label_map, collection_of_segments.list_of_segments[list_index])
+		
+		mouse_events.append((collection_of_segments.list_of_segments[list_index].label, (s,m1,m2)))
+		counter+=1
+		
+	return mouse_events
+	
+	
+def classify_segments(classifier, data_vector):
+	
+
+	class_prediction = []
+	discriminant_value = []
+	
+	call_silent_process(data_vector.attachKernel,"gaussian")
+	
+	print "Classifying new data...               "
+	for i in xrange (len(data_vector)):
+		prediction = call_silent_process(classifier.classify,data_vector,i)
+		class_prediction.append(prediction[0])
+		discriminant_value.append(prediction[1])
+		#if class_prediction[-1] == 1:
+		#	print class_prediction[i]	,": ", discriminant_value[-1]	
+	
+	#number_bad_segments = np.sum(class_prediction>0)
+	#print "... Number bad segments:", number_bad_segments
+		
+	return (class_prediction, discriminant_value)
+
+
+
+def learn_classifier():
+
+
+	# Reading trainign volume
+	vol = load_from_mat(DEFAULT_PARAMETER["training_vol_mat_path"], DEFAULT_PARAMETER["training_vol_mat_var"])
+	
+	# Reading training nuclei
+	nuclei_collection = NucleusCollection(DEFAULT_PARAMETER["training_vol_nuclei_mat_path"], DEFAULT_PARAMETER["training_vol_nuclei_mat_var"])
+	
+
+	#### positive segment collection
+	
+	ground_truth = load_from_mat(DEFAULT_PARAMETER["training_positive_seg_mat_path"], DEFAULT_PARAMETER["training_positive_seg_mat_var"])
+	
+
+	list_of_labels_in_gt = load_from_mat(DEFAULT_PARAMETER["training_positive_labels_mat_path"], DEFAULT_PARAMETER["training_positive_labels_mat_var"])
+	# converting to right format
+	
+	list_of_labels_in_gt = [elem[0] for elem in list_of_labels_in_gt]
+	
+
+	np.random.seed(1234)
+	np.random.shuffle(list_of_labels_in_gt)
+
+	set_of_labels_for_positive_examples = set(list_of_labels_in_gt[:30])
+	collection_of_positive_segments = get_segments_with_features(vol, ground_truth, set_of_labels_for_positive_examples, "ground_truth", nuclei_collection)
+
+	
+
+#	class_prediction = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#	list_of_labels = [2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287]
+
+
+	del ground_truth
+	
+	#### negative segment collection
+
+	bad_watershed = load_from_mat(DEFAULT_PARAMETER["training_negative_seg_mat_path"], DEFAULT_PARAMETER["training_negative_seg_mat_var"])
+	set_of_labels_for_negative_examples = load_from_mat(DEFAULT_PARAMETER["training_negative_labels_mat_path"], DEFAULT_PARAMETER["training_negative_labels_mat_var"])
+	set_of_labels_for_negative_examples = [elem[0] for elem in set_of_labels_for_negative_examples]
+	set_of_labels_for_negative_examples = set(np.unique(set_of_labels_for_negative_examples))
+	
+
+	collection_of_negative_segments = get_segments_with_features(vol, bad_watershed, set_of_labels_for_negative_examples, "bad_watershed", nuclei_collection)
+
+	del bad_watershed
+
+	#save_training_data_in_mat(collection_of_positive_segments, collection_of_negative_segments)
+
+	data = prepare_training_data(collection_of_positive_segments, collection_of_negative_segments)
+
+
+	print "Training classifier..."
+
+	classifier = call_silent_process(prepare_SVM, data)
+
+	return classifier
+
+
+
+def make_new_seed(user_mouse_click, box, nucleus_index, seed_index):
+
+
+	asc_coords = user_mouse_click.asc_coordinates
+	seed = Seed(asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin, nucleus_index, seed_index)
+	
+	return seed
+	
+def make_new_nucleus_and_return_index(user_mouse_click,box, nuclei_collection, added_by_user = False):
+
+
+	asc_coords = user_mouse_click.asc_coordinates
+	
+	nucleus_index = nuclei_collection.nuclei_list[-1].index +1
+	new_nucleus = Nucleus( asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin,  nucleus_index, added_by_user)
+	
+	nuclei_collection.add_nucleus (new_nucleus)
+	
+	
+def get_nucleus_index_of_intended_label(segment_gui_feedback, task_of_interest, label_map, segment_collection):
+	# if there was a right click, get nucleus it was meant to pick up
+
+
+	nucleus_index = []
+	counter = 0
+
+	# find where the task of interest clicks begin:
+	while segment_gui_feedback.list_of_cropped_ascidian_events[counter].task_index != task_of_interest:
+		counter += 1
+	task_index = segment_gui_feedback.list_of_cropped_ascidian_events[counter].task_index
+	
+
+	box = segment_gui_feedback.bounding_box
+	while task_index == task_of_interest and counter < len(segment_gui_feedback.list_of_cropped_ascidian_events):
+	
+		user_mouse_click = segment_gui_feedback.list_of_cropped_ascidian_events [counter]
+		
+		# if right click - if this click was intended to pick up a segment label
+		if segment_gui_feedback.list_of_cropped_ascidian_events[counter].right_click:
+			asc_coords = user_mouse_click.asc_coordinates
+
+			segment_label =  label_map[ box.xmin + asc_coords.xval, box.ymin + asc_coords.yval, box.zmin + asc_coords.zval  ]
+		
+			# get the nucleus associated with this segment.
+			try:
+				segment_list_index = segment_collection.segment_label_to_list_index_dict[segment_label]
+				segment = segment_collection.list_of_segments[segment_list_index]
+				nucleus_index.append(segment.nucleus_list[0].index)
+
+			except:
+				print "Warning: Segment with label", segment_label,"does not exist. Perhaps background/border."
+				
+			
+			
+		counter += 1
+		try:
+			task_index = segment_gui_feedback.list_of_cropped_ascidian_events[counter].task_index
+		except:
+			break
+		
+
+	return nucleus_index
+	
+					
+	
+def make_list_of_input_points(nuclei_collection, seed_collection = None):
+
+	len_nuclei = len(nuclei_collection.nuclei_list)
+	try:
+		len_seeds = len(seed_collection.list_of_seeds)
+	except:
+		len_seeds = 0
+	init_pts = np.zeros((3, len_nuclei + len_seeds))
+	
+	counter = 0
+	for nucleus in nuclei_collection.nuclei_list:
+		init_pts[:,counter] = (nucleus.x, nucleus.y, nucleus.z)
+		counter += 1
+		
+	if seed_collection:
+		for seed in seed_collection.list_of_seeds:
+			init_pts[:,counter] = (seed.x, seed.y, seed.z)
+			counter += 1
+		
+	return init_pts
+		
+	
+	
+def run_watershed(vol, init_pts):
+
+	
+	print "\nRunning seeded watershed....\n"
+	has_bg = int(DEFAULT_PARAMETER["has_bg"])
+	io.savemat("temp/watershed_input.mat", {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
+	import subprocess
+	import os
+	t = time.time()
+	
+	os.system( "matlab -nodesktop -nosplash -r \"cd utils; run_seeded_watershed('../temp/watershed_input.mat', '../temp/watershed_result.mat')\"")
+	os.system("stty echo")
+
+		
+	print ".......", time.time() - t, "sec"
+	
+	ws = io.loadmat("temp/watershed_result.mat")["ws"]
+	return ws
+
+
+def show_new_user_points(original_init_pts, init_pts):
+
+	from mpl_toolkits.mplot3d import Axes3D
+		
+	fig = pylab.figure(figsize=(10,3))
+	ax = fig.add_subplot( 111, projection='3d')
+	
+	x_vals = [ original_init_pts [0, i] for i in xrange (original_init_pts.shape[1])]
+	y_vals = [ original_init_pts [1, i] for i in xrange (original_init_pts.shape[1])]
+	z_vals = [ original_init_pts [2, i] for i in xrange (original_init_pts.shape[1])]
+	colors = [ 'r' for i in xrange (original_init_pts.shape[1])]
+	#markers = [ 'o' for i in xrange (original_init_pts.shape[1]) ]
+	
+	x_vals.extend( [ init_pts [0, i] for i in xrange (original_init_pts.shape[1], init_pts.shape[1])] )
+	y_vals.extend( [ init_pts [1, i] for i in xrange (original_init_pts.shape[1], init_pts.shape[1])] )
+	z_vals.extend( [ init_pts [2, i] for i in xrange (original_init_pts.shape[1], init_pts.shape[1])] )
+	colors.extend( [ 'b' for i in xrange (original_init_pts.shape[1], init_pts.shape[1])] )
+	#markers.extend( [ 'o' for i in xrange (original_init_pts.shape[1], init_pts.shape[1])]  )
+	
+	ax.scatter(x_vals, y_vals, z_vals, s=20, c = colors)
+	ax.set_xlabel('X axis')
+	ax.set_ylabel('Y axis')
+	ax.set_zlabel('Z axis')
+	ax.pbaspect = [1., 1., 0.3]
+	#ax.title("OLD SEEDS (red circle) and NEW SEEDS (blue triangle)")
+	
+	pylab.show()
+	pylab.close()
+
+
+
+def recolor_label_map_correctly( label_map, nuclei_collection, seed_collection, segment_collection, seed_segment_collection):
+# TODO: only do these changes locally, dont do operations on the whole matrix
+
+	set_of_labels_for_which_to_remove_border = set()
+
+	# check if already colored correctly (in case user said just merge 2 nuclei, and watershed was not rerun)
+
+	# color all the seed segment by their head nucleus:
+	for seed in seed_collection.list_of_seeds:
+	
+		# curent label in the label map (comes from watershed)
+		current_label = label_map[seed.x, seed.y, seed.z]
+
+		if current_label >1:
+
+			# get the nucleus index this seed is associated with (if any)
+			index_of_parent_nucleus = seed.nucleus_index
+			
+			# get the nucleus object
+			parent_nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[index_of_parent_nucleus]
+			parent_nucleus = nuclei_collection.nuclei_list[parent_nucleus_list_pos]
+			# get the head nucleus of the set this nucleus is (in case it was merged with soemthing else)
+			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)
+		
+			# color it by the current color of the head nucleus:
+			new_label = label_map[head_nucleus.x, head_nucleus.y, head_nucleus.z]
+			
+			if current_label != new_label:
+				#print current_label ," => ", new_label
+				label_map = (label_map == current_label) * new_label + (label_map != current_label) * label_map
+
+
+				# take the box around this seed segment and remove boundary if necessary
+				try:
+					seed_segment_list_index = seed_segment_collection.seed_index_to_seed_segment_list_index_dict[seed.index]
+				except:
+					pdb.set_trace()
+				seed_segment = seed_segment_collection.list_of_seed_segments[seed_segment_list_index]
+				bb = seed_segment.bounding_box
+				remove_boundary(label_map[bb.xmin:bb.xmax, bb.ymin:bb.ymax, bb.zmin:bb.zmax])
+
+			
+
+	# check if already colored correctly (in case user said just merge 2 nuclei, and watershed was not rerun)
+
+	# color every nucleus segment to the color of the head nucleus.
+	for nucleus in nuclei_collection.nuclei_list:
+		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)
+
+		if head_nucleus.index != nucleus.index:
+
+			current_label = label_map[nucleus.x, nucleus.y, nucleus.z]
+			new_label = label_map[head_nucleus.x, head_nucleus.y, head_nucleus.z]
+
+			if current_label != new_label:
+
+				# got the label that this index should have
+				# TODO: dont iterate the whole matrix, only redo the the pixels in that segment
+				label_map = (label_map == current_label) * new_label + (label_map != current_label) * label_map
+
+				# remove boundary, if any of the nuclei to be merged exist as segments
+				try:
+					segment_index_1 = segment_collection.segment_label_to_list_index_dict[current_label]
+					segment1 = segment_collection.list_of_segments[segment_index_1]
+					bb1 = segment1.bounding_box
+					remove_boundary(label_map[bb1.xmin:bb1.xmax, bb1.ymin:bb1.ymax, bb1.zmin:bb1.zmax])
+				except:
+					try:
+						segment_index_2 = segment_collection.segment_label_to_list_index_dict[new_label]
+						segment2 = segment_collection.list_of_segments[segment_index_2]			
+						bb2 = segment2.bounding_box
+						remove_boundary(label_map[bb2.xmin:bb2.xmax, bb2.ymin:bb2.ymax, bb2.zmin:bb2.zmax])
+					except:
+						pass
+			
+	return label_map
+
+
+
+
+def remove_boundary(label_map):
+
+
+	# remove boundary:
+	# TODO make this way faster
+
+	if label_map.size >0:
+	
+		t1 = time.time()
+
+		it = np.nditer(label_map, flags=['multi_index'])
+		while not it.finished:
+			# if boundary_pixel
+			if it[0] == 0:
+				coords = it.multi_index
+				xmin = max(coords[0]-2, coords[0]-1,0)
+				xmax = min(coords[0]+2, coords[0]+1, label_map.shape[0])
+				ymin = max(coords[1]-2, coords[1]-1,0)
+				ymax = min(coords[1]+2, coords[1]+1, label_map.shape[1])
+				zmin = max(coords[2]-2, coords[2]-1,0)
+				zmax = min(coords[2]+2, coords[2]+1, label_map.shape[2])
+				box = label_map[xmin:xmax+1, ymin:ymax+1, zmin:zmax+1]
+				unique_vals = np.unique(box)
+					
+				if len(unique_vals) == 2:  # 0, and something else
+					label_map[coords] = unique_vals[1]
+					#print "found 0, replaced with", new_val
+
+			it.iternext()
+		t2 = time.time()
+		#print "time to remove border:", t2-t1
+
+	
+
+
+
+#def recolor_label_map_correctly ( label_map, nuclei_collection, seed_collection, segment_collection, seed_segment_collection ):
+
+
+#	######### COLOR SEED BY NUCLEUS COLOR #########
+
+#	# for each seed segment, color the label map with the index of it parent nucleus.
+#	# if the parent nucleus is part of a union, make sure to get the index of the union head.
+
+#	# remove boundary for seeds which will end up having hte same label
+
+#	for i in xrange(len(seed_segment_collection.list_of_seed_segments)-1):
+#		seed_segment1 = seed_segment_collection.list_of_seed_segments[i]
+#		nucleus_index1 = seed_segment1.seed.nucleus_index
+
+#		for j in xrange(i+1, len(seed_segment_collection.list_of_seed_segments)):
+
+#			seed_segment2 =  seed_segment_collection.list_of_seed_segments[j]
+#			nucleus_index2 = seed_segment2.seed.nucleus_index
+
+#			if nucleus_index1 == nucleus_index2:
+#				remove_boundary(label_map, seed_segment1, seed_segment2)
+
+##	# remove the boundary for seeds that are neighbor to the nucleus segment they blong to
+
+#	for i in xrange(len(seed_segment_collection.list_of_seed_segments)):
+#		seed_segment = seed_segment_collection.list_of_seed_segments[i]
+#		parent_nucleus_index = seed_segment.seed.nucleus_index
+#		parent_nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[parent_nucleus_index]
+#		parent_nucleus = nuclei_collection.nuclei_list[parent_nucleus_list_pos]
+#		try:		
+#			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)
+#		except:
+#			pdb.set_trace()
+#		segment_label = label_map[head_nucleus.x, head_nucleus.y, head_nucleus.z]
+#		try:
+#			segment_list_index = segment_collection.segment_label_to_list_index_dict[segment_label]
+#		except:
+#			pdb.set_trace()
+#		segment = segment_collection.list_of_segments[segment_list_index]
+#		remove_boundary (label_map, seed_segment, segment)
+
+
+
+#	for seed in seed_collection.list_of_seeds:
+
+#		# curent label in the label map (comes from watershed)
+#		current_label = label_map[seed.x, seed.y, seed.z]
+
+#		if current_label >1:
+
+#			# get the nucleus index this seed is associated with
+#			index_of_parent_nucleus = seed.nucleus_index
+#			# get the nucleus object
+#			parent_nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[index_of_parent_nucleus]
+#			parent_nucleus = nuclei_collection.nuclei_list[parent_nucleus_list_pos]
+#			# get the head nucleus of the set this nucleus is (in case it was merged with soemthing else)
+#			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)
+#		
+#			# color it by the current color of the head nucleus:
+#			new_label = label_map[head_nucleus.x, head_nucleus.y, head_nucleus.z]
+#			print current_label ," => ", new_label
+
+#	#		nucleus_list_index = nuclei_collection.nucleus_index_to_list_pos[index_of_parent_nucleus]
+#	#		nucleus = nuclei_collection.nuclei_list[nucleus_list_index]
+#	#		label_of_segment_at_this_nucleus = label_map[nucleus.x, nucleus.y, nucleus.z]
+#	#		new_label = label_of_segment_at_this_nucleus
+#		
+#			# got the label that this index should have
+#			# TODO: dont iterate the whole matrix, only redo the the pixels in that segment
+#			label_map = (label_map == current_label) * new_label + (label_map != current_label) * label_map
+
+
+
+#	######## COLOR NUCLEUS BY HEAD NUCLEUS COLOR ########
+
+#	# check if we have two segments which have two different head_nuclei
+#	# if so, make the minimum bounding box around them, and if it is nonzero, dilate both to color the boundary
+
+#	for i in xrange(len(nuclei_collection.nuclei_list)-1):
+#		nucleus1 = nuclei_collection.nuclei_list[i]
+#		# for every nucleus, check what nucleus set it belongs to
+#		head_nucleus1 = nuclei_collection.get_head_nucleus_in_its_set(nucleus1)
+#		segment_label1 = label_map[nucleus1.x, nucleus1.y, nucleus1.z] 
+
+#		for j in xrange(i+1, len(nuclei_collection.nuclei_list)):
+#			nucleus2 = nuclei_collection.nuclei_list[j]
+#			head_nucleus2 = nuclei_collection.get_head_nucleus_in_its_set(nucleus2)
+#			if head_nucleus1.index == head_nucleus2.index:
+#				# check if they weren't colored already from past iteration
+#				segment_label2 = label_map[nucleus2.x, nucleus2.y, nucleus2.z]		
+
+#				if segment_label1 != segment_label2:
+#					# try to get the segment from the segment collection.
+#					# if the segment doesnt exist in the collection, it's probably because it was previously merged
+#					# with its head nucleus which is a segment in the collection for sure.
+#					try:
+#						segment_list_index1 = segment_collection.segment_label_to_list_index_dict[segment_label1]
+#					except:
+#						segment_label1 = label_map[head_nucleus1.x, head_nucleus1.y, head_nucleus1.z] 
+#						segment_list_index1 = segment_collection.segment_label_to_list_index_dict[segment_label1]
+
+#					try:
+#						segment_list_index2 = segment_collection.segment_label_to_list_index_dict[segment_label2]
+#					except:
+#						segment_label2 = label_map[head_nucleus2.x, head_nucleus2.y, head_nucleus2.z] 
+#						segment_list_index2 = segment_collection.segment_label_to_list_index_dict[segment_label2]
+
+#					segment1 = segment_collection.list_of_segments[segment_list_index1]
+#					segment2 = segment_collection.list_of_segments[segment_list_index2]	
+
+#					remove_boundary(label_map, segment1, segment2)
+
+
+
+#	# for every nucleus, check if it is part of a union.
+#	# if so, recolor that segment with the color of the union head.
+
+
+#	for nucleus in nuclei_collection.nuclei_list:
+#		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)
+#		if head_nucleus.index != nucleus.index:
+#	
+#			current_label = label_map[nucleus.x, nucleus.y, nucleus.z]
+#			new_label = label_map[head_nucleus.x, head_nucleus.y, head_nucleus.z]
+
+#			# got the label that this index should have
+#			# TODO: dont iterate the whole matrix, only redo the the pixels in that segment
+#			label_map = (label_map == current_label) * new_label + (label_map != current_label) * label_map
+
+
+
+#		
+#	return label_map
+
+
+
+#def remove_boundary(label_map, segment1, segment2):
+
+#	# make minimum bounding box around hte border, and dilate each side to cover the boundary
+
+#	xmin = max (segment1.bounding_box.xmin, segment2.bounding_box.xmin)
+#	ymin = max (segment1.bounding_box.ymin, segment2.bounding_box.ymin)
+#	zmin = max (segment1.bounding_box.zmin, segment2.bounding_box.zmin)
+
+#	xmax = min (segment1.bounding_box.xmax, segment2.bounding_box.xmax)
+#	ymax = min (segment1.bounding_box.ymax, segment2.bounding_box.ymax)
+#	zmax = min (segment1.bounding_box.zmax, segment2.bounding_box.zmax)
+
+
+#	# get segment label (either nucleus or seed):
+#	try:
+#		segment_label1 = segment1.label
+#	except:
+#		segment_label1 = label_map[segment1.seed.x,segment1.seed.y, segment1.seed.z ]
+
+#	try:
+#		segment_label2 = segment2.label	
+#	except:
+#		segment_label2 = label_map[segment2.seed.x,segment2.seed.y, segment2.seed.z ]
+
+#	cropped_label_map = label_map[xmin:xmax, ymin:ymax, zmin:zmax]
+#	mask1 = cropped_label_map == segment_label1
+#	mask2 = cropped_label_map == segment_label2
+#	mask1 =  ndimage.morphology.binary_dilation(mask1 )
+#	mask1 =  ndimage.morphology.binary_dilation(mask1 )
+#	mask1 =  ndimage.morphology.binary_dilation(mask1 )
+#	mask2 =  ndimage.morphology.binary_dilation(mask2 )
+#	mask2 =  ndimage.morphology.binary_dilation(mask2 )
+#	mask2 =  ndimage.morphology.binary_dilation(mask2 )
+#	mask12 = mask1 * mask2
+#	if (mask12.sum() > 0):
+#		cropped_label_map = cropped_label_map * (1-mask12) + mask12 * segment_label1
+#		label_map[xmin:xmax, ymin:ymax, zmin:zmax] = cropped_label_map
+#	
+
+
+	
+
+
+	
+def get_cellness_for_specific_labels(uncertainty_map, segment_collection):
+	
+	labels =[137.0, 180.0, 282.0, 112.0, 281.0, 170.0, 279.0, 275.0, 136.0, 246.0, 119.0, 273.0, 290.0, 152.0, 40.0, 80.0, 91.0, 12.0, 240.0, 156.0, 287.0, 120.0, 139.0, 158.0, 284.0, 155.0, 182.0, 118.0, 261.0, 244.0, 286.0, 292.0, 169.0, 167.0, 135.0, 95.0, 126.0, 127.0, 124.0, 123.0, 125.0, 109.0, 242.0, 233.0, 145.0, 277.0, 268.0, 165.0, 189.0, 154.0]
+
+	f_meas = [0.74247945173495011, 0.74594890137199088, 0.90343904062635039, 0.48555565894183028, 0.88846572655285871, 0.87073551115488934, 0.87956315693728826, 0.90229298241629086, 0.8611897266946037, 0.91636015611815946, 0.81496061759522676, 0.90549732946950956, 0.91349230876978349, 0.77653479862343244, 0.70464012861413494, 0.88650874659949352, 0.58081174934154134, 0.84046257327520801, 0.926278247329826, 0.8276489468492505, 0.89664466362299877, 0.78090300918904865, 0.83505784759760215, 0.86577054945458121, 0.8194330568081547, 0.89772757174374418, 0.85617735237927095, 0.75222859228031447, 0.8444957510153086, 0.6163141872407446, 0.90083887247643679, 0.84604818889297551, 0.82462810071046677, 0.76633901523811943, 0.86704669174258109, 0.74878339762670476, 0.79437821547153931, 0.78173288597164015, 0.8620762048347349, 0.81376202674466624, 0.83552562331692271, 0.77697344253782186, 0.89688513224998401, 0.90093469563838557, 0.78475625998393184, 0.88192461450599657, 0.89298298786375574, 0.86647289745106659, 0.91429510321240348, 0.76808278224057625]
+
+	cellness_measure = []
+	for label in labels:
+		seg_index = segment_collection.segment_label_to_list_index_dict[label]
+		segment = segment_collection.list_of_segments[seg_index]
+		a_voxel = segment.list_of_voxel_tuples[0]
+		cellness_measure.append(uncertainty_map[a_voxel])
+
+#pylab.figure()
+#pylab.plot(cellness, "--r", linewidth = 3, label= "Cellness")
+#pylab.hold(True)
+#pylab.plot(f_meas, "b", linewidth = 3, label= "F-measure")
+#pylab.xlabel("Cell index")
+#pylab.legend()
+#pylab.show()
+
+	return cellness_measure	
+
+
+def shuffle_labels(label_map):
+# TODO write this with iterators
+
+	t = time.time()
+
+	labels = np.unique(label_map)
+	labels = sorted(labels)
+
+	old_labels = copy.deepcopy(labels)
+	old_labels_dict = dict((label, index) for index, label in enumerate(old_labels))
+
+	np.random.seed(12)
+	np.random.shuffle(labels)
+
+	for i in xrange(len(labels)):
+		if labels[i] == 0:
+			temp = labels[i]
+			labels[i] = labels[0]
+			labels[0] = temp
+
+		if labels[i] == 1:
+			temp = labels[i]
+			labels[i] = labels[1]
+			labels[1] = temp
+
+		if labels[0] == 0 and labels[1] == 1:
+			break
+
+#		reverse_index = {label: [] for label in set_of_labels}
+
+#		it = np.nditer(label_map, flags=['multi_index'])
+#		while not it.finished:
+#			label = int(it[0])
+#			if label in set_of_labels:
+#				reverse_index[label].append(it.multi_index)
+#			it.iternext()
+	
+	it = np.nditer(label_map, op_flags=['readwrite'])
+	for x in np.nditer(label_map, op_flags =["readwrite"]):
+
+		label = int(x)
+		x[...] =  labels[old_labels_dict[label]]
+	
+
+#	for i in xrange(label_map.shape[0]):
+#		for j in xrange(label_map.shape[1]):
+#			for k in xrange(label_map.shape[2]):
+
+#				label_map[i,j,k] = labels[old_labels_dict[label_map[i,j,k]]]
+
+	print "label scramble:" , time.time() - t
+
+	return label_map
+
+	
+
+
+def init():
+
+
+	if len(sys.argv) != 2:
+		print "Usage: python interactive_seg.py PATH_TO_CONFIG_FILE"
+		return
+	else:
+		global CONFIG_FILE_PATH
+		CONFIG_FILE_PATH = sys.argv[1]
+
+
+
+	if not os.path.exists("temp"):
+		os.makedirs("temp")
+
+	##############################################################
+	# READ AND SET PARAMETERS
+	
+	print "Loading config parameters..."
+	read_program_parameters()
+
+
+	##############################################################
+	# LOADING TRAINING DATA AND TRAINING CLASSIFIER
+
+	print colored("================================================================================",'red')
+	print colored("              Loading training data and training cellness metric:", 'red')
+	print colored("================================================================================",'red')
+	
+	classifier = learn_classifier()
+
+
+	##############################################################
+	# LOADING DATA FOR CURRENT VOLUME
+	
+	print colored("================================================================================",'red')
+	print colored("                            Processing test volume:",'red')
+	print colored("================================================================================",'red')
+	
+	print "Loading test volume..."
+	vol = load_from_mat(DEFAULT_PARAMETER["volume_mat_path"], DEFAULT_PARAMETER["volume_mat_var"])
+	print "Loading initial segmentation..."
+	watershed = load_from_mat(DEFAULT_PARAMETER["first_seg_mat_path"], DEFAULT_PARAMETER["first_seg_mat_var"])
+
+	#watershed = shuffle_labels(watershed)
+
+	
+
+
+
+	print "Loading nuclei..."
+	nuclei_collection = NucleusCollection(DEFAULT_PARAMETER["nuclei_mat_path"], DEFAULT_PARAMETER["nuclei_mat_var"])
+
+	last_length_of_seeds_list = 0 
+	seed_collection = SeedCollection([])
+	seed_segment_collection = SeedSegmentCollection()
+
+
+	ask_feedback = True
+	watershed_old = watershed
+
+	global should_load_last_save
+	should_load_last_save = False
+
+	while ask_feedback or should_load_last_save:
+
+		if should_load_last_save:
+			nuclei_collection, seed_collection, watershed = load_last_save()
+			seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+			#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+	
+			should_load_last_save = False
+
+
+		print "Preparing data for classifier..."
+
+		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
+		original_init_pts = make_list_of_input_points(nuclei_collection)
+		collection_of_ws_segments = get_segments_with_features(vol, watershed, set_of_labels, "watershed", nuclei_collection)
+
+		test_data = prepare_test_data(collection_of_ws_segments)
+		test_data_svm = call_silent_process(VectorDataSet, test_data)
+
+		print "Applying cellness metric to segments..."
+		class_prediction, discriminant_value = classify_segments(classifier,test_data_svm)
+
+		classified_segments = (set_of_labels, class_prediction, discriminant_value)
+
+		print "Prompting user for feedback..."	
+		all_user_feedback = call_silent_err(show_uncertainty_map_and_get_feedback, vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old)
+	
+		if not should_load_last_save:
+
+			print "Processing user feedback..."
+			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
+			old_number_of_seeds = len(seed_collection.list_of_seeds)
+		
+			parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
+		
+			new_number_of_nuclei = len(nuclei_collection.nuclei_list)
+			new_number_of_seeds = len(seed_collection.list_of_seeds)
+	
+			if len(all_user_feedback):
+
+				init_pts = make_list_of_input_points(nuclei_collection, seed_collection)
+				#call_silent_err( show_new_user_points,original_init_pts, init_pts)
+
+				watershed_old = watershed
+				if old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds:
+				
+					watershed = run_watershed(vol, init_pts)
+					seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+
+				watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+
+				del test_data
+				del test_data_svm
+				del classified_segments
+				del all_user_feedback
+				del init_pts
+			
+			else:
+				ask_feedback = False
+
+
+			
+
+	display_volume_two(vol, watershed)
+
+
+	should_save = ""
+	while not should_save in set(['y', 'n']):
+		print colored("Save latest result? [Y/N] ","red")
+		should_save = sys.stdin.read(1)
+		should_save = should_save.lower()
+		print ""
+
+		
+
+	if should_save.lower() == "y":
+		save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+	else:
+		print "Not saving."
+	
+
+	print "KTnxBye."
+
+if __name__ == "__main__":
+
+
+	init()
+
+
+
