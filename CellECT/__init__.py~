@@ -1,3 +1,0 @@
-import seg_tool
-
-print "Calling seg_tool app."
