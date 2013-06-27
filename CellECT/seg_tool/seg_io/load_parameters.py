@@ -11,7 +11,7 @@ from termcolor import colored
 import CellECT.seg_tool.globals 
 
 
-def parse_config_file_line(line, line_number):
+def parse_config_file_line(line):
 	"""
 	Parse a line from the config fine: key = value.
 	"""
@@ -21,25 +21,22 @@ def parse_config_file_line(line, line_number):
 	
 	matches = re.match("(.+)=(.+)", line)
 
-	found_issue = False
 
 	if matches:
 		key = matches.group(1).strip().lower()
 		val = matches.group(2).strip().lower()
 
 		if not key in CellECT.seg_tool.globals.default_parameter_dictionary_keys:
-			found_issue = True
+			raise IOError("Key '%s' not in parameter list" % key)
 
 		if not val:
-			found_issue = True
+			raise IOError("No value assigned for key '%s'" % key)
 	else:
 		found_issue = True
 
-	if found_issue:
-		raise IOError("Error reading config file at line " + str(line_counter)+": "+line)
 
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER.has_key(key):
-		raise IOError("Error reading config file at line " + str(line_number) + ": Redefinition of key '" + key+"'")
+		raise IOError("Redefinition of key '%s'" % key)
 			
 	return key, val
 
@@ -69,19 +66,22 @@ def read_program_parameters(config_file_path):
 		print colored("Could not read config file at:" + config_file_path, 'red')
 		sys.exit()
 
+
 	line = f.readline()
 	line_counter = 0
 
 	while (line != ""):
 		line_counter += 1
+
 		try:
-			key, val = parse_config_file_line(line, line_counter)
+			key, val = parse_config_file_line(line)
+			
 		except IOError as err:
-			print colored(err, "red")
+			print colored("Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() ), "red")
 			sys.exit()
 			# TODO: write to log file
 		except Exception as err:
-			print colored(err, "red")
+			print colored("Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() ), "red")
 			sys.exit()
 			# TODO: write to log file
 			
@@ -92,7 +92,7 @@ def read_program_parameters(config_file_path):
 	try:
 		check_if_file_complete()
 	except IOError as err:
-		print colored(err, "red")		
+		print colored("Error in the config file: %s" % err.message, "red")		
 		sys.exit()
 		# TODO: write to log file
 
