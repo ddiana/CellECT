@@ -36,11 +36,9 @@ def parse_config_file_line(line, line_number):
 		found_issue = True
 
 	if found_issue:
-		print colored("Error reading config file at line " + str(line_number)+": "+line, 'red')
 		raise IOError("Error reading config file at line " + str(line_counter)+": "+line)
 
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER.has_key(key):
-		print colored("Error reading config file at line " + str(line_number) + ": Redefinition of key '" + key+"'", "red")
 		raise IOError("Error reading config file at line " + str(line_number) + ": Redefinition of key '" + key+"'")
 			
 	return key, val
@@ -57,7 +55,6 @@ def check_if_file_complete():
 			missing_info += key + " "
 
 	if len(missing_info):
-		print colored("Error reading config file: incomplete config file. \nMissing info: "+missing_info, "red")
 		raise IOError("Error reading config file: incomplete config file. Minssing info: "+missing_info)
 
 
@@ -80,9 +77,11 @@ def read_program_parameters(config_file_path):
 		try:
 			key, val = parse_config_file_line(line, line_counter)
 		except IOError as err:
+			print colored(err, "red")
 			sys.exit()
 			# TODO: write to log file
 		except Exception as err:
+			print colored(err, "red")
 			sys.exit()
 			# TODO: write to log file
 			
@@ -92,7 +91,10 @@ def read_program_parameters(config_file_path):
 
 	try:
 		check_if_file_complete()
-	except:
+	except IOError as err:
+		print colored(err, "red")		
 		sys.exit()
 		# TODO: write to log file
+
+
 	
