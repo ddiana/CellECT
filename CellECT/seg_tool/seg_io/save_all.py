@@ -50,7 +50,13 @@ def save_seg_to_mat(watershed):
 	"Save label map to .mat file."
 
 	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
-	io.savemat(file_name, {"ws": watershed})
+
+	try:
+		io.savemat(file_name, {"ws": watershed})
+	except Exception as err:
+		err.message = "Error saveing variable in  file %s" % file_name
+		raise err
+
 	print "....... Saved label mat at:", file_name
 
 	

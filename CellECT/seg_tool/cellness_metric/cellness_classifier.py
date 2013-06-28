@@ -12,6 +12,8 @@ from PyML.classifiers.svm import SVM, loadSVM
 from matplotlib.widgets import Slider
 from PyML.classifiers.svm import loadSVM
 import os
+from termcolor import colored
+import sys
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_all
@@ -39,18 +41,26 @@ def learn_classifier():
 
 
 	# Reading trainign volume
-	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_var"])
-	
+	try:
+		vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_var"])
+	except Exception as err:
+		print colored("Error: %s" % err.message, "red")
+		sys.exit()
+		
+
 	# Reading training nuclei
 	nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_var"])
 	
 
 	#### positive segment collection
-	
-	ground_truth = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_var"])
-	
 
-	list_of_labels_in_gt = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_var"])
+	try:	
+		ground_truth = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_var"])
+		list_of_labels_in_gt = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_var"])
+	except Exception as err:
+		print colored("Error: %s" % err.message, "red")
+		sys.exit()
+
 	# converting to right format
 	
 	list_of_labels_in_gt = [elem[0] for elem in list_of_labels_in_gt]
@@ -72,8 +82,13 @@ def learn_classifier():
 	
 	#### negative segment collection
 
-	bad_watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_var"])
-	set_of_labels_for_negative_examples = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_var"])
+	try:
+		bad_watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_var"])
+		set_of_labels_for_negative_examples = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_var"])
+	except Exception as err:
+		print colored("Error: %s" % err.message, "red")
+		sys.exit()
+
 	set_of_labels_for_negative_examples = [elem[0] for elem in set_of_labels_for_negative_examples]
 	set_of_labels_for_negative_examples = set(np.unique(set_of_labels_for_negative_examples))
 	

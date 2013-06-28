@@ -1,5 +1,10 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
+
+# Imports
 import unittest
 
+# Imports from this project
 from CellECT.seg_tool.seg_io.load_parameters import parse_config_file_line as parser;
 
 
@@ -51,10 +56,13 @@ class ParseConfigFileTestSequence(unittest.TestCase):
 
 
 	def test_exception_for_bad_key(self):
-		#check that it raises exception for a key that is not in the dictionary	
+		# check that it raises exception for a key that is not in the dictionary	
 		self.fail_sample("training_vol_nuclei_mat_va = seeds")
 
 
+	def test_exception_for_bad_pattern_two_equals(self):
+		# check that it raises exception for a bad key=value patter	
+		self.fail_sample("training_vol_nuclei_mat_va = seeds = seeds")
 	
 
 

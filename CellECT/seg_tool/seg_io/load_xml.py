@@ -7,6 +7,7 @@ import pylab
 import re
 from termcolor import colored
 import xml.etree.ElementTree as ET
+import sys
 
 # Imports from this project
 import CellECT.seg_tool.globals
@@ -22,8 +23,15 @@ def load_nuclei_from_xml():
 	"Load nuclei collection from xml file."
 
 	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "nuclei.xml"
+	
 	print colored("Loading nuclei from "+ file_name, "cyan")
-	tree = ET.parse(file_name)
+	
+	try:
+		tree = ET.parse(file_name)
+	except IOError as err:
+		err.message = "Could not open nuclei xml file at %s" % file_name
+		raise err
+
 
 	root = tree.getroot()
 
@@ -61,8 +69,17 @@ def load_seeds_from_xml():
 
 	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "seeds.xml"
 
+
+	
 	print colored("Loading seeds from "+ file_name, "cyan")
-	tree = ET.parse(file_name)
+	try:
+		tree = ET.parse(file_name)
+	except IOError as err:
+		err. message = "Could not open seeds xml file at %s" % file_name
+		raise err
+
+
+
 
 	root = tree.getroot()
 

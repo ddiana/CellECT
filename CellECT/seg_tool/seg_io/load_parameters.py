@@ -24,7 +24,7 @@ def parse_config_file_line(line):
 
 	if matches:
 		key = matches.group(1).strip().lower()
-		val = matches.group(2).strip().lower()
+		val = matches.group(2).strip()
 
 		if not key in CellECT.seg_tool.globals.default_parameter_dictionary_keys:
 			raise IOError("Key '%s' not in parameter list" % key)
@@ -32,7 +32,8 @@ def parse_config_file_line(line):
 		if not val:
 			raise IOError("No value assigned for key '%s'" % key)
 	else:
-		found_issue = True
+		raise IOError("No key=value pattern.")
+		return None, None
 
 
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER.has_key(key):
