@@ -173,7 +173,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	total = len(set_of_labels)
 	counter = 0
 	
-
+	pdb.set_trace()
 	print "Making segment collection of", len(set_of_labels), "segments from", name_of_parent ,"..."
 
 	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)

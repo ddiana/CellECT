@@ -26,6 +26,7 @@ def load_last_save():
 		watershed = io.loadmat(file_name)["ws"]
 	except Exception as err:
 		print colored("Error: %s" % err.message, "red")
+		print colored(err, "red")
 		sys.exit()
 
 	return nuclei_collection, seed_collection, watershed

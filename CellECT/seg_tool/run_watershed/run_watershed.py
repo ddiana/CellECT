@@ -6,9 +6,10 @@ import os
 from scipy import io as spio
 import time
 import numpy as np
-
+import pdb
 
 import CellECT.seg_tool.globals
+import CellECT
 
 """
 This module prepares input and calls watershed from Matlab.
@@ -22,21 +23,31 @@ def run_watershed(vol, init_pts):
 	This function calls matlab to run watershed on the given volume.
 	TODO: Replace this with C extension of watershed.
 	"""
+
+	path_to_temp = CellECT.seg_tool.globals.path_to_workspace + "/temp/"
+
+	## Make temp folder ########################################################
+	if not os.path.exists(path_to_temp):
+		os.makedirs(path_to_temp)
+
 	
 	print "\nRunning seeded watershed....\n"
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
-	spio.savemat("temp/watershed_input.mat", {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
+	spio.savemat("%s/watershed_input.mat" % path_to_temp, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
 	import subprocess
-	import os
+
 	t = time.time()
 	
-	os.system( "matlab -nodesktop -nosplash -r \"cd utils; run_seeded_watershed('../temp/watershed_input.mat', '../temp/watershed_result.mat')\"")
+	matlab_file_path = CellECT.__path__[0] + "/utils"
+
+	
+	os.system( "matlab -nodesktop -nosplash -r \"cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')\"" % (matlab_file_path, path_to_temp, path_to_temp))
 	os.system("stty echo")
 
 		
 	print ".......", time.time() - t, "sec"
 	
-	ws = spio.loadmat("temp/watershed_result.mat")["ws"]
+	ws = spio.loadmat("%s/watershed_result.mat" % path_to_temp)["ws"]
 	return ws
 
 

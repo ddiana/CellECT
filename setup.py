@@ -17,6 +17,8 @@ CellECT_packages = ['CellECT',
                     'CellECT/seg_tool/segment_collection',
                     'CellECT/seg_tool/seg_utils' ]
 
+
+
 LONG_DESC = """
 CellECT: Cell Evolution Capturing Tool.
 """
@@ -31,6 +33,7 @@ setup(name='CellECT',\
 	author_email = 'diana.delibaltov@gmail.com',\
 	url = 'http://vision.ece.ucsb.edu',\
 	packages = CellECT_packages,\
+    package_data = {'CellECT': ['utils/*.py', 'utils/*.m']},\
 	classifiers = [\
 		'Development Status :: 3 - Alpha',\
 		'Environment :: Console',\

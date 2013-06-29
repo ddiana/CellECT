@@ -14,6 +14,8 @@ should_load_last_save = False
 
 task_index = 0
 
+path_to_workspace = ""
+
 default_parameter_dictionary_keys = ("volume_mat_path",
    "volume_mat_var",\
    "first_seg_mat_path",\

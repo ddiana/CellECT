@@ -97,5 +97,44 @@ def read_program_parameters(config_file_path):
 		sys.exit()
 		# TODO: write to log file
 
+	prepare_program_parameters(config_file_path)
+
+
+
+def parse_path_to_config_file(config_file_path):
+
+	return "/home/diana/RESEARCH/REPOSITORY/CellECT/old_ascidian_workspace/"
+
+def make_absolute_path(path_from_config_file):
+
+	"""
+	convert path relative to workspace to absolute path
+	"""
+
+	return CellECT.seg_tool.globals.path_to_workspace + path_from_config_file
+
+
+def prepare_program_parameters(config_file_path):
+
+	"""
+	Given the path the user gave for the config file, which is in 
+	...../workspace/config_files/ etc find the path to workspace only.
+	"""
+
+	# get absolute path to workspace
+	CellECT.seg_tool.globals.path_to_workspace = parse_path_to_config_file(config_file_path)
+
+	# convert everything to absolute path
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"])
+	
 
 	

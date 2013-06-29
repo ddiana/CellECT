@@ -52,10 +52,6 @@ def main():
 		config_file_path = sys.argv[1]
 
 
-	## Make temp folder ########################################################
-	if not os.path.exists("temp"):
-		os.makedirs("temp")
-
 	## READ AND SET PARAMETERS #################################################
 	
 	print "Loading config parameters..."
