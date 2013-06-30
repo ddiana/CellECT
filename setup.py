@@ -4,6 +4,7 @@ import os, sys
 from distutils.core import setup
 from CellECT.seg_tool import module_info
 
+
 CellECT_packages = ['CellECT', 
                     'CellECT/seg_tool' ,
                     'CellECT/seg_tool/cellness_metric',
@@ -33,7 +34,7 @@ setup(name='CellECT',\
 	author_email = 'diana.delibaltov@gmail.com',\
 	url = 'http://vision.ece.ucsb.edu',\
 	packages = CellECT_packages,\
-    package_data = {'CellECT': ['utils/*.py', 'utils/*.m']},\
+    package_data = {'CellECT': ['utils/*.py', 'utils/*.m', 'README.TXT']},\
 	classifiers = [\
 		'Development Status :: 3 - Alpha',\
 		'Environment :: Console',\

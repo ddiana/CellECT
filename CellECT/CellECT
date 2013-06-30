@@ -2,22 +2,161 @@
 
 # Author: Diana Delibaltov
 # Vision Research Lab, University of California Santa Barbara
+#
+# Menu application adapted from:
+# http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
+# 
+# And from:
+# Goncalo Gomes 
+# http://promisc.org
+
+# Imports
+import signal
+signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 import os
 import sys
+import curses
+import traceback
+import atexit
+import time
+
+# Imports from this project
+import CellECT
+
+
+class cmenu(object):
+    datum = {}
+    ordered = []
+    pos = 0
+
+    def __init__(self, options, title="Welcome to CellECT, the Cell Evolution Capturing Tool"):
+        curses.initscr()
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
+        curses.curs_set(0)
+        self.screen = curses.initscr()
+        self.screen.keypad(1)
+
+        self.h = curses.color_pair(1)
+        self.n = curses.A_NORMAL
+
+        for item in options:
+            k, v = item.items()[0]
+            self.datum[k] = v
+            self.ordered.append(k)
+
+        self.title = title
+
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        curses.doupdate()
+        curses.endwin()
+
+    def upKey(self):
+        if self.pos == (len(self.ordered) - 1):
+            self.pos = 0
+        else:
+            self.pos += 1
+
+    def downKey(self):
+        if self.pos <= 0:
+            self.pos = len(self.ordered) - 1
+        else:
+            self.pos -= 1
+
+    def display(self):
+        screen = self.screen
+
+        while True:
+            screen.clear()
+            screen.addstr(2, 2, self.title, curses.A_STANDOUT|curses.A_BOLD)
+            screen.addstr(5, 2, "Please cellect from the options below...", curses.A_BOLD)
+
+
+            ckey = None
+            func = None
+
+            while ckey != ord('\n'):
+                for n in range(0, len(self.ordered)):
+                    optn = self.ordered[n]
+
+                    if n != self.pos:
+                        screen.addstr(7 + n, 4, "%d. %s" % (n, optn), self.n)
+                    else:
+                        screen.addstr(7 + n, 4, "%d. %s" % (n, optn), self.h)
+
+
+                screen.refresh()
+
+                ckey = screen.getch()
+
+                if ckey == 258:
+                    self.upKey()
+
+                if ckey == 259:
+                    self.downKey()
+
+            ckey = 0
+            self.cleanup()
+            if self.pos >= 0 and self.pos < len(self.ordered):
+                self.datum[self.ordered[self.pos]]()
+                self.pos = -1
+            else:
+                curses.flash()
+
+
+def exit():
+    sys.exit(1)
+
+def call_CellECT_seg_tool():
+
+	global config_file_location
+	os.system("clear & CellECT_seg_tool %s" % config_file_location)
+
+def call_CellECT_track_tool():
+	pass
+
+def make_workspace():
+	pass
+
+def show_readme():
+	path_to_readme = CellECT.__path__[0] + "/README.TXT"
+	os.system("less %s" % path_to_readme)
+	pass
+
+
+global config_file_location
+config_file_location = ""
+
+def main(argv):
+
+	global config_file_location
+	if len(argv)>1:
+		config_file_location = argv[1]
+
+	try:
+		c = cmenu([
+		    { "CellECT Segmentation Tool": call_CellECT_seg_tool },
+		    { "CellECT Tracking Tool for Cell Lineage": call_CellECT_track_tool },
+		    { "Create an empty worskpace": make_workspace},
+		    { "View ReadMe" : show_readme},
+		    { "Exit": exit },
+		    ])
+		c.display()
+
+	except SystemExit:
+		pass
+	else:
+		#log(traceback.format_exc())
+		c.cleanup()	
 
 
 
-def main():
-
-	print "Calling seg_tool app."
-
-	os.system("CellECT_seg_tool " + sys.argv[1])
-
-	print "Done."
 
 
 if __name__ == "__main__":
 
 
-	main()
+	main(sys.argv)

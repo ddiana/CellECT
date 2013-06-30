@@ -40,14 +40,20 @@ import CellECT.seg_tool.globals
 Main sequence of events of the seg_tool, the interactive segmentation tool 
 from the CellECT (Cell Evolution Capturing Tool) project.
 """
+
+
+
+def ask_for_config_file():
+
+	print "Please provide location of configuration file:\n"
+	return raw_input("")
 	
 def main():
 
 
 	## CHECK INPUT #############################################################
 	if len(sys.argv) != 2:
-		print module_info.__usage__
-		return
+		config_file_path = ask_for_config_file()
 	else:
 		config_file_path = sys.argv[1]
 
