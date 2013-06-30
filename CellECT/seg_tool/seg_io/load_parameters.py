@@ -6,6 +6,7 @@ import pdb
 import re
 import sys
 from termcolor import colored
+import os
 
 # Imports from this project
 import CellECT.seg_tool.globals 
@@ -101,9 +102,38 @@ def read_program_parameters(config_file_path):
 
 
 
-def parse_path_to_config_file(config_file_path):
+def abs_path_to_workspace(config_file_path):
 
-	return "/home/diana/RESEARCH/REPOSITORY/CellECT/old_ascidian_workspace/"
+	"""
+	Given the relative path to the config file, return the absolute path to the
+	workspace directory
+	"""
+
+	abs_path_to_config_file = os.path.abspath(config_file_path)
+
+	# config file is always in the config_files directory of the workspace directory
+	abs_path_to_workspace_dir = os.path.abspath(abs_path_to_config_file + "/../..") + "/"
+	
+	if not os.path.isdir(abs_path_to_workspace_dir):
+		err = IOError("Could not find workspace directory.")
+		raise err
+
+	test_workspace_directory_structure(abs_path_to_workspace_dir)		
+
+	print abs_path_to_workspace_dir
+
+	return abs_path_to_workspace_dir
+
+def test_workspace_directory_structure(path_to_workspace):
+	"""
+	Given the path to the workspace directory, check that the necessary 
+	directories are present.
+	"""
+
+	for directory in CellECT.seg_tool.globals.expected_workspace_directories:
+		assert os.path.isdir("%s/%s" % (path_to_workspace, directory)), colored("Bad woskspace structure. Directory %s not found in workspace at %s." % (directory, path_to_workspace), 'red')
+
+
 
 def make_absolute_path(path_from_config_file):
 
@@ -122,7 +152,11 @@ def prepare_program_parameters(config_file_path):
 	"""
 
 	# get absolute path to workspace
-	CellECT.seg_tool.globals.path_to_workspace = parse_path_to_config_file(config_file_path)
+	try:
+		CellECT.seg_tool.globals.path_to_workspace = abs_path_to_workspace(config_file_path)
+	except Exception as err:
+		print colored("Error: %s" % err)
+		sys.exit()
 
 	# convert everything to absolute path
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"])

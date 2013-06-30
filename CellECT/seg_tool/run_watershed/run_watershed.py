@@ -7,7 +7,11 @@ from scipy import io as spio
 import time
 import numpy as np
 import pdb
+import sys
+from termcolor import colored
+import subprocess
 
+# Imports from this project
 import CellECT.seg_tool.globals
 import CellECT
 
@@ -28,26 +32,45 @@ def run_watershed(vol, init_pts):
 
 	## Make temp folder ########################################################
 	if not os.path.exists(path_to_temp):
-		os.makedirs(path_to_temp)
+		try:
+			os.makedirs(path_to_temp)
+		except IOError as err:
+			err.message = "Could not create temp directory at %s" % path_to_temp
+			print colored("Error: %" % err.message, "red")
+			print colored(err, "red")
+			sys.exit()
 
 	
 	print "\nRunning seeded watershed....\n"
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
-	spio.savemat("%s/watershed_input.mat" % path_to_temp, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
-	import subprocess
+
+	save_mat_file = "%s/watershed_input.mat" % path_to_temp
+	try:
+		spio.savemat(save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
+	except Exception as err:
+		err.message = "Could not write input file for Matlab at %s" % save_mat_file
+		print colored("Error: %s" % err.message, "red")
+		print colored(err, "red")
+		sys.exit()
+
 
 	t = time.time()
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 
-	
 	os.system( "matlab -nodesktop -nosplash -r \"cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')\"" % (matlab_file_path, path_to_temp, path_to_temp))
 	os.system("stty echo")
 
 		
 	print ".......", time.time() - t, "sec"
 	
-	ws = spio.loadmat("%s/watershed_result.mat" % path_to_temp)["ws"]
+	try:
+		ws = spio.loadmat("%s/watershed_result.mat" % path_to_temp)["ws"]
+	except IOError as err:
+		err.message = "Could not read watershed result from Matlab. Perhaps Matlab did not run?"
+		print colored("Error: %s" % err.message, "red")
+		print colored(err, "red")
+		sys.exit()
 	return ws
 
 

@@ -16,6 +16,8 @@ task_index = 0
 
 path_to_workspace = ""
 
+expected_workspace_directories = set(["config_files", "init_watershed_all_time_stamps", "input_slices", "segs_all_time_stamps", "tracker_config", "training_data"])
+
 default_parameter_dictionary_keys = ("volume_mat_path",
    "volume_mat_var",\
    "first_seg_mat_path",\
