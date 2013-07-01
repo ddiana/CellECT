@@ -17,6 +17,10 @@ def directory_dialog():
 	root.withdraw()
 	dir_path = tkFileDialog.askdirectory()
 
+	if not dir_path:
+		print "No directory selected. Exitting."
+		sys.exit()
+
 	return dir_path
 
 
@@ -31,6 +35,10 @@ def ask_for_workspace_info():
 	print "\nThe new workspace will be created at: %s/" % dir_path
 
 	workspace_name = raw_input(colored("\nPlease enter a name for the new workspace: ", "yellow"))
+	
+	if len(workspace_name) == 0:
+		print "No workspace name given. Exitting."
+		sys.exit()
 
 	full_workspace_path = "%s/%s" % (dir_path, workspace_name)
 

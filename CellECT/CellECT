@@ -129,7 +129,8 @@ def call_CellECT_track_tool():
 	time.sleep(1)
 
 def make_workspace():
-	pass
+	os.system("clear & CellECT_create_workspace_directories")
+	time.sleep(1)
 
 def show_readme():
 	path_to_readme = CellECT.__path__[0] + "/README.TXT"

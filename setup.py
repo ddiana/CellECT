@@ -25,7 +25,7 @@ CellECT: Cell Evolution Capturing Tool.
 """
 
 setup(name='CellECT',\
-    scripts = ['CellECT/CellECT', 'CellECT/seg_tool/CellECT_seg_tool'],\
+    scripts = ['CellECT/CellECT', 'CellECT/seg_tool/CellECT_seg_tool', 'CellECT/utils/CellECT_create_workspace_directories'],\
 	version = module_info.__version__ ,\
 	description = 'CellECT: Cell Evolution Capturing Tool', \
 	long_description = LONG_DESC,\
