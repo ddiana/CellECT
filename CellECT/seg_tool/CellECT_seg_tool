@@ -15,6 +15,8 @@ import sys
 from termcolor import colored
 import os
 import time
+import logging
+import datetime
 
 
 # Imports from this project
@@ -42,6 +44,13 @@ from the CellECT (Cell Evolution Capturing Tool) project.
 """
 
 
+def setup_logging():
+
+	logging.basicConfig(filename='CellECT_seg_tool.log', level=logging.INFO)
+	message = " =============================== Starting CellECT_seg_tool ============================================"
+	logging.info (message)
+	logging.info('Started at %s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M") )
+
 
 def ask_for_config_file():
 
@@ -50,6 +59,7 @@ def ask_for_config_file():
 	
 def main():
 
+	setup_logging()
 
 	## CHECK INPUT #############################################################
 	if len(sys.argv) != 2:
@@ -203,7 +213,7 @@ def main():
 	else:
 		print "Not saving."
 	
-
+	logging.info('Exitted normally at %s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M") )
 	print "KTnxBye."
 
 

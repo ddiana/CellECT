@@ -7,9 +7,11 @@ import re
 import sys
 from termcolor import colored
 import os
+import logging
 
 # Imports from this project
 import CellECT.seg_tool.globals 
+
 
 
 def parse_config_file_line(line):
@@ -28,17 +30,26 @@ def parse_config_file_line(line):
 		val = matches.group(2).strip()
 
 		if not key in CellECT.seg_tool.globals.default_parameter_dictionary_keys:
-			raise IOError("Key '%s' not in parameter list" % key)
+			err = IOError()
+			err.message = "Key '%s' not in parameter list" % key
+			raise err
 
 		if not val:
-			raise IOError("No value assigned for key '%s'" % key)
+			err = IOError()
+			err.message = "No value assigned for key '%s'" % key
+			raise err
 	else:
-		raise IOError("No key=value pattern.")
+		err = IOError()
+		err.message = "No key=value pattern."
+		logging.exception(err.message)
+		raise err
 		return None, None
 
 
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER.has_key(key):
-		raise IOError("Redefinition of key '%s'" % key)
+		err = IOError()
+		err.message = "Redefinition of key '%s'" % key
+		raise err
 			
 	return key, val
 
@@ -54,7 +65,9 @@ def check_if_file_complete():
 			missing_info += key + " "
 
 	if len(missing_info):
-		raise IOError("Error reading config file: incomplete config file. Minssing info: "+missing_info)
+		err = IOError()
+		err.message = "Error reading config file: incomplete config file. Minssing info: "+missing_info
+		raise err
 
 
 
@@ -65,7 +78,10 @@ def read_program_parameters(config_file_path):
 	try:
 		f = open(config_file_path)
 	except IOError as err:
-		print colored("Could not read config file at:" + config_file_path, 'red')
+		err .message = "Could not read config file at:" + config_file_path 
+		logging.exception(err)
+		logging.exception(err.message)
+		print colored("Error: %s " % err.message , 'red')
 		sys.exit()
 
 
@@ -79,13 +95,16 @@ def read_program_parameters(config_file_path):
 			key, val = parse_config_file_line(line)
 			
 		except IOError as err:
-			print colored("Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() ), "red")
+			message = "Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() )
+			print colored(message, "red")
+			logging.exception(message)
 			sys.exit()
-			# TODO: write to log file
+
 		except Exception as err:
-			print colored("Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() ), "red")
+			message = "Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() )
+			logging.exception(message)
+			print colored(message, "red")
 			sys.exit()
-			# TODO: write to log file
 			
 		if key and val:
 			CellECT.seg_tool.globals.DEFAULT_PARAMETER[key] = val
@@ -94,9 +113,11 @@ def read_program_parameters(config_file_path):
 	try:
 		check_if_file_complete()
 	except IOError as err:
-		print colored("Error in the config file: %s" % err.message, "red")		
+		message = "Error in the config file: %s" % err.message
+		logging.exception(message)
+		print colored(message, "red")		
 		sys.exit()
-		# TODO: write to log file
+
 
 	prepare_program_parameters(config_file_path)
 
@@ -155,7 +176,10 @@ def prepare_program_parameters(config_file_path):
 	try:
 		CellECT.seg_tool.globals.path_to_workspace = abs_path_to_workspace(config_file_path)
 	except Exception as err:
-		print colored("Error: %s" % err)
+		message = "Error: %s" % err.message
+		print colored(message)
+		logging.exception(err)
+		logging.exception(err.message)
 		sys.exit()
 
 	# convert everything to absolute path
@@ -170,5 +194,6 @@ def prepare_program_parameters(config_file_path):
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"])
 	
+	logging.info("DEFAULT PARAMETERS: %s" % CellECT.seg_tool.globals.DEFAULT_PARAMETER)
 
 	

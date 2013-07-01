@@ -36,8 +36,6 @@ class SegmentCollection(object):
 
 		label_map = label_map.astype("int32")
 		
-		t1 = time.time()
-
 		reverse_index = {label: [] for label in set_of_labels}
 
 		it = np.nditer(label_map, flags=['multi_index'])
@@ -47,11 +45,7 @@ class SegmentCollection(object):
 			if label in set_of_labels:
 				reverse_index[label].append(it.multi_index)
 
-			it.iternext()
-		
-
-		print ".......",  time.time() - t1, "sec          "
-		
+			it.iternext()		
 		
 		for label in set_of_labels:
 			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent))	

@@ -11,6 +11,7 @@ import time
 from matplotlib.lines import Line2D
 from termcolor import colored
 from matplotlib.widgets import Button
+import logging
 
 
 # Imports from this project
@@ -130,13 +131,15 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 			print "--------------------------------------------------------------------------------"
 			print colored("ADD SEEDS FOR EXISTING LABEL: Right click to choose label, Left click to put seeds.","blue")
 			#print colored("(Only the latest right click counts. All the left clicks count)", "grey")
-					
+			logging.info(CellECT.seg_tool.globals.current_button_task)
+								
 		def seed_new_label(self,event):
 			CellECT.seg_tool.globals.current_button_task  = "ADD_SEEDS_TO_NEW_LABEL" 
 			CellECT.seg_tool.globals.task_index += 1
 			print "--------------------------------------------------------------------------------"
 			print colored("ADD ONE SEED FOR A NEW LABEL: Left click to put one seed.","blue")
 			print colored("(Only latest left click counts)", "grey")
+			logging.info(CellECT.seg_tool.globals.current_button_task)
 			
 		def merge_two_labels(self, event):			
 			CellECT.seg_tool.globals.task_index += 1
@@ -144,14 +147,13 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 			print "--------------------------------------------------------------------------------"
 			print colored("MERGE TWO LABELS: Right click for first label, Right click for second label.","blue")
 			print colored("(Only latest two right clicks count)", "grey")
-			
-
-			
+			logging.info(CellECT.seg_tool.globals.current_button_task)
+						
 		def clear_task(self, event):
 			CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 			print "--------------------------------------------------------------------------------"
 			print colored("NO BUTTON TASK SELECTED: You can left/right click anywhere to get info.","blue")
-	
+			logging.info(CellECT.seg_tool.globals.current_button_task)
 	
 	def get_nuclei_at_z(nuclei_coords, z):
 	
@@ -407,9 +409,9 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		
 
 		if event.mouseevent.button == 3:
-			# right			
-			print "Label", watershed[int(xval), int(yval), int(zval)], "@ (" + str(int(xval)) + ", " + str( int(yval)) + ", " + str( int(zval)) +")"
-
+			# right		
+			print "Label %d @ (%d, %d, %d)" % (watershed[int(xval), int(yval), int (zval)], xval, yval, zval)
+			
 		elif event.mouseevent.button == 1: 
 			# left
 			
@@ -425,9 +427,9 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 					seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
-				
-			print "Seed at: (" + str(int(xval)) + ", " + str(int(yval)) + ", " + str(int(zval)) + ")"
-
+			
+			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
+		
 
 
 		if event.mouseevent.button in set([1,3]):

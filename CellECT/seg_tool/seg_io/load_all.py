@@ -5,6 +5,7 @@
 import scipy as sp
 from scipy import io
 import pdb
+import logging
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_xml
@@ -16,7 +17,9 @@ Functions to load last save.
 
 def load_last_save():
 	
-	"Load .mat files and .xml files."	
+	"Load .mat files and .xml files."
+
+	logging.info("Loading last save.")	
 	
 	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
 
@@ -27,6 +30,8 @@ def load_last_save():
 	except Exception as err:
 		print colored("Error: %s" % err.message, "red")
 		print colored(err, "red")
+		logging.exception(err)
+		logging.exception(err.message)
 		sys.exit()
 
 	return nuclei_collection, seed_collection, watershed

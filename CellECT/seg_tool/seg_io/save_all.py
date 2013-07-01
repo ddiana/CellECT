@@ -8,6 +8,7 @@ import pdb
 import pylab
 from termcolor import colored
 import sys
+import logging
 
 # Import from this project
 from CellECT.seg_tool.seg_io import save_xml 
@@ -20,6 +21,8 @@ Functions to save the current status.
 def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map):
 	
 	"Save XML and MAT files."
+
+	logging.info("Saving current status.")
 	
 	try:
 		print colored("Saving XML for nuclei...", "cyan")
@@ -44,6 +47,8 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 
 		print colored("Error: %s" % err.message, "red")
 		print colored(err, "red")
+		logging.exception(err)
+		logging.exception(err.message)
 		sys.exit()
 
 

@@ -7,6 +7,7 @@ import pdb
 import pylab
 import time
 from termcolor import colored
+import logging
 
 # Imports from this project
 from CellECT.seg_tool.nuclei_collection import nuclei_collection as nc
@@ -135,13 +136,14 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 	if task_name == "ADD_SEEDS_TO_NEW_LABEL":
 		# if new label, then we need at least one left click. Take only the last left click.
 
-		pdb.set_trace()
 
 		if len (left_clicks):
 			user_mouse_click = left_clicks[-1]
 			nucleus_index = add_new_nucleus_to_collection(user_mouse_click, box,  nuclei_collection, added_by_user=True)
 		else:
-			print colored("Warning: Ignoring ADD SEED TO NEW LABEL task. No seed given.","red")
+			message = "Ignoring ADD SEED TO NEW LABEL task. No seed given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 
 	elif task_name == "ADD_SEEDS_TO_EXISTING_LABEL":
 		# if adding seed to an old label, check if 
@@ -150,12 +152,16 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		# check if no seed
 		if not (len(left_clicks)):
-			print colored("Warning: Ignoring ADD SEEDS TO EXISTING LABEL task. No seed given.","red")
+			message = "Ignoring ADD SEED TO NEW LABEL task. No seed given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 			return
 			
 		# check if no label
 		if not (len(right_clicks)):
-			print colored("Warning: Ignoring ADD SEEDS TO EXISTING LABEL task. No label given.","red")
+			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. No label given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 			return
 
 		# get the last right click information
@@ -163,7 +169,9 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		# if they returned None, None
 		if not (segment_label and nucleus_index_for_segment):
-			print colored("Warning: Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background or border).","red")
+			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background or border)"
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 			return
 
 
@@ -191,7 +199,9 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		# 3) neither is background.
 
 		if len(right_clicks) <2:
-			print colored("Warning: Ignoring MERGE TWO LABELS task. Not enough labels given.","red")
+			message = "Ignoring MERGE TWO LABELS task. Not enough labels given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 			return
 
 		# check the last 2 right clicks:
@@ -201,7 +211,9 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		# if either one came None
 		if not (segment1 and segment2 and nucleus_index_for_segment1 and nucleus_index_for_segment2):
-			print colored("Warning: Ignoring MERGE TWO LABELS task. Bad label given.","red")
+			message = "Ignoring MERGE TWO LABELS task. Bad label given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
 			return
 
 		# if we made it this far, merge the two labels (apply changes)

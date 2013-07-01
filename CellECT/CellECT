@@ -116,7 +116,7 @@ def call_CellECT_seg_tool():
 	os.system("clear & CellECT_seg_tool %s" % config_file_location)
 
 def call_CellECT_track_tool():
-	pass
+	print "CellECT Track Tool is not finished yet."
 
 def make_workspace():
 	pass

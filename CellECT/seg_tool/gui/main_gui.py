@@ -11,6 +11,7 @@ from matplotlib.lines import Line2D
 from termcolor import colored
 from matplotlib.widgets import Button
 import os
+import logging
 
 # Imports from this project
 from CellECT.seg_tool.gui import correct_segment_gui as seg_gui
@@ -65,7 +66,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	they want to modify.
 	Also possible to load an old result or save the current result.	
 	"""
-
+	logging.info ("STARTING USER FEEDBACK")
 	print colored("============================== START USER FEEDBACK =============================", "yellow")
 
 	nuclei_coords = [ (nucleus.x, nucleus.y, nucleus.z) for nucleus in nuclei_collection.nuclei_list ]
@@ -211,13 +212,16 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		else:
 			if event.mouseevent.button != 1:
 				# right click to mark as correct
-				print "Correct segment: ", label, "@", int(yval), int(xval), int(zval)
+				# print "Correct segment: ", label, "@", int(yval), int(xval), int(zval)
 			
 				# TODO: KEEP CORRECT LABEL INFORMATION
+
+				pass
 			
 			else:
-			
-				print "Opening GUI for segment: Label", label, "@ (" + str(int(yval)) + ", " + str( int(xval)) + ", " + str( int(zval)) +")"
+				message = "Opening GUI for segment: Label %d @ (%d, %d, %d)" % (label, int(yval), int(xval), int(zval))
+				print message
+				logging.info(message)
 			
 			
 				segment_index = segment_collection.segment_label_to_list_index_dict[label]
@@ -241,6 +245,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	pylab.show()
 	
 	print colored("=============================== END USER FEEDBACK ==============================","yellow")
+	logging.info("ENDING USER FEEDBACK")
 
 	return list_of_all_mouse_events
 

@@ -6,6 +6,7 @@ import numpy as np
 import pdb
 import copy
 import time
+import logging
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import bounding_box as bbx
@@ -36,7 +37,10 @@ class SeedSegmentCollection(object):
 		t1 = time.time()
 
 		reverse_index = {int(label_map[seed.x, seed.y, seed.z]): [] for seed in seed_collection.list_of_seeds}
-		print "Making seed-segment collection of", len (reverse_index), "segments from seeds..."
+
+		message = "Making seed-segment collection of %d segments from seeds..." % len (reverse_index)
+		print message
+		logging.info(message)
 
 		it = np.nditer(label_map, flags=['multi_index'])
 		labels_of_interest = set(reverse_index.keys())
@@ -54,9 +58,9 @@ class SeedSegmentCollection(object):
 		self.seed_index_to_seed_segment_list_index_dict = dict(( seed_segment.seed.index, index) for index, seed_segment in enumerate(self.list_of_seed_segments))
 	
 				
-		
-		print ".......",  time.time() - t1, "sec          "
-		
+		t2 = time.time()
+		print "....... %.3f sec              " % (t2-t1)
+		logging.info("... %.3f sec" % (t2-t1))
 
 
 

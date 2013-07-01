@@ -6,6 +6,7 @@ import numpy as np
 import pdb
 from scipy import ndimage
 import time
+import logging
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import misc
@@ -173,13 +174,24 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	total = len(set_of_labels)
 	counter = 0
 	
-	print "Making segment collection of", len(set_of_labels), "segments from", name_of_parent ,"..."
-
-	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)
-
-	print "Getting properties for", len(set_of_labels), "segments from", name_of_parent ,"..."
+	message = "Making segment collection of %d segments from %s ..." % (len(set_of_labels), name_of_parent)
+	print message
+	logging.info(message)
 
 	t1 = time.time()
+	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)
+	t2 = time.time()
+	print "....... %.3f sec              " %(t2 - t1)
+	logging.info ("... %.3f sec" % (t2-t1))
+
+	
+
+	message = "Getting properties for %d segments from %s ..." % (len(set_of_labels), name_of_parent)
+	print message
+	logging.info(message)
+	
+	t1 = time.time()
+
 	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
 
 	for segment in segment_collection.list_of_segments:
@@ -209,7 +221,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 		#print np.mean(segment.feature_dict["border_to_nucleus_distance"]), segment.nucleus.index
 	t2 = time.time()
-	print ".......", t2-t1, "sec         "
+	print "....... %.3f sec           " % (t2 - t1)
+	logging.info ("... %.3f sec" % (t2-t1))
 
 	return segment_collection
 
