@@ -141,7 +141,7 @@ def abs_path_to_workspace(config_file_path):
 
 	test_workspace_directory_structure(abs_path_to_workspace_dir)		
 
-	print abs_path_to_workspace_dir
+	print "Workspace at: %s" % abs_path_to_workspace_dir
 
 	return abs_path_to_workspace_dir
 
