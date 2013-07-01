@@ -54,8 +54,16 @@ def setup_logging():
 
 def ask_for_config_file():
 
-	print "Please provide location of configuration file:\n"
-	return raw_input("")
+	print colored("Please provide location of configuration file.", "red")
+	import Tkinter, tkFileDialog
+
+	root = Tkinter.Tk()
+	root.withdraw()
+	file_path = tkFileDialog.askopenfilename()
+
+	print "Thank you."
+
+	return file_path
 	
 def main():
 

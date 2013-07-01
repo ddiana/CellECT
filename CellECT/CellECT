@@ -20,6 +20,7 @@ import curses
 import traceback
 import atexit
 import time
+from termcolor import colored
 
 # Imports from this project
 import CellECT
@@ -71,8 +72,16 @@ class cmenu(object):
 
         while True:
             screen.clear()
-            screen.addstr(2, 2, self.title, curses.A_STANDOUT|curses.A_BOLD)
-            screen.addstr(5, 2, "Please cellect from the options below...", curses.A_BOLD)
+            screen.addstr(2, 2, self.title, curses.A_BOLD)
+            screen.addstr(4, 10, "   ______         __   __   ________    ______  _________  ",)
+            screen.addstr(5, 10, " .' ___  |       [  | [  | |_   __  | .' ___  ||  _   _  | ")
+            screen.addstr(6, 10, "/ .'   \_| .---.  | |  | |   | |_ \_|/ .'   \_||_/ | | \_| ")
+            screen.addstr(7, 10, "| |       / /__\\\ | |  | |   |  _| _ | |           | |     ")
+            screen.addstr(8, 10, "\ `.___.'\| \__., | |  | |  _| |__/ |\ `.___.'\   _| |_    ")
+            screen.addstr(9, 10, " `.____ .' '.__.'[___][___]|________| `.____ .'  |_____|")
+
+
+            screen.addstr(13, 2, "Please cellect from the options below...", curses.A_BOLD)
 
 
             ckey = None
@@ -83,9 +92,9 @@ class cmenu(object):
                     optn = self.ordered[n]
 
                     if n != self.pos:
-                        screen.addstr(7 + n, 4, "%d. %s" % (n, optn), self.n)
+                        screen.addstr(15 + n, 4, "%d. %s" % (n+1, optn), self.n)
                     else:
-                        screen.addstr(7 + n, 4, "%d. %s" % (n, optn), self.h)
+                        screen.addstr(15 + n, 4, "%d. %s" % (n+1, optn), self.h)
 
 
                 screen.refresh()
@@ -116,7 +125,8 @@ def call_CellECT_seg_tool():
 	os.system("clear & CellECT_seg_tool %s" % config_file_location)
 
 def call_CellECT_track_tool():
-	print "CellECT Track Tool is not finished yet."
+	print colored("CellECT Track Tool is not yet implemented.", "red")
+	time.sleep(1)
 
 def make_workspace():
 	pass
@@ -139,7 +149,7 @@ def main(argv):
 	try:
 		c = cmenu([
 		    { "CellECT Segmentation Tool": call_CellECT_seg_tool },
-		    { "CellECT Tracking Tool for Cell Lineage": call_CellECT_track_tool },
+		    { "CellECT Tracking Tool for cell lineage discovery": call_CellECT_track_tool },
 		    { "Create an empty worskpace": make_workspace},
 		    { "View ReadMe" : show_readme},
 		    { "Exit": exit },
