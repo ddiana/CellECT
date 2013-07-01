@@ -1,25 +1,85 @@
+#!/usr/bin/env python
+
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
+
+# Application to create a workspace skeleton for CellECT
+
 import os
 import sys
+from termcolor import colored
+import Tkinter, tkFileDialog 
+
+
+def directory_dialog():
+
+	root = Tkinter.Tk()
+	root.withdraw()
+	dir_path = tkFileDialog.askdirectory()
+
+	return dir_path
+
+
+def ask_for_workspace_info():
+
+	print colored("Please select path to workspace directory. ", "yellow")
+	print "This application will create a new workspace directory at this location."
+	print "The new workspace will contain the directory structure needed for CellECT."
+
+	dir_path = directory_dialog()
+
+	print "\nThe new workspace will be created at: %s/" % dir_path
+
+	workspace_name = raw_input(colored("\nPlease enter a name for the new workspace: ", "yellow"))
+
+	full_workspace_path = "%s/%s" % (dir_path, workspace_name)
+
+	print "The new workspace is %s." % full_workspace_path
+
+	return full_workspace_path
 
 
 def prepare_directories(workspace_path):
 
 	if os.path.exists(workspace_path):
-		print workspace_path, "already exists... Did not create directories."
+		print colored ("Error: Already exists... Did not create directories.", "red")
+		sys.exit()
 	else:
-		os.makedirs(workspace_path + "/config_files")
-		os.makedirs(workspace_path + "/init_watershed_all_time_stamps")
-		os.makedirs(workspace_path + "/input_slices")
-		os.makedirs(workspace_path + "/segs_all_time_stamps")
-		os.makedirs(workspace_path + "/tracker_config")
-		os.makedirs(workspace_path + "/training_data")
+		try:
+			os.makedirs(workspace_path + "/config_files")
+			os.makedirs(workspace_path + "/init_watershed_all_time_stamps")
+			os.makedirs(workspace_path + "/input_slices")
+			os.makedirs(workspace_path + "/segs_all_time_stamps")
+			os.makedirs(workspace_path + "/tracker_config")
+			os.makedirs(workspace_path + "/training_data")
+		except IOError as err:
+			print colored("Could not create directories.", "red")
+			print err
+			sys.exit()
+
+	print "\nThe following files were successfully created:"
+	print workspace_path + "/config_files"
+	print workspace_path + "/init_watershed_all_time_stamps"
+	print workspace_path + "/input_slices"
+	print workspace_path + "/segs_all_time_stamps"
+	print workspace_path + "/tracker_config"
+	print workspace_path + "/training_data"
+
 
 
 if __name__ == "__main__":
 
-	if len(sys.argv) != 2:
-		print "Usage: python create_workspace_directories.py WORSPACE_PATH"
+	full_workspace_path = ""
+
+	if len(sys.argv) > 3 or len(sys.argv) == 2:
+		print "Usage: python create_workspace_directories.py [WORSPACE_PATH, WORKSPACE_NAME]"
 		print "Example: python create_workspace_directories.py ascidian_workspace"
 		print "	   This will create the ascidian_workspace directory in the current directory and place the necessary directories in it."
+		sys.exit()
+	elif len(sys.argv) == 3:
+		full_workspace_path = "%s/%s" % (sys.argv[1], sys.argv[2])
 	else:
-		prepare_directories(sys.argv[1])
+		full_workspace_path = ask_for_workspace_info()
+
+	prepare_directories(full_workspace_path)
+
