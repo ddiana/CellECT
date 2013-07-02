@@ -1,9 +1,9 @@
-CellECT: Cell Evolution Discovery Tool (v.0.1.2)
+CellECT: Cell Evolution Discovery Tool
 ======================================
 
 About
 -----
-
+CellECT is a tool for cell analysis in 3-D confocal microscopy membrane volumes. CellECT provides a segmentation tool, which runs seeded watershed on the volume, predics uncertain areas and allows the user to interact with the segmentation in order to correct it. CellECT also provices a tracking tool for discovering cell lineage across multiple 3-D volumes.
 
 Instalation:
 ------------
@@ -27,6 +27,15 @@ After installing the prerequisttes CellECT can be installed as follows:
 python setup.py build
 python setup.py install 
 ```
+
+Running CellECT:
+----------------
+
+CellECT can be run from command line:
+```
+CellECT [path-to-config-file]
+```s
+
 
 
 
