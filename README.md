@@ -223,18 +223,22 @@ If the path_to_workspace and workspace_name parameters are not provided, the app
 License and Disclaimer
 ======================
 
-<dl>
-  <dt>Author:</dt>
-   Diana Delibaltov, http://ece.ucsb.edu/~diana
+**Author:**
 
-   Vision Research Lab, http://vision.ece.ucsb.edu
+Diana Delibaltov, http://ece.ucsb.edu/~diana
 
-   University of California, Santa Barbara<
-  <dt>License:</dt>
-   UCSB license, (c) 2013
-  <dt>Disclaimer:</dt>
-   I assume no responsibility for any effect this software may have on you,
-   your family, pet, computer, or anything else related to you or your existance.
-   No warranty provided nor implied.
-</dl>
+Vision Research Lab, http://vision.ece.ucsb.edu
+
+University of California, Santa Barbara<
+
+
+**License:**
+
+UCSB license, (c) 2013
+
+**Disclaimer:**
+
+I assume no responsibility for any effect this software may have on you,
+your family, pet, computer, or anything else related to you or your existance.
+No warranty provided nor implied.
 
