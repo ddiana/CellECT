@@ -40,7 +40,6 @@ CellECT can be run from command line:
 
 ```
 CellECT [path-to-config-file]
-
 ```
 
 The configuration file is optional and is passed to the segmentation tool if this option is selected. Otherwise, if not configuration file is provided and the segmentation tool option is selected, the user will be prompted to select the file through a dialog window.
@@ -81,7 +80,6 @@ The segmentation tool can be accessed from the menu of the CellECT application, 
 Alternatively, the segmentation tool can be called directory from command line:
 ```
 CellECT_seg_tool [path_to_config_file]
-
 ```
 
 If the path to the configuration file is not specified, the user will be prompted to provide such a file through a dialog window.
@@ -226,12 +224,12 @@ License and Disclaimer
 ======================
 
 <dl>
-  <dt>**Author:**</dt>
+  <dt>Author:</dt>
   <dd>[Diana Delibaltov](http://ece.ucsb.edu/~diana/)</dd>
   <dd>[Vision Research Lab](http://vision.ece.ucsb.edu/), University of California, Santa Barbara.</dd>
-  <dt>**License:**</dt>
+  <dt>License:</dt>
   <dd>UCSB license, (c) 2013</dd>
-  <dt>**Disclaimer:**</dt>
+  <dt>Disclaimer:</dt>
   <dd>I assume no responsibility for any effect this software may have on you, your family, pet, computer, or anything else related to you or your existance. No warranty provided nor implied.</dd>
 </dl>
 
