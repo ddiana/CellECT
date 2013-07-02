@@ -66,6 +66,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	they want to modify.
 	Also possible to load an old result or save the current result.	
 	"""
+
 	logging.info ("STARTING USER FEEDBACK")
 	print colored("============================== START USER FEEDBACK =============================", "yellow")
 
@@ -236,6 +237,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
 				list_of_mouse_events_in_cropped_ascidian = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, z_default = zval - bounding_box.zmin, nuclei_coords =  cropped_nuclei_coords)
+					
 
 				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))
 

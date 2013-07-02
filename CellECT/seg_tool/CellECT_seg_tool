@@ -18,6 +18,12 @@ import time
 import logging
 import datetime
 
+## memory inspection tool
+#from pympler import muppy
+#from pympler import summary
+#from pympler.classtracker import ClassTracker
+
+#from memory_profiler import profile
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_parameters as loader
@@ -65,10 +71,11 @@ def ask_for_config_file():
 
 	return file_path
 	
+#@profile
 def main():
 
 	setup_logging()
-
+	
 	## CHECK INPUT #############################################################
 	if len(sys.argv) != 2:
 		config_file_path = ask_for_config_file()
@@ -122,8 +129,10 @@ def main():
 
 	
 	## MAIN LOOP ###############################################################
+	sum_new = None
 
 	while ask_feedback or CellECT.seg_tool.globals.should_load_last_save:
+
 
 		## Load last save, or continue with current setup ######################
 		if CellECT.seg_tool.globals.should_load_last_save:
@@ -191,12 +200,27 @@ def main():
 
 				watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 
-				del test_data
-				del test_data_svm
-				del classified_segments
-				del all_user_feedback
-				del init_pts
-			
+
+				#del test_data
+				#del test_data_svm
+				#del classified_segments
+				#del all_user_feedback
+				#del init_pts
+
+				
+#				# Memory inspection
+#				pdb.set_trace()
+
+#				all_objects = muppy.get_objects()
+#				sum_old = sum_new
+#				sum_new = summary.summarize(all_objects)		
+#				summary.print_(sum_new)
+
+#				if sum_old:
+#					diff = summary.get_diff(sum_old, sum_new)
+#					summary.print_(diff)
+#				# end memory inspection
+
 			else:
 				ask_feedback = False
 
@@ -224,5 +248,5 @@ def main():
 	logging.info('Exitted normally at %s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M") )
 	print "KTnxBye."
 
-
-main()
+if __name__ == "__main__":
+	main()

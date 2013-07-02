@@ -232,6 +232,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 	- add nuclei, add seeds, modify union of nuclei, etc.
 	"""
 
+
 	task_index = -1
 	current_task = ""
 

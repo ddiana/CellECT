@@ -72,8 +72,6 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	"""
 
 
-	pylab.ion()
-
 	#print "Nuclei in this cropped section: ", nuclei_coords
 	seed_coords = []
 	
@@ -411,6 +409,7 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		if event.mouseevent.button == 3:
 			# right		
 			print "Label %d @ (%d, %d, %d)" % (watershed[int(xval), int(yval), int (zval)], xval, yval, zval)
+
 			
 		elif event.mouseevent.button == 1: 
 			# left
@@ -430,6 +429,7 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 			
 			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
 		
+		
 
 
 		if event.mouseevent.button in set([1,3]):
@@ -445,9 +445,10 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 #		print ev.asc_coordinates.xval
 #	print '.......'
 	
-	pylab.ioff()	
 
 	pylab.show()
+
+	pdb.set_trace()
 
 	return list_of_mouse_events_in_ascidian
 
