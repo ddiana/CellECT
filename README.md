@@ -1,4 +1,4 @@
-CellECT: Cell Evolution Discovery Tool
+CellECT: Cell Evolution Capturing Tool
 ======================================
 
 About
