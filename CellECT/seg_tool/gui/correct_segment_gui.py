@@ -448,7 +448,6 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 
 	pylab.show()
 
-	pdb.set_trace()
 
 	return list_of_mouse_events_in_ascidian
 

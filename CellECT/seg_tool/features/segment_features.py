@@ -181,7 +181,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	t1 = time.time()
 	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)
 	t2 = time.time()
-	print "....... %.3f sec              " %(t2 - t1)
+	print "....... %.3f sec                         " %(t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
 
 	
@@ -221,7 +221,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 		#print np.mean(segment.feature_dict["border_to_nucleus_distance"]), segment.nucleus.index
 	t2 = time.time()
-	print "....... %.3f sec           " % (t2 - t1)
+	print "....... %.3f sec                           " % (t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
 
 	return segment_collection

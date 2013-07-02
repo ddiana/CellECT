@@ -3,18 +3,19 @@ CellECT: Cell Evolution Discovery Tool
 
 About
 -----
-CellECT is a tool for cell analysis in 3-D confocal microscopy membrane volumes. CellECT provides a segmentation tool, which runs seeded watershed on the volume, predics uncertain areas and allows the user to interact with the segmentation in order to correct it. CellECT also provices a tracking tool for discovering cell lineage across multiple 3-D volumes.
+
+CellECT is a tool for cell analysis in 3-D confocal microscopy membrane volumes. CellECT provides a segmentation tool, which runs seeded watershed on the volume, predicts uncertain areas and allows the user to interact with the segmentation in order to correct it. CellECT also provides a tracking tool for discovering cell lineage across multiple 3-D volumes.
 
 Skip to [CellECT Segmentation Tool](https://github.com/ddiana/CellECT#cellect-segmentation-tool)
 
 Skip to [CellECT Tracking Tool](https://github.com/ddiana/CellECT#cellect-tracking-tool)
 
-Instalation
+Installation
 ------------
 
 CellECT is supported for Linux and MacOS, and was tested on Ubuntu 11.10, Ubuntu 12.04 and Fedora 18.
 
-Prerequisittes:
+Prerequisites:
 
 * python 2.7
 * numpy 1.6.1
@@ -25,25 +26,26 @@ Prerequisittes:
 * termcolor
 * matlab (needed for imimposemin, watershed)
 
-After the prerequisttes, CellECT can be installed as follows:
+After the prerequisites, CellECT can be installed as follows:
 
 ```
 python setup.py build
-python setup.py install 
+python setup.py install
 ```
 
 Running CellECT
 ----------------
 
 CellECT can be run from command line:
+
 ```
 CellECT [path-to-config-file]
+
 ```
 
 The configuration file is optional and is passed to the segmentation tool if this option is selected. Otherwise, if not configuration file is provided and the segmentation tool option is selected, the user will be prompted to select the file through a dialog window.
 
 When running CellECT the user can choose from the applications available:
-
 * CellECT segmentation tool
 * CellECT tracking tool
 * CellECT workspace creation tool
@@ -57,7 +59,6 @@ Workspace Directory
 The CellECT tools operate in a predefined workspace directory structure. To create a directory structure for a new project, refer to the [workspace creation tool](https://github.com/ddiana/CellECT#cellect-workspace-creation).
 
 The workspace directory must contain the following sub-directories:
-
 * **config_files** (holds .cfg files where the information specific for this dataset is specified.
 * **init_watershed_all_timespamps** (holds .mat files with the initial watershed segmentation and nuclei coordinates)
 * **input_slices** (.png slices of the volume nucleus and membrane channels in the z-stack and t-stack. This is used by the tracking tool only)
@@ -66,8 +67,6 @@ The workspace directory must contain the following sub-directories:
 * **training_data** (stores .mat files containing example segmentations and the list of labels for positive and negative examples).
 
 ![Workspace structure](CellECT/doc/md_figures/workspace_directories.png "Workspace directories")
-
-
 
 
 CellECT Segmentation Tool
@@ -82,6 +81,7 @@ The segmentation tool can be accessed from the menu of the CellECT application, 
 Alternatively, the segmentation tool can be called directory from command line:
 ```
 CellECT_seg_tool [path_to_config_file]
+
 ```
 
 If the path to the configuration file is not specified, the user will be prompted to provide such a file through a dialog window.
@@ -89,6 +89,11 @@ If the path to the configuration file is not specified, the user will be prompte
 
 How to Use the CellECT Segmentation Tool
 ----------------------------------------
+
+The CellECT Segmentation tool runs seeded Watershed segmentation, predicts areas of uncertainty and displays an "cellness" metric map of the segmentation. The user can select segments to correct, and provide feedback in another window. In the mean time, progress and status information is displayed in the terminal window. A typical run of this application is shown in the figure below.
+
+![CellECT Segmentation Tool](CellECT/doc/md_figures/full_screen.png "CellECT Segmentation Tool")
+
 
 The user interface window from the figure below is displayed once the segmentation tool is set up and ready to receive user input. The first panel shows a slice through the original volume. Panel 2 shows a slice through the segmentation, color coded by confidence in the segmentation (“cellness metric”): the segments colored in green are likely to be correct, and the segments colored in purple are likely to be incorrect. The third panel shows the segmentation label map color coded by segment label. Finally, the last panel shows the difference between the current segmentation and the previous one (if any). Edges which were removed are colored in red. Edges which were added are colored in green.
 
@@ -102,7 +107,7 @@ Once a segment is clicked for correction, the window in the figure below shows a
 2.  Add seeds for an old label. Right click for the label of interest. Left click to place a few seeds. The new seeds will be marked with star symbols.
 3.  Merge two labels. Place two right clicks, one for each label to me merged.
 
-![Segment Corection Interface](CellECT/doc/md_figures/correct_segment_gui.png "Correct Segment Interface")
+![Segment Correction Interface](CellECT/doc/md_figures/correct_segment_gui.png "Correct Segment Interface")
 
 Multiple such corrections can be made for each segment correction window. Multiple segment correction windows can be opened. Once the user has given enough corrections for this iteration, the main interactive segmentation window needs to be closed (along with any other remaining windows) for the next iteration to take place. This process repeats until the segmentation is satisfactory.
 
@@ -113,7 +118,7 @@ Multiple such corrections can be made for each segment correction window. Multip
 3.  "Clear task" button can be used to freely click in the segmentation and display information.
 4.  In general: Left click to place seed, Right click to pick label. For "Clear task" the information at each click is still displayed but the clicks are discarded.
 5.  Existing nuclei are displayed as circled. Additional seeds placed by the user are displayed as stars.
-6.  Use the slider widgets to traverse the volume. 
+6.  Use the slider widgets to traverse the volume.
 
 
 Information in the Console:
@@ -136,16 +141,11 @@ Refer to the terminal window for status information. The application prints usef
 ![Matlab system call progress information is displayed in the terminal](CellECT/doc/md_figures/seg_tool_matlab.png "Matlab system call progress information is displayed in the terminal")
 
 
-**Example 4:** If the user chooses to save or load a segmentation, this progress is displayed in the terminal window.
+**Example 4:** If the user chooses to save or load a segmentation, this progress is displayed in the terminal window. The user is also prompted for a final save before the application exits.
 
 ![Save and load information is displayed in the terminal](CellECT/doc/md_figures/seg_tool_saving.png "Save and load information is displayed in the terminal")
 
-
-**Example 5:** User is prompted to save the segmentation upon exit.
-
-![Save confirmation is displayed in the terminal](CellECT/doc/md_figures/seg_tool_exit.png "Save confirmation is displayed in the terminal")
-
-Warnings regarding the user feedback, such as “Bad or no label” or “No file to load” are displayed in the terminal. 
+Warnings regarding the user feedback, such as "Bad or no label" or "No file to load" are displayed in the terminal.
 
 Input Data
 ----------
@@ -168,7 +168,7 @@ The following information needs to present in one (or several) .mat files. The m
 * _training_negative_seg_mat_path_ = path to mat file containing 3-D array holding the label map used for negative examples.
 * _training_negative_seg_mat_var_ = name of variable containing 3-D array holding the label map used for negative examples.
 * _training_negative_labels_mat_path_ = path to mat file containing 1-D array listing all the labels of segments used for negative examples
-* _save_location_prefix_ = path to the segs_all_time_stamps directory in the workspace, and the prefix for this segmentation, where all the segmentation results will be stored. Example : old_ascidian_workspace/segs_all_time_stamps/timestamp_0_
+* _save_location_prefix_ = path to the segs_all_time_stamps directory in the workspace, and the prefix for this segmentation, where all the segmentation results will be stored. Example : timestamp_0_
 * _has_bg_ = flag indicating if there is a background region in the volume (0 or 1)
 * _use_size_ = flag indicating if the size of the segments should be used as a feature (0 or 1)
 * _use_border_intensity_ = flag indicating if the border intensity should be used as a feature (0 or 1)
@@ -196,7 +196,6 @@ Output files contain the following: (where prefix is defined by the user in the 
 * **prefix_seed_segment_props.xml** holds the watershed segment properties for those segments resulting from seeds. (prior to label reassignment) This is used by the tracking tool.
 * **prefix_segment_props.xml** holds the final segment properties (after label reassignment)
 * **prefix_z_%d_seg.png** label map slices used by the tracking tool.
-
 Segmentation results can be saved and loaded from the segmentation tool application.
 
 
@@ -210,7 +209,7 @@ CellECT tracking tool for cell lineage is work in progress and not published yet
 CellECT Workspace Creation
 ==========================
 
-The workspace creation tool is useful to create the directory skeleton structure that CellECT expects. You should use this when you want to apply CellECT to your own data. 
+The workspace creation tool is useful to create the directory skeleton structure that CellECT expects. You should use this when you want to apply CellECT to your own data.
 
 You can access this application from the CellECT menu. Alternatively, you can call this application directly as:
 
@@ -218,7 +217,7 @@ You can access this application from the CellECT menu. Alternatively, you can ca
 CellECT_create_workspace_directories [path_to_workspace, workspace_name]
 ```
 
-If the path_to_workspace and workspace_name parameters are not provided, the application will request the user to celect a directory in which to create the workspace, as shown below. Next, the user will be prompted from the console to provide the desired workspace name.
+If the path_to_workspace and workspace_name parameters are not provided, the application will request the user to select a directory in which to create the workspace, as shown below. Next, the user will be prompted from the console to provide the desired workspace name.
 
 ![Workspace creation tool directory dialog](CellECT/doc/md_figures/workspace_creation_dialog.png "Workspace creation tool dialog")
 
@@ -226,5 +225,13 @@ If the path_to_workspace and workspace_name parameters are not provided, the app
 License and Disclaimer
 ======================
 
-UCSB license.
+<dl>
+  <dt>**Author:**</dt>
+  <dd>[Diana Delibaltov](http://ece.ucsb.edu/~diana/)</dd>
+  <dd>[Vision Research Lab](http://vision.ece.ucsb.edu/), University of California, Santa Barbara.</dd>
+  <dt>**License:**</dt>
+  <dd>UCSB license, (c) 2013</dd>
+  <dt>**Disclaimer:**</dt>
+  <dd>I assume no responsibility for any effect this software may have on you, your family, pet, computer, or anything else related to you or your existance. No warranty provided nor implied.</dd>
+</dl>
 
