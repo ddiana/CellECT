@@ -225,12 +225,14 @@ License and Disclaimer
 
 <dl>
   <dt>Author:</dt>
-  <dd>Diana Delibaltov, http://ece.ucsb.edu/~diana</dd>
-  <dd>Vision Research Lab, http://vision.ece.ucsb.edu</dd>
-  <dd>University of California, Santa Barbara</dd>
+   Diana Delibaltov, http://ece.ucsb.edu/~diana
+   Vision Research Lab, http://vision.ece.ucsb.edu
+   University of California, Santa Barbara<
   <dt>License:</dt>
-  <dd>UCSB license, (c) 2013</dd>
+   UCSB license, (c) 2013
   <dt>Disclaimer:</dt>
-  <dd>I assume no responsibility for any effect this software may have on you, your family, pet, computer, or anything else related to you or your existance. No warranty provided nor implied.</dd>
+   I assume no responsibility for any effect this software may have on you,
+   your family, pet, computer, or anything else related to you or your existance.
+   No warranty provided nor implied.
 </dl>
 
