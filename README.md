@@ -34,7 +34,8 @@ Running CellECT:
 CellECT can be run from command line:
 ```
 CellECT [path-to-config-file]
-```s
+```
+
 
 
 
