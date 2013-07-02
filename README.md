@@ -225,8 +225,9 @@ License and Disclaimer
 
 <dl>
   <dt>Author:</dt>
-  <dd>[Diana Delibaltov](http://ece.ucsb.edu/~diana/)</dd>
-  <dd>[Vision Research Lab](http://vision.ece.ucsb.edu/), University of California, Santa Barbara.</dd>
+  <dd>Diana Delibaltov, http://ece.ucsb.edu/~diana</dd>
+  <dd>Vision Research Lab, http://vision.ece.ucsb.edu</dd>
+  <dd>University of California, Santa Barbara</dd>
   <dt>License:</dt>
   <dd>UCSB license, (c) 2013</dd>
   <dt>Disclaimer:</dt>
