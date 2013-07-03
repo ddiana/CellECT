@@ -151,7 +151,7 @@ def main(argv):
 		c = cmenu([
 		    { "CellECT Segmentation Tool": call_CellECT_seg_tool },
 		    { "CellECT Tracking Tool for cell lineage discovery": call_CellECT_track_tool },
-		    { "Create an empty worskpace": make_workspace},
+		    { "Create an empty workspace": make_workspace},
 		    { "View ReadMe" : show_readme},
 		    { "Exit": exit },
 		    ])

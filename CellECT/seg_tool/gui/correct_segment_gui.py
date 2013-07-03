@@ -13,6 +13,7 @@ from termcolor import colored
 from matplotlib.widgets import Button
 import logging
 import gc
+import matplotlib
 
 # Imports from this project
 import CellECT.seg_tool.globals
@@ -70,7 +71,6 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		- add seeds to modify existing segments.
 		- merge existing segments.
 	"""
-
 
 	#print "Nuclei in this cropped section: ", nuclei_coords
 	seed_coords = []
@@ -447,9 +447,9 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	
 
 	pylab.show()
-	pylab.close()
-	fig.clf()
-	gc.collect()
+	if matplotlib.get_backend().lower() != "GTK3Agg".lower():
+		pylab.close()
+		gc.collect()
 
 	return list_of_mouse_events_in_ascidian
 

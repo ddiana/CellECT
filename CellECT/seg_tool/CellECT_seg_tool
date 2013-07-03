@@ -20,11 +20,8 @@ import datetime
 import pylab
 
 ## memory inspection tool
-#from pympler import muppy
-#from pympler import summary
-#from pympler.classtracker import ClassTracker
-
 #from memory_profiler import profile
+
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_parameters as loader
@@ -81,10 +78,6 @@ def main():
 		config_file_path = ask_for_config_file()
 	else:
 		config_file_path = sys.argv[1]
-
-
-	pylab.figure()
-	pylab.show()
 
 
 	## READ AND SET PARAMETERS #################################################
@@ -208,26 +201,6 @@ def main():
 
 				watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 
-
-				#del test_data
-				#del test_data_svm
-				#del classified_segments
-				#del all_user_feedback
-				#del init_pts
-
-				
-#				# Memory inspection
-#				pdb.set_trace()
-
-#				all_objects = muppy.get_objects()
-#				sum_old = sum_new
-#				sum_new = summary.summarize(all_objects)		
-#				summary.print_(sum_new)
-
-#				if sum_old:
-#					diff = summary.get_diff(sum_old, sum_new)
-#					summary.print_(diff)
-#				# end memory inspection
 
 			else:
 				ask_feedback = False

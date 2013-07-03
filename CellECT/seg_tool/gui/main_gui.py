@@ -12,6 +12,7 @@ from termcolor import colored
 from matplotlib.widgets import Button
 import os
 import logging
+import matplotlib
 
 # Imports from this project
 from CellECT.seg_tool.gui import correct_segment_gui as seg_gui
@@ -246,7 +247,9 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	fig.canvas.mpl_connect('pick_event', onpick)
 
 	pylab.show()
-	pylab.close()
+	if matplotlib.get_backend().lower() != "GTK3Agg".lower():
+		pylab.close()
+		gc.collect()
 	
 	print colored("=============================== END USER FEEDBACK ==============================","yellow")
 	logging.info("ENDING USER FEEDBACK")
