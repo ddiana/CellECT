@@ -21,6 +21,8 @@ def directory_dialog():
 		print "No directory selected. Exitting."
 		sys.exit()
 
+	root.destroy()
+
 	return dir_path
 
 

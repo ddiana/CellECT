@@ -12,6 +12,7 @@ import logging
 from CellECT.seg_tool.seg_utils import misc
 from CellECT.seg_tool.segment_collection import segment_collection as segc
 import CellECT.seg_tool.globals
+from CellECT.seg_tool.seg_utils import voxel as vx
 
 
 """
@@ -34,7 +35,7 @@ def segment_border_to_nucleus(segment):
 
 	box_bounds = segment.bounding_box
 
-	nucleus = Voxel(segment.nucleus_list[0].x - box_bounds.xmin, segment.nucleus_list[0].y - box_bounds.ymin, segment.nucleus_list[0].z-box_bounds.zmin)
+	nucleus = vx.Voxel(segment.nucleus_list[0].x - box_bounds.xmin, segment.nucleus_list[0].y - box_bounds.ymin, segment.nucleus_list[0].z-box_bounds.zmin)
 
 	cropped_mask = np.zeros((box_bounds.xmax - box_bounds.xmin+1, box_bounds.ymax - box_bounds.ymin+1, box_bounds.zmax - box_bounds.zmin+1))
 
@@ -50,7 +51,7 @@ def segment_border_to_nucleus(segment):
 
 	for i in xrange(len(x)):
 
-		dist_values.append( euclidian_distance( Voxel(x[i], y[i], z[i]), nucleus ))
+		dist_values.append( euclidian_distance( vx.Voxel(x[i], y[i], z[i]), nucleus ))
 
 
 	return dist_values
