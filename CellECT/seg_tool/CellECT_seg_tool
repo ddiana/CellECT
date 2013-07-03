@@ -85,8 +85,6 @@ def main():
 	print "Loading config parameters..."
 	loader.read_program_parameters(config_file_path)
 
-
-
 	## LOADING TRAINING DATA AND TRAINING CLASSIFIER ###########################
 
 	print colored("================================================================================",'red')
