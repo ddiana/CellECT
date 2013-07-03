@@ -12,7 +12,7 @@ from matplotlib.lines import Line2D
 from termcolor import colored
 from matplotlib.widgets import Button
 import logging
-
+import gc
 
 # Imports from this project
 import CellECT.seg_tool.globals
@@ -447,7 +447,9 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	
 
 	pylab.show()
-
+	pylab.close()
+	fig.clf()
+	gc.collect()
 
 	return list_of_mouse_events_in_ascidian
 

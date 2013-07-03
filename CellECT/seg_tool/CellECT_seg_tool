@@ -131,6 +131,8 @@ def main():
 	## MAIN LOOP ###############################################################
 	sum_new = None
 
+
+
 	while ask_feedback or CellECT.seg_tool.globals.should_load_last_save:
 
 
@@ -149,6 +151,8 @@ def main():
 
 		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
 		original_init_pts = ws.make_list_of_input_points(nuclei_collection)
+
+
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "watershed", nuclei_collection)
 
 		test_data = cellness.prepare_test_data(collection_of_ws_segments)
@@ -176,7 +180,7 @@ def main():
 			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			old_number_of_seeds = len(seed_collection.list_of_seeds)
 		
-			## Get feedback ####################################################
+			# Get feedback ####################################################
 			gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
 		
 			new_number_of_nuclei = len(nuclei_collection.nuclei_list)

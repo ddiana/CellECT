@@ -246,7 +246,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	fig.canvas.mpl_connect('pick_event', onpick)
 
 	pylab.show()
-
+	pylab.close()
 	
 	print colored("=============================== END USER FEEDBACK ==============================","yellow")
 	logging.info("ENDING USER FEEDBACK")
