@@ -17,6 +17,7 @@ import os
 import time
 import logging
 import datetime
+import pylab
 
 ## memory inspection tool
 #from pympler import muppy
@@ -66,8 +67,7 @@ def ask_for_config_file():
 	root = Tkinter.Tk()
 	root.withdraw()
 	file_path = tkFileDialog.askopenfilename()
-
-	print "Thank you."
+	root.destroy()
 
 	return file_path
 	
@@ -81,6 +81,10 @@ def main():
 		config_file_path = ask_for_config_file()
 	else:
 		config_file_path = sys.argv[1]
+
+
+	pylab.figure()
+	pylab.show()
 
 
 	## READ AND SET PARAMETERS #################################################
