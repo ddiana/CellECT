@@ -4,6 +4,7 @@ import os, sys
 from distutils.core import setup
 from CellECT.seg_tool import module_info
 
+print "running"
 
 CellECT_packages = ['CellECT', 
                     'CellECT/seg_tool' ,
@@ -16,7 +17,9 @@ CellECT_packages = ['CellECT',
                     'CellECT/seg_tool/seed_segment_collection',
                     'CellECT/seg_tool/seg_io',
                     'CellECT/seg_tool/segment_collection',
-                    'CellECT/seg_tool/seg_utils' ]
+                    'CellECT/seg_tool/seg_utils',
+                    'CellECT/seg_tool/bisque',
+                    'CellECT/seg_tool/bisque/bisque_io' ]
 
 
 

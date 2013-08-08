@@ -17,7 +17,6 @@ import os
 import time
 import logging
 import datetime
-import pylab
 
 ## memory inspection tool
 #from memory_profiler import profile
@@ -32,12 +31,12 @@ from CellECT.seg_tool.seed_segment_collection import seed_segment_collection as 
 from CellECT.seg_tool.seed_collection import seed_collection as seedc
 from CellECT.seg_tool.features import segment_features as feat
 from CellECT.seg_tool.seg_utils import call_silent
-from CellECT.seg_tool.gui import main_gui
-from CellECT.seg_tool.gui import parse_feedback as gui_parse
 from CellECT.seg_tool.seg_io import save_all
-from CellECT.seg_tool.seg_utils import display_tools
 from CellECT.seg_tool.seg_utils import labelmap_tools as lm_tools
 from CellECT.seg_tool.run_watershed import run_watershed as ws
+from CellECT.seg_tool.bisque.bisque_io import segments_xml
+from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
+
 
 import CellECT.seg_tool.globals
 
@@ -67,6 +66,7 @@ def ask_for_config_file():
 	root.destroy()
 
 	return file_path
+
 	
 #@profile
 def main():
@@ -78,7 +78,6 @@ def main():
 		config_file_path = ask_for_config_file()
 	else:
 		config_file_path = sys.argv[1]
-
 
 	## READ AND SET PARAMETERS #################################################
 	
@@ -104,6 +103,7 @@ def main():
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
 	print "Loading initial segmentation..."
 	watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
+
 
 	#watershed = shuffle_labels(watershed)
 
@@ -164,7 +164,22 @@ def main():
 		## ASK FOR FEEDBACK ####################################################
 
 		print "Prompting user for feedback..."	
-		all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old)
+
+		if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+			# TODO: bisque UI
+			print colored("BISQUE UI","red")
+			logging.info("BISQUE UI.")
+			talk_to_ui.wait_for_UI_update()
+
+			all_user_feedback = []
+
+		else:
+			import pylab
+			from CellECT.seg_tool.gui import main_gui
+			from CellECT.seg_tool.gui import parse_feedback as gui_parse
+			from CellECT.seg_tool.seg_utils import display_tools
+			logging.info("DESKTOP CLIENT ")
+			all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old)
 	
 
 		## USE FEEDBACK ########################################################
@@ -175,8 +190,15 @@ def main():
 			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			old_number_of_seeds = len(seed_collection.list_of_seeds)
 		
-			# Get feedback ####################################################
-			gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
+			# Get feedback #####################################################
+			if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+				# TODO: bisque UI parser
+				print colored("BISQUE UI PARSER","red")
+				logging.info("BISQUE UI PARSER.")
+			else:
+				logging.info("DESKTOP CLIENT UI PARSER.")
+				gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
+
 		
 			new_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			new_number_of_seeds = len(seed_collection.list_of_seeds)
@@ -206,16 +228,24 @@ def main():
 
 			
 	## Show final output #######################################################
-	display_tools.display_volume_two(vol, watershed)
+	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+		display_tools.display_volume_two(vol, watershed)
+	else:
+		logging.info("Not displaying final volume (bisque).")
 
 
 	## Ask if save #############################################################
 	should_save = ""
-	while not should_save in set(['y', 'n']):
-		print colored("Save latest result? [Y/N] ","red")
-		should_save = sys.stdin.read(1)
-		should_save = should_save.lower()
-		print ""
+	if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+		should_save = "y"
+		logging.info("Not prompting user for saving (bisque).")
+		CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+	else:
+		while not should_save in set(['y', 'n']):
+			print colored("Save latest result? [Y/N] ","red")
+			should_save = sys.stdin.read(1)
+			should_save = should_save.lower()
+			print ""
 
 		
 	## Save ####################################################################
@@ -227,5 +257,11 @@ def main():
 	logging.info('Exitted normally at %s' % datetime.datetime.now().strftime("%Y-%m-%d %H:%M") )
 	print "KTnxBye."
 
+
+
 if __name__ == "__main__":
 	main()
+
+
+
+

@@ -1,4 +1,4 @@
 python setup.py build
-python setup.py install
+sudo python setup.py install
 echo "================================================================================"
 CellECT_seg_tool $1

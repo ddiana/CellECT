@@ -6,10 +6,8 @@ import numpy as np
 from numpy import random
 from scipy import io
 import pdb
-import pylab
 from PyML import VectorDataSet
 from PyML.classifiers.svm import SVM, loadSVM
-from matplotlib.widgets import Slider
 from PyML.classifiers.svm import loadSVM
 import os
 from termcolor import colored
@@ -22,6 +20,8 @@ from CellECT.seg_tool.features import segment_features as feat
 from CellECT.seg_tool.seg_utils import call_silent
 
 import CellECT.seg_tool.globals
+
+
 
 
 """

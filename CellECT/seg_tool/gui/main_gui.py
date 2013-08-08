@@ -249,7 +249,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	pylab.show()
 	if matplotlib.get_backend().lower() != "GTK3Agg".lower():
 		pylab.close()
-		gc.collect()
+		#gc.collect()
 	
 	print colored("=============================== END USER FEEDBACK ==============================","yellow")
 	logging.info("ENDING USER FEEDBACK")

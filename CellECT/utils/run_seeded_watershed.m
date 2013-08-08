@@ -11,10 +11,10 @@ end
 % if it has background, assume that this background surrounds the object of interest.
 % Note: change this is not accurate
 if has_bg
-	start_pts_mask(:,round(0.05*size(vol,2)),:) = 1;
-	start_pts_mask(:,round(0.95*size(vol,2)),:) = 1;
-	start_pts_mask(round(0.05*size(vol,1)),:,:) = 1;
-	start_pts_mask(round(0.95*size(vol,1)),:,:) = 1;
+	start_pts_mask(:,1,:) = 1;
+	start_pts_mask(:,end-1,:) = 1;
+	start_pts_mask(1,:,:) = 1;
+	start_pts_mask(end-1,:,:) = 1;
 end
 
 vol = imimposemin (vol, start_pts_mask);

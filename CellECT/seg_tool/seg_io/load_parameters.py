@@ -14,6 +14,7 @@ import CellECT.seg_tool.globals
 
 
 
+
 def parse_config_file_line(line):
 	"""
 	Parse a line from the config fine: key = value.
@@ -194,6 +195,10 @@ def prepare_program_parameters(config_file_path):
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"])
 	
+	# convert to number
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"])
+
+
 	logging.info("DEFAULT PARAMETERS: %s" % CellECT.seg_tool.globals.DEFAULT_PARAMETER)
 
 	

@@ -40,4 +40,8 @@ default_parameter_dictionary_keys = ("volume_mat_path",
    "has_bg", \
    "use_size", \
    "use_border_intensity", \
-   "use_border_distance")
+   "use_border_distance",\
+   "bisque",\
+   "bq_token",\
+   "bq_mex_url",\
+   "bq_t")

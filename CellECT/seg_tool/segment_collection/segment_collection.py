@@ -5,6 +5,8 @@
 import numpy as np
 import pdb
 import time
+import cv
+import cv2
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import bounding_box as bbx
@@ -26,7 +28,13 @@ class SegmentCollection(object):
 		
 		self.add_segments_to_collection(label_map, set_of_labels, name_of_parent)
 
-	
+
+
+	def make_contours_for_all_segments(self, label_map):
+
+		for segment in self.list_of_segments:
+			segment.make_segment_contours(label_map)
+
 	def add_segments_to_collection(self, label_map, set_of_labels, name_of_parent):
 	
 		"""Given a label map, and a list of labels of interest, 
@@ -88,8 +96,25 @@ class Segment(object):
 		self.feature_dict = {}
 		self.nucleus_list = []
 		self.bounding_box = self.get_boundaries()
+		self.contour_polygons_list = []
 		
 	
+
+	def make_segment_contours(self, label_map):
+
+		"Add the polygon contours for every segment as a list of points"
+
+		cropped_mask = label_map[self.bounding_box.xmin : self.bounding_box.xmax, self.bounding_box.ymin : self.bounding_box.ymax, self.bounding_box.zmin:self.bounding_box.zmax] == self.label
+
+		for z in xrange(cropped_mask.shape[2]):
+			contour_output = cv2.findContours(cropped_mask[:,:,z].astype('uint8'),cv.CV_RETR_LIST, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
+			if contour_output[0]:
+				polygon = [(contour_output[0][0][i][0][1], contour_output[0][0][i][0][0], z + self.bounding_box.zmin) for i in xrange(len(contour_output[0][0]))]
+				self.contour_polygons_list.append(polygon)
+	
+
+		
+
 
 	def add_feature(self,feat_name, feat_value):
 	

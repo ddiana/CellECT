@@ -117,6 +117,9 @@ class NucleusCollection(object):
 
 		return min_nucleus
 
+
+		
+
 	def merge_two_nuclei (self, nucleus1, nucleus2):
 	
 		"Merge two nuclei: union of nuclei."

@@ -5,7 +5,6 @@
 import scipy as sp
 from scipy import io
 import pdb
-import pylab
 from termcolor import colored
 import sys
 import logging
@@ -34,14 +33,16 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 		print colored("Saving XML for segment properties...", "cyan")
 		save_xml.save_xml_file_segment_props(segment_collection)
 	
-		print colored("Saving XML for seed-segment properties...", "cyan")
+		print colored("Saving XML for seed-segment properties...", "cyan")	
 		save_xml.save_xml_file_seed_segment_props(seed_segment_collection)
 	
-		print colored("Saving label map in MAT file...", "cyan")
-		save_seg_to_mat(label_map)
+		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+
+			print colored("Saving label map in MAT file...", "cyan")
+			save_seg_to_mat(label_map)
 	
-		print colored("Saving segmentation slices as PNG files...", "cyan")
-		save_seg_slices(label_map)
+			print colored("Saving segmentation slices as PNG files...", "cyan")
+			save_seg_slices(label_map)
 	
 	except Exception as err:
 

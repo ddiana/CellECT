@@ -3,7 +3,6 @@
 
 # Imports
 import pdb
-import pylab
 import re
 from termcolor import colored
 import xml.etree.ElementTree as ET
