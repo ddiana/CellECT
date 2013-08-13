@@ -3,11 +3,13 @@
 # Author: Diana Delibaltov
 # Vision Research Lab, University of California Santa Barbara
 
-
+# Imports
 import sys
 import os
 from PySide import QtGui, QtCore
 
+# Imports from this project
+import CellECT
 
 """
 Menu application adapted from:
@@ -32,7 +34,7 @@ class MainMenu(QtGui.QWidget):
         
         self.setToolTip('This is a <b>QWidget</b> widget')
         
-        pixmap = QtGui.QPixmap("CellECT_logo.png")
+        pixmap = QtGui.QPixmap(CellECT.__path__[0] + "/resources/CellECT_logo.png")
 
         self.logo = QtGui.QLabel(self)
         self.logo.setPixmap(pixmap)
