@@ -1,173 +1,131 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # Author: Diana Delibaltov
 # Vision Research Lab, University of California Santa Barbara
-#
-# Menu application adapted from:
-# http://blog.skeltonnetworks.com/2010/03/python-curses-custom-menu/
-# 
-# And from:
-# Goncalo Gomes 
-# http://promisc.org
 
-# Imports
-import signal
-signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-import os
 import sys
-import curses
-import traceback
-import atexit
-import time
-from termcolor import colored
-
-# Imports from this project
-import CellECT
+import os
+from PySide import QtGui, QtCore
 
 
-class cmenu(object):
-    datum = {}
-    ordered = []
-    pos = 0
-
-    def __init__(self, options, title="Welcome to CellECT, the Cell Evolution Capturing Tool"):
-        curses.initscr()
-        curses.start_color()
-        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
-        curses.curs_set(0)
-        self.screen = curses.initscr()
-        self.screen.keypad(1)
-
-        self.h = curses.color_pair(1)
-        self.n = curses.A_NORMAL
-
-        for item in options:
-            k, v = item.items()[0]
-            self.datum[k] = v
-            self.ordered.append(k)
-
-        self.title = title
-
-        atexit.register(self.cleanup)
-
-    def cleanup(self):
-        curses.doupdate()
-        curses.endwin()
-
-    def upKey(self):
-        if self.pos == (len(self.ordered) - 1):
-            self.pos = 0
-        else:
-            self.pos += 1
-
-    def downKey(self):
-        if self.pos <= 0:
-            self.pos = len(self.ordered) - 1
-        else:
-            self.pos -= 1
-
-    def display(self):
-        screen = self.screen
-
-        while True:
-            screen.clear()
-            screen.addstr(2, 2, self.title, curses.A_BOLD)
-            screen.addstr(4, 10, "   ______         __   __   ________    ______  _________  ",)
-            screen.addstr(5, 10, " .' ___  |       [  | [  | |_   __  | .' ___  ||  _   _  | ")
-            screen.addstr(6, 10, "/ .'   \_| .---.  | |  | |   | |_ \_|/ .'   \_||_/ | | \_| ")
-            screen.addstr(7, 10, "| |       / /__\\\ | |  | |   |  _| _ | |           | |     ")
-            screen.addstr(8, 10, "\ `.___.'\| \__., | |  | |  _| |__/ |\ `.___.'\   _| |_    ")
-            screen.addstr(9, 10, " `.____ .' '.__.'[___][___]|________| `.____ .'  |_____|")
+"""
+Menu application adapted from:
+http://zetcode.com/gui/pysidetutorial/firstprograms/
+"""
 
 
-            screen.addstr(13, 2, "Please cellect from the options below...", curses.A_BOLD)
+class MainMenu(QtGui.QWidget):
+
+    """
+    Main menu for CellECT displaying workspace creation, seg tool, track tool, visit page and quit.
+    """
+    
+    def __init__(self):
+        super(MainMenu, self).__init__()
+        
+        self.initUI()
+        
+    def initUI(self):
+        
+        QtGui.QToolTip.setFont(QtGui.QFont('SansSerif', 10))
+        
+        self.setToolTip('This is a <b>QWidget</b> widget')
+        
+        pixmap = QtGui.QPixmap("CellECT_logo.png")
+
+        self.logo = QtGui.QLabel(self)
+        self.logo.setPixmap(pixmap)
 
 
-            ckey = None
-            func = None
-
-            while ckey != ord('\n'):
-                for n in range(0, len(self.ordered)):
-                    optn = self.ordered[n]
-
-                    if n != self.pos:
-                        screen.addstr(15 + n, 4, "%d. %s" % (n+1, optn), self.n)
-                    else:
-                        screen.addstr(15 + n, 4, "%d. %s" % (n+1, optn), self.h)
+        buttons_offset = 150
+        buttons_height = 28
+        buttons_width = 360
+        buttons_spacing = 3
 
 
-                screen.refresh()
+        # List of buttons:
 
-                ckey = screen.getch()
-
-                if ckey == 258:
-                    self.upKey()
-
-                if ckey == 259:
-                    self.downKey()
-
-            ckey = 0
-            self.cleanup()
-            if self.pos >= 0 and self.pos < len(self.ordered):
-                self.datum[self.ordered[self.pos]]()
-                self.pos = -1
-            else:
-                curses.flash()
+        self.btn_create_ws = QtGui.QPushButton('Create a new workspace', self)
+        self.btn_create_ws.setToolTip('Make a new workspace <b>CellECT</b> for a new dataset.')
+        self.btn_create_ws.resize(buttons_width, buttons_height)
+        self.btn_create_ws.move(50, buttons_offset)      
+        self.btn_create_ws.clicked.connect(self.run_CellECT_create_workspace)
 
 
-def exit():
-    sys.exit(1)
-
-def call_CellECT_seg_tool():
-
-	global config_file_location
-	os.system("clear & CellECT_seg_tool %s" % config_file_location)
-
-def call_CellECT_track_tool():
-	print colored("CellECT Track Tool is not yet implemented.", "red")
-	time.sleep(1)
-
-def make_workspace():
-	os.system("clear & CellECT_create_workspace_directories")
-	time.sleep(1)
-
-def show_readme():
-	path_to_readme = CellECT.__path__[0] + "/README.TXT"
-	os.system("less %s" % path_to_readme)
-	pass
+        self.btn_seg_tool = QtGui.QPushButton('CellECT Segmentation Tool', self)
+        self.btn_seg_tool.setToolTip('Run the interactive <b>CellECT</b> segmentation tool.')
+        self.btn_seg_tool.resize(buttons_width, buttons_height)
+        self.btn_seg_tool.move(50, buttons_offset + (buttons_height + buttons_spacing)) 
+        self.btn_seg_tool.clicked.connect(self.run_CellECT_seg_tool)
 
 
-global config_file_location
-config_file_location = ""
+        self.btn_track_tool = QtGui.QPushButton('CellECT Tracking Tool', self)
+        self.btn_track_tool.setToolTip('Run <b>CellECT</b> tracking tool to make cell associations.')
+        self.btn_track_tool.resize(buttons_width, buttons_height)
+        self.btn_track_tool.move(50, buttons_offset + (buttons_height + buttons_spacing)*2) 
+        self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
 
-def main(argv):
 
-	global config_file_location
-	if len(argv)>1:
-		config_file_location = argv[1]
+        self.btn_readme = QtGui.QPushButton('Visit Project Page', self)
+        self.btn_readme.setToolTip('Visit the <b>CellECT</b> website on GitHub.')
+        self.btn_readme.resize(buttons_width, buttons_height)
+        self.btn_readme.move(50, buttons_offset + (buttons_height + buttons_spacing)*3) 
+        self.btn_readme.clicked.connect(self.run_CellECT_readme)
 
-	try:
-		c = cmenu([
-		    { "CellECT Segmentation Tool": call_CellECT_seg_tool },
-		    { "CellECT Tracking Tool for cell lineage discovery": call_CellECT_track_tool },
-		    { "Create an empty workspace": make_workspace},
-		    { "View ReadMe" : show_readme},
-		    { "Exit": exit },
-		    ])
-		c.display()
+        self.btn_quit = QtGui.QPushButton('Quit', self)
+        self.btn_quit.setToolTip('Quit <b>CellECT<b>.')
+        self.btn_quit.resize(buttons_width, buttons_height)
+        self.btn_quit.move(50, buttons_offset + (buttons_height + buttons_spacing)*4) 
+        self.btn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
+        
+        self.setGeometry(300, 300, 470, 330)
+        self.setWindowTitle('CellECT')    
+        self.show()
+        
 
-	except SystemExit:
-		pass
-	else:
-		#log(traceback.format_exc())
-		c.cleanup()	
+    def run_CellECT_readme(self):
+
+        """
+        Open firefox at the GitHub project page.
+        """
+
+        os.system('firefox https://github.com/ddiana/CellECT')
+
+
+    def run_CellECT_seg_tool(self):
+
+        """
+        Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec
+        """
+
+        os.system('gnome-terminal -x sh -c "CellECT_seg_tool; sleep 1"')
+
+
+    def run_CellECT_track_tool(self):
+
+        """
+        Open gnome-terminal and run CellECT_track_tool and sleep 1 sec
+        """
+
+        os.system('gnome-terminal -x sh -c "CellECT_track_tool; sleep 1"')
+
+
+    def run_CellECT_create_workspace(self):
+
+        """
+        Open gnome-terminal and run CellECT_create_workspace_directories and sleep 1 sec
+        """
+        os.system('gnome-terminal -x sh -c "CellECT_create_workspace_directories; sleep 1"')
 
 
 
+def main():
+    
+    app = QtGui.QApplication(sys.argv)
+    CellECT_main_menu = MainMenu()
+    sys.exit(app.exec_())
 
 
-if __name__ == "__main__":
-
-
-	main(sys.argv)
+if __name__ == '__main__':
+    main()

@@ -19,7 +19,11 @@ CellECT_packages = ['CellECT',
                     'CellECT/seg_tool/segment_collection',
                     'CellECT/seg_tool/seg_utils',
                     'CellECT/seg_tool/bisque',
-                    'CellECT/seg_tool/bisque/bisque_io' ]
+                    'CellECT/seg_tool/bisque/bisque_io',
+                    'CellECT/track_tool/cell_tracker_core',
+                    'CellECT/track_tool/gui',
+                    'CellECT/track_tool/track_io',
+                    'CellECT/track_tool' ]
 
 
 
@@ -28,7 +32,7 @@ CellECT: Cell Evolution Capturing Tool.
 """
 
 setup(name='CellECT',\
-    scripts = ['CellECT/CellECT', 'CellECT/seg_tool/CellECT_seg_tool', 'CellECT/utils/CellECT_create_workspace_directories'],\
+    scripts = ['CellECT/CellECT', 'CellECT/seg_tool/CellECT_seg_tool', 'CellECT/track_tool/CellECT_track_tool', 'CellECT/utils/CellECT_create_workspace_directories'],\
 	version = module_info.__version__ ,\
 	description = 'CellECT: Cell Evolution Capturing Tool', \
 	long_description = LONG_DESC,\
@@ -37,7 +41,7 @@ setup(name='CellECT',\
 	author_email = 'diana.delibaltov@gmail.com',\
 	url = 'http://vision.ece.ucsb.edu',\
 	packages = CellECT_packages,\
-    package_data = {'CellECT': ['utils/*.py', 'utils/*.m', 'README.TXT']},\
+    package_data = {'CellECT': ['utils/*.py', 'utils/*.m', 'README.TXT','track_tool/resources/gui_thumbnails/*']},\
 	classifiers = [\
 		'Development Status :: 3 - Alpha',\
 		'Environment :: Console',\

@@ -1,4 +1,4 @@
 python setup.py build
 sudo python setup.py install
 echo "================================================================================"
-CellECT_seg_tool $1
+CellECT_track_tool $1
