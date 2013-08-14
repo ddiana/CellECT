@@ -874,7 +874,7 @@ class CellTrackerUI:
 			z_seg = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
 				l1.set_data(I)
 				#print "loading ", "seg_all_time_stamps/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png"
 				Seg = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png")
