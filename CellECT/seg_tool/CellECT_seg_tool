@@ -34,8 +34,7 @@ from CellECT.seg_tool.seg_utils import call_silent
 from CellECT.seg_tool.seg_io import save_all
 from CellECT.seg_tool.seg_utils import labelmap_tools as lm_tools
 from CellECT.seg_tool.run_watershed import run_watershed as ws
-from CellECT.seg_tool.bisque.bisque_io import segments_xml
-from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
+
 
 
 import CellECT.seg_tool.globals
@@ -167,6 +166,10 @@ def main():
 
 		if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 			# TODO: bisque UI
+
+			from CellECT.seg_tool.bisque.bisque_io import segments_xml
+			from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
+
 			print colored("BISQUE UI","red")
 			logging.info("BISQUE UI.")
 			talk_to_ui.wait_for_UI_update()
