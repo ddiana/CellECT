@@ -1,131 +1,477 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Author: Diana Delibaltov
 # Vision Research Lab, University of California Santa Barbara
 
 # Imports
+
+from PySide import QtGui
+from PySide import QtCore
 import sys
 import os
-from PySide import QtGui, QtCore
-
-# Imports from this project
-import CellECT
-
-"""
-Menu application adapted from:
-http://zetcode.com/gui/pysidetutorial/firstprograms/
-"""
-
-
-class MainMenu(QtGui.QWidget):
-
-    """
-    Main menu for CellECT displaying workspace creation, seg tool, track tool, visit page and quit.
-    """
-    
-    def __init__(self):
-        super(MainMenu, self).__init__()
-        
-        self.initUI()
-        
-    def initUI(self):
-        
-        QtGui.QToolTip.setFont(QtGui.QFont('SansSerif', 10))
-        
-        pixmap = QtGui.QPixmap(CellECT.__path__[0] + "/resources/CellECT_logo.png")
-
-        self.logo = QtGui.QLabel(self)
-        self.logo.setPixmap(pixmap)
+import pdb
+import re
+import numpy as np
+from scipy import misc
+from scipy import io
+from scipy.ndimage import morphology
+import pickle
+import os.path
+import multiprocessing
 
 
-        buttons_offset = 150
-        buttons_height = 28
-        buttons_width = 360
-        buttons_spacing = 3
+# Imports form this project
 
+from CellECT.gui import mainGui
+from CellECT.gui import newWorkspaceGui
 
-        # List of buttons:
-
-        self.btn_create_ws = QtGui.QPushButton('Create a new workspace', self)
-        self.btn_create_ws.setToolTip('Make a new workspace <b>CellECT</b> for a new dataset.')
-        self.btn_create_ws.resize(buttons_width, buttons_height)
-        self.btn_create_ws.move(50, buttons_offset)      
-        self.btn_create_ws.clicked.connect(self.run_CellECT_create_workspace)
-
-
-        self.btn_seg_tool = QtGui.QPushButton('CellECT Segmentation Tool', self)
-        self.btn_seg_tool.setToolTip('Run the interactive <b>CellECT</b> segmentation tool.')
-        self.btn_seg_tool.resize(buttons_width, buttons_height)
-        self.btn_seg_tool.move(50, buttons_offset + (buttons_height + buttons_spacing)) 
-        self.btn_seg_tool.clicked.connect(self.run_CellECT_seg_tool)
-
-
-        self.btn_track_tool = QtGui.QPushButton('CellECT Tracking Tool', self)
-        self.btn_track_tool.setToolTip('Run <b>CellECT</b> tracking tool to make cell associations.')
-        self.btn_track_tool.resize(buttons_width, buttons_height)
-        self.btn_track_tool.move(50, buttons_offset + (buttons_height + buttons_spacing)*2) 
-        self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
-
-
-        self.btn_readme = QtGui.QPushButton('Visit Project Page', self)
-        self.btn_readme.setToolTip('Visit the <b>CellECT</b> website on GitHub.')
-        self.btn_readme.resize(buttons_width, buttons_height)
-        self.btn_readme.move(50, buttons_offset + (buttons_height + buttons_spacing)*3) 
-        self.btn_readme.clicked.connect(self.run_CellECT_readme)
-
-        self.btn_quit = QtGui.QPushButton('Quit', self)
-        self.btn_quit.setToolTip('Quit <b>CellECT<b>.')
-        self.btn_quit.resize(buttons_width, buttons_height)
-        self.btn_quit.move(50, buttons_offset + (buttons_height + buttons_spacing)*4) 
-        self.btn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
-        
-        self.setGeometry(300, 300, 470, 330)
-        self.setWindowTitle('CellECT')    
-        self.show()
-        
-
-    def run_CellECT_readme(self):
-
-        """
-        Open firefox at the GitHub project page.
-        """
-
-        os.system('firefox https://github.com/ddiana/CellECT')
-
-
-    def run_CellECT_seg_tool(self):
-
-        """
-        Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec
-        """
-
-        os.system('gnome-terminal -x sh -c "CellECT_seg_tool; sleep 1"')
-
-
-    def run_CellECT_track_tool(self):
-
-        """
-        Open gnome-terminal and run CellECT_track_tool and sleep 1 sec
-        """
-
-        os.system('gnome-terminal -x sh -c "CellECT_track_tool; sleep 1"')
-
-
-    def run_CellECT_create_workspace(self):
-
-        """
-        Open gnome-terminal and run CellECT_create_workspace_directories and sleep 1 sec
-        """
-        os.system('gnome-terminal -x sh -c "CellECT_create_workspace_directories; sleep 1"')
+from CellECT.workspace_management import metadata as md
+from CellECT.workspace_management import workspace_data as wd
+from CellECT.gui import about_window
+from CellECT.gui import new_workspace
 
 
 
-def main():
-    
-    app = QtGui.QApplication(sys.argv)
-    CellECT_main_menu = MainMenu()
-    sys.exit(app.exec_())
+
+class SimpleList(QtCore.QAbstractListModel):
+    def __init__(self, contents):
+        super(SimpleList, self).__init__()
+        self.contents = contents
+
+    def rowCount(self, parent):
+        return len(self.contents)
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            return str(self.contents[index.row()])
+	
+			
+
+class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
-if __name__ == '__main__':
-    main()
+	def setup_ui_data(self):
+
+		if self.workspace_data.metadata.numt:
+			self.horizontalSlider_t.setMaximum(self.workspace_data.metadata.numt-1)
+			self.horizontalSlider_z.setMaximum(self.workspace_data.metadata.numz-1)
+		else:
+			self.horizontalSlider_t.setMaximum(0)
+			self.horizontalSlider_z.setMaximum(0)
+
+		self.set_images()
+
+		self.populate_segmentation_checklist_list()
+
+		self.populate_metadata_boxes()
+
+		self.list_view_selection_model = self.listView.selectionModel()
+
+		self.list_view_selection_model.selectionChanged.connect(self.time_selected_in_list)
+
+
+
+	def __init__(self, parent=None):
+		super(MainWindow, self).__init__(parent)
+
+
+#		pickle.dump( self.workspace_data, open( "workspace_data.cws", "wb" ) )
+
+		# setupUI needs to be called to setup the UI designed with QT Designer
+		self.setupUi(self)
+
+		self.workspace_data = wd.WorkSpaceData()
+
+		self.setup_ui_data()
+
+
+		# connect actions to functions
+		self.actionRun_Segmentation_Tool.triggered.connect(self.run_CellECT_seg_tool)
+		self.actionRun_Tracking_Tool.triggered.connect( self.run_CellECT_track_tool)
+		self.actionGitHub_Repo.triggered.connect( self.run_CellECT_seg_tool)
+		self.actionOpen_Workspace.triggered.connect( self.open_workspace)
+		self.actionAbout.triggered.connect(self.show_about)
+		self.actionNew_Workspace.triggered.connect(self.show_new_workspace)
+
+		self.actionExit.triggered.connect(self.exit_app)
+
+
+		# connect buttons
+		self.btn_preliminary_seg.clicked.connect(self.run_preliminary_seg)
+		self.btn_seg_tool.clicked.connect(self.run_CellECT_seg_tool)
+		self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
+		self.btn_select_all.clicked.connect(self.listView.selectAll)
+		
+
+
+		self.spinBox_numx.valueChanged.connect(self.update_metadata)
+		self.spinBox_numy.valueChanged.connect(self.update_metadata)
+		self.spinBox_numz.valueChanged.connect(self.update_metadata)
+		self.spinBox_numt.valueChanged.connect(self.update_metadata)
+		self.doubleSpinBox_xres.valueChanged.connect(self.update_metadata)
+		self.doubleSpinBox_yres.valueChanged.connect(self.update_metadata)
+		self.doubleSpinBox_zres.valueChanged.connect(self.update_metadata)
+		self.doubleSpinBox_tres.valueChanged.connect(self.update_metadata)
+		self.spinBox_numch.valueChanged.connect(self.update_metadata)
+		self.comboBox_mem_chan.currentIndexChanged.connect(self.update_metadata)
+
+		# images
+		self.horizontalSlider_t.valueChanged.connect(self.set_images)
+		self.horizontalSlider_z.valueChanged.connect(self.set_images)
+
+		
+	
+
+
+	def open_workspace(self):
+		# Use the stock Qt dialog to look for VTK files.
+		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "*.cws")
+
+
+		#self.workspace_data = pickle.load( open( filename, "rb" ) )
+
+		self.workspace_data.load_workspace(filename)
+		self.workspace_data.set_location(filename)		
+		self.workspace_data.get_available_segs()
+
+		self.setup_ui_data()
+
+		
+
+		print filename
+
+
+
+	def time_selected_in_list(self):
+
+		try:
+			current_selection = self.listView.selectionModel().selectedIndexes()[-1].row()
+		except:
+			current_selection = 0
+
+		self.horizontalSlider_t.setValue(current_selection)
+
+
+
+	def populate_metadata_boxes(self):
+
+		if not self.workspace_data.metadata.xres == None:
+			self.doubleSpinBox_xres.setValue(self.workspace_data.metadata.xres)
+
+		if not self.workspace_data.metadata.yres == None:
+			self.doubleSpinBox_yres.setValue(self.workspace_data.metadata.yres)
+
+		if not self.workspace_data.metadata.zres == None:
+			self.doubleSpinBox_zres.setValue(self.workspace_data.metadata.zres)
+
+		if not self.workspace_data.metadata.tres == None:
+			self.doubleSpinBox_tres .setValue(self.workspace_data.metadata.tres)
+	
+		if not self.workspace_data.metadata.numx == None:
+			self.spinBox_numx.setValue(self.workspace_data.metadata.numx)
+
+		if not self.workspace_data.metadata.numy == None:
+			self.spinBox_numy .setValue(self.workspace_data.metadata.numy)
+
+		if not self.workspace_data.metadata.numz == None:
+			self.spinBox_numz.setValue(self.workspace_data.metadata.numz)
+
+		if not self.workspace_data.metadata.numt == None:
+			self.spinBox_numt.setValue(self.workspace_data.metadata.numt)
+
+		if not self.workspace_data.metadata.numch == None:
+			self.spinBox_numch.setValue(self.workspace_data.metadata.numch)
+
+		# TODO: if number of chnnels is not set
+		if not self.workspace_data.metadata.mem_ch == None:
+			for i in xrange(self.workspace_data.metadata.numch):
+				self.comboBox_mem_chan.addItem(str(i))
+
+
+
+	def update_metadata(self):
+
+		if self.doubleSpinBox_xres.value():
+			self.workspace_data.metadata.xres = self.doubleSpinBox_xres.value()
+
+		if self.doubleSpinBox_xres.value():
+			self.workspace_data.metadata.xres = self.doubleSpinBox_xres.value()
+
+		if self.doubleSpinBox_yres.value():
+			self.workspace_data.metadata.yres = self.doubleSpinBox_yres.value()
+
+		if self.doubleSpinBox_zres.value():
+			self.workspace_data.metadata.zres = self.doubleSpinBox_zres.value()
+
+		if self.doubleSpinBox_tres .value():
+			self.workspace_data.metadata.tres = self.doubleSpinBox_tres .value()
+
+		if self.spinBox_numx.value():
+			self.workspace_data.metadata.numx = self.spinBox_numx.value()
+
+		if self.spinBox_numy .value():
+			self.workspace_data.metadata.numy = self.spinBox_numy .value()
+
+		if self.spinBox_numz.value():
+			self.workspace_data.metadata.numz = self.spinBox_numz.value()
+
+		if self.spinBox_numt.value():
+			self.workspace_data.metadata.numt = self.spinBox_numt.value()
+
+		if self.spinBox_numch.value():
+			self.workspace_data.metadata.numch = self.spinBox_numch.value()
+
+		# TODO update number of channels in combobox
+		self.workspace_data.metadata.memch = self.comboBox_mem_chan.currentIndex()
+
+		
+	def write_tracker_config_file(self, selected_indices):
+
+		file_name = "%s/tracker_config/config_file_tracker.cnf" % self.workspace_data.workspace_location
+		with open(file_name,'w') as f:
+
+		
+			z_scale = float(self.workspace_data.metadata.zres) / float( self.workspace_data.metadata.xres)
+			f.write('z-scale = %d\n' % z_scale)
+
+			f.write("time-stamps = ")
+			for i in selected_indices:
+				f.write("%d " % i.row())
+		
+
+			# TODO tracker relative path
+
+			f.write("\nsegs-path = %s/segs_all_time_stamps\n" % self.workspace_data.workspace_location)
+			f.write('z-slices-per-stack = %d\n' %  self.workspace_data.metadata.numz)
+			f.write('tif-slices-path = %s/input_slices/\n' % self.workspace_data.workspace_location)
+			f.write('gui-thumbnail-path = gui_thumbnails/\n')
+			f.write('cell-association-distance-threshold = 200\n')
+			f.write('max-cell-growth-rate = 1.3\n')
+	
+		return file_name
+
+	def set_images(self):
+
+		
+		#print "t: %d, z: %d" % (self.horizontalSlider_t.value(), self.horizontalSlider_z.value())
+
+		try:
+			index = self.model.index(self.horizontalSlider_t.value(),0)
+			self.listView.selectionModel().setCurrentIndex(index,  QtGui.QItemSelectionModel.ClearAndSelect)
+		except:
+			pass
+
+
+
+
+		if self.workspace_data.workspace_location:
+
+			i = (self.horizontalSlider_t.value() ) * self.workspace_data.metadata.numz*self.workspace_data.metadata.numch + self.horizontalSlider_z.value()*self.workspace_data.metadata.numch+1
+			img1_full_size = misc.imread("%s/input_slices/%d.tif" % (self.workspace_data.workspace_location, i))	
+
+			max_size = 500
+			factor = min(1, 500./ max(img1_full_size.shape) )
+
+			img1 = misc.imresize(img1_full_size, (int(img1_full_size.shape[0]*factor), int(img1_full_size.shape[1]*factor)))
+
+
+			if self.workspace_data.metadata.numch>1:			
+	
+				img2_full_size = misc.imread("%s/input_slices/%d.tif"  % (self.workspace_data.workspace_location, i+1))	
+				img2 = misc.imresize(img2_full_size, (int(img2_full_size.shape[0]*factor), int(img2_full_size.shape[1]*factor)))
+			else:
+				img2 = np.zeros_like(img1)		
+				img2_full_size = np.zeros_like(img1_full_size)
+		
+			img3 = np.zeros_like(img2)
+			img = np.dstack([img1, img2, img3])
+
+			
+			misc.imsave("temp_slice.jpg", img)
+			image1 = QtGui.QImage("temp_slice.jpg")
+	
+			self.label_original_image.setPixmap(QtGui.QPixmap.fromImage(image1))
+
+		
+			try:
+
+				seg_img = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % ( self.workspace_data.workspace_location, self.horizontalSlider_t.value()))["ws"][:,:,self.horizontalSlider_z.value()]
+
+				img3_full_size = np.zeros_like(img1_full_size)
+				img_full_size = np.dstack([img1_full_size, img2_full_size, img3_full_size])
+
+				borders_mask = np.uint(seg_img<1)
+				borders_mask = morphology.binary_dilation( borders_mask, np.ones((3,3)))
+				borders_mask = np.dstack([borders_mask, borders_mask, borders_mask])
+				seg_img = img_full_size * (1-borders_mask) + 255*borders_mask
+				misc.imsave("temp_seg.jpg", seg_img)
+				image2 = QtGui.QImage("temp_seg.jpg")
+			except:
+				image2 = image1
+
+			self.label_segmented_image.setPixmap(QtGui.QPixmap.fromImage(image2))
+
+
+	def call_cellect_seg_tool_preliminary(self, config_file_location, index):
+
+		os.system('CellECT_seg_tool -m -i -f %s' % config_file_location)
+
+
+		print self.model.contents[index] 
+		self.model.contents[index] += " has segmentation"
+
+	def run_preliminary_seg(self):
+	
+		"""
+		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode
+		"""
+
+		if len(self.listView.selectionModel().selectedIndexes()):
+			segmentation_indexes = [ index.row() for index in self.listView.selectionModel().selectedIndexes()]
+		else:
+			QtGui.QMessageBox.information(self, "CellECT Preliminary Segmentation", "Please select one or more time points to run the segmentation on.")
+			return
+
+		valid_indexes = []
+		invalid_indexes = []
+
+		for index in segmentation_indexes:
+			if re.search("[.]*has segmentation",self.model.contents[index]):
+				invalid_indexes.append(index)
+			else:
+				valid_indexes.append(index)
+
+		if len(valid_indexes):
+			if len(invalid_indexes):
+				message = "The following selected time stamps already have a segmentation result: %s. Perform preliminary segmentation on the remaining time stamps?" % str(invalid_indexes)[1:-1]
+				reply = QtGui.QMessageBox.question(self, "CellECT Preliminary Segmentation", message, QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+				if reply == QtGui.QMessageBox.No:
+					return
+  
+		else:
+			QtGui.QMessageBox.information(self, "CellECT Preliminary Segmentation", "All the selected time stamps already have a segmentation result.")
+			return
+
+
+
+		for index in valid_indexes:
+			config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+		
+			p = multiprocessing.Process(target = self.call_cellect_seg_tool_preliminary, args=(config_file_location, index))
+			p.start()
+		
+			print config_file_location
+
+
+
+
+
+
+
+	def run_CellECT_readme(self):
+
+		"""
+		Open firefox at the GitHub project page.
+		"""
+
+		os.system('firefox https://github.com/ddiana/CellECT')
+
+
+	def run_CellECT_seg_tool(self):
+
+		"""
+		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec
+		"""
+
+		if len(self.listView.selectionModel().selectedIndexes()):
+			if len(self.listView.selectionModel().selectedIndexes()) > 1:
+				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Please select ONLY ONE time point to run the interactive segmentation on.")
+			else:
+				segmentation_index =  self.listView.selectionModel().selectedIndexes()[-1].row()
+		else:
+			QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Please select the time point to run the interactive segmentation on.")
+
+
+
+		config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+
+		print config_file_location
+
+		use_metric = ""		
+		if not self.checkBox_use_metric.isChecked():
+			use_metric = "-m"
+
+		os.system('gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location))
+
+
+	def run_CellECT_track_tool(self):
+
+		"""
+		Open gnome-terminal and run CellECT_track_tool and sleep 1 sec
+		"""
+
+		if len(self.listView.selectionModel().selectedIndexes()) <2:
+			QtGui.QMessageBox.information(self, "CellECT Tracking Tool", "Please select two or more time points to run the interactive segmentation on.")
+			return
+
+
+		for i in self.listView.selectionModel().selectedIndexes():
+
+
+			if not i.row() in self.workspace_data.available_segs:
+				QtGui.QMessageBox.information(self, "CellECT Tracking Tool", "Tracking can only be performed on available segmentations.")
+
+				break
+
+
+		config_file_location = self.write_tracker_config_file(self.listView.selectionModel().selectedIndexes())
+
+
+		os.system('gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 1"' % config_file_location)
+
+
+
+	def populate_segmentation_checklist_list(self):
+
+		#self.listWidget.addItems(['test','test','test','test','test','test','test'])
+
+		list_items = []
+
+		if self.workspace_data.metadata.numt:
+
+			for i in xrange(self.workspace_data.metadata.numt):
+				if i in self.workspace_data.available_segs:
+					list_item = "Volume at t=%d has segmentation" % i
+				else:
+					list_item = "Volume at t=%d" %i
+
+				list_items.append(list_item)
+
+		self.model = SimpleList(list_items)
+	
+		
+		self.listView.setModel(self.model)
+		self.listView.show()
+
+
+	def exit_app(self):
+
+		
+		sys.exit(0)
+
+	def show_about(self):
+
+		form = about_window.AboutWindow(self)
+		form.show()
+
+	def show_new_workspace(self):
+
+		form = new_workspace.NewWorkspaceWindow(self)
+		form.show()
+		
+
+
+app = QtGui.QApplication(sys.argv)
+form = MainWindow()
+form.show()
+app.exec_()

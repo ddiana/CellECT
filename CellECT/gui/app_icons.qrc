@@ -1,0 +1,15 @@
+<RCC>
+  <qresource>
+    <file>icons/1376911320_file_encrypted.png</file>
+    <file>icons/octocat.png</file>
+    <file>icons/1376906128_Card_file.png</file>
+    <file>icons/1376909502_bullet_delete.png</file>
+    <file>icons/1376909512_bullet_info.png</file>
+    <file>icons/1376909581_comment_error.png</file>
+    <file>icons/1376909654_folder_starred.png</file>
+    <file>icons/1376909673_folders.png</file>
+    <file>icons/1376909739_basket_empty.png</file>
+    <file>icons/1376909756_basket_download.png</file>
+    <file>icons/1376909786_basket_edit.png</file>
+  </qresource>
+</RCC>

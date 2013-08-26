@@ -15,7 +15,7 @@ import CellECT.seg_tool.globals
 
 
 
-def parse_config_file_line(line):
+def parse_config_file_line(line, required_keys, all_keys):
 	"""
 	Parse a line from the config fine: key = value.
 	"""
@@ -26,11 +26,13 @@ def parse_config_file_line(line):
 	matches = re.match("(.+)=(.+)", line)
 
 
+
 	if matches:
 		key = matches.group(1).strip().lower()
 		val = matches.group(2).strip()
 
-		if not key in CellECT.seg_tool.globals.default_parameter_dictionary_keys:
+		if not key in all_keys:
+			
 			err = IOError()
 			err.message = "Key '%s' not in parameter list" % key
 			raise err
@@ -55,20 +57,24 @@ def parse_config_file_line(line):
 	return key, val
 
 
-def check_if_file_complete():
+def check_if_file_complete(required_keys):
 	"""
 	Check if the config file addressed all the parameters needed.
 	"""
 
 	missing_info = ""
-	for key in CellECT.seg_tool.globals.default_parameter_dictionary_keys:
+
+	for key in required_keys:
 		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER.has_key(key):
 			missing_info += key + " "
+
 
 	if len(missing_info):
 		err = IOError()
 		err.message = "Error reading config file: incomplete config file. Minssing info: "+missing_info
 		raise err
+
+
 
 
 
@@ -86,6 +92,19 @@ def read_program_parameters(config_file_path):
 		sys.exit()
 
 
+	required_keys = set(CellECT.seg_tool.globals.default_parameter_dictionary_keys)
+
+	if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+		required_keys = required_keys.union( set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_bq_only))
+	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
+		required_keys = required_keys.union( set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_cellness_metric_only))
+
+	all_keys = set(CellECT.seg_tool.globals.default_parameter_dictionary_keys)
+	all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_bq_only))
+	all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_cellness_metric_only))
+
+
+
 	line = f.readline()
 	line_counter = 0
 
@@ -93,7 +112,7 @@ def read_program_parameters(config_file_path):
 		line_counter += 1
 
 		try:
-			key, val = parse_config_file_line(line)
+			key, val = parse_config_file_line(line, required_keys, all_keys)
 			
 		except IOError as err:
 			message = "Error at line #%d: %s \nLine #%d: %s" % (line_counter, err.message, line_counter, line.strip() )
@@ -112,7 +131,7 @@ def read_program_parameters(config_file_path):
 		line = f.readline()
 
 	try:
-		check_if_file_complete()
+		check_if_file_complete(required_keys)
 	except IOError as err:
 		message = "Error in the config file: %s" % err.message
 		logging.exception(message)
@@ -145,6 +164,8 @@ def abs_path_to_workspace(config_file_path):
 	print "Workspace at: %s" % abs_path_to_workspace_dir
 
 	return abs_path_to_workspace_dir
+
+
 
 def test_workspace_directory_structure(path_to_workspace):
 	"""

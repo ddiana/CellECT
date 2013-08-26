@@ -158,8 +158,9 @@ def prepare_test_data(collection_of_segments):
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			vector.append (segment.feature_dict["border_to_interior_intensity_ratio"])
 		test_vectors.append(vector)
-		
-	test_vectors = normalize_test_data(test_vectors)	
+
+	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
+		test_vectors = normalize_test_data(test_vectors)	
 		
 	
 	return test_vectors

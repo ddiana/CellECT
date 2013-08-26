@@ -16,6 +16,10 @@ Load defaults, if applicable.
 """
 
 
+def get_time_stamps_from_input_string(input_string):
+
+	CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"] = [int(number.strip()) for number in input_string.split(" ")]
+
 def read_program_parameters(config_file_path):
 
 	# TODO unit tests for this
@@ -33,4 +37,6 @@ def read_program_parameters(config_file_path):
 			print "ERROR reading config file"
 		line = f.readline()
 
+
+	get_time_stamps_from_input_string(CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"])
 

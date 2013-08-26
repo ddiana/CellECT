@@ -74,7 +74,7 @@ def load_cell_tracker():
 
 
 	cell_tracker = ct.CellTracker()
-	time_stamps = range(int(CellECT.track_tool.globals.PARAMETER_DICT["t-first"]), int(CellECT.track_tool.globals.PARAMETER_DICT["t-last"]),  int(CellECT.track_tool.globals.PARAMETER_DICT["t-step"]) )
+	time_stamps = CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"]
 
 	for t in time_stamps:
 		cell_profiles = parse_file_at_timestamp( CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] +"/"+ "timestamp_" + str(t) +"_segment_props.xml",t)

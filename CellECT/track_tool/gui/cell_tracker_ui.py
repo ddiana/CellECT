@@ -655,14 +655,14 @@ class CellTrackerUI:
 
 			if (z_old2[0] != z2) or (t_old2[0] !=t2):
 				if t1 <= t2:
-					I2 = sp.misc.imread(PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-					Seg2[0] = sp.misc.imread(PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
+					I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
+					Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 					I2_is_blank[0] = False
 
 					# if the other panel is set to blank_page, restore it..
 					if I1_is_blank[0]:
-						I1 = sp.misc.imread(PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-						Seg1[0] = sp.misc.imread(PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
+						I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
+						Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 						l1.set_data(I1)
 						l2.set_data(Seg1[0])
 						I1_is_blank[0] = False

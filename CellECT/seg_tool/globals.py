@@ -18,13 +18,11 @@ path_to_workspace = ""
 
 expected_workspace_directories = set(["config_files", "init_watershed_all_time_stamps", "input_slices", "segs_all_time_stamps", "tracker_config", "training_data"])
 
-default_parameter_dictionary_keys = ("volume_mat_path",
-   "volume_mat_var",\
-   "first_seg_mat_path",\
-   "first_seg_mat_var", \
-   "nuclei_mat_path",\
-   "nuclei_mat_var",\
-   "training_vol_mat_path",\
+default_parameter_dictionary_keys_bq_only =  ("bq_token",\
+   "bq_mex_url",\
+   "bq_t")
+
+default_parameter_dictionary_keys_cellness_metric_only = ( "training_vol_mat_path",\
    "training_vol_mat_var",\
    "training_vol_nuclei_mat_path", \
    "training_vol_nuclei_mat_var",\
@@ -35,13 +33,16 @@ default_parameter_dictionary_keys = ("volume_mat_path",
    "training_negative_seg_mat_path",\
    "training_negative_seg_mat_var",\
    "training_negative_labels_mat_path",\
-   "training_negative_labels_mat_var", \
+   "training_negative_labels_mat_var")
+
+default_parameter_dictionary_keys = ("volume_mat_path",
+   "volume_mat_var",\
+   "first_seg_mat_path",\
+   "first_seg_mat_var", \
+   "nuclei_mat_path",\
+   "nuclei_mat_var",\
    "save_location_prefix",\
    "has_bg", \
    "use_size", \
    "use_border_intensity", \
-   "use_border_distance",\
-   "bisque",\
-   "bq_token",\
-   "bq_mex_url",\
-   "bq_t")
+   "use_border_distance")
