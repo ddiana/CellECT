@@ -63,7 +63,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		self.populate_segmentation_checklist_list()
 
-		self.populate_metadata_boxes()
+		try:
+			self.workspace_data.metadata.populate_metadata_boxes(self)
+		except:
+			pass
 
 		self.list_view_selection_model = self.listView.selectionModel()
 
@@ -135,7 +138,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.workspace_data.get_available_segs()
 
 		self.setup_ui_data()
-
+		
 		
 
 		print filename
@@ -153,39 +156,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-	def populate_metadata_boxes(self):
-
-		if not self.workspace_data.metadata.xres == None:
-			self.doubleSpinBox_xres.setValue(self.workspace_data.metadata.xres)
-
-		if not self.workspace_data.metadata.yres == None:
-			self.doubleSpinBox_yres.setValue(self.workspace_data.metadata.yres)
-
-		if not self.workspace_data.metadata.zres == None:
-			self.doubleSpinBox_zres.setValue(self.workspace_data.metadata.zres)
-
-		if not self.workspace_data.metadata.tres == None:
-			self.doubleSpinBox_tres .setValue(self.workspace_data.metadata.tres)
-	
-		if not self.workspace_data.metadata.numx == None:
-			self.spinBox_numx.setValue(self.workspace_data.metadata.numx)
-
-		if not self.workspace_data.metadata.numy == None:
-			self.spinBox_numy .setValue(self.workspace_data.metadata.numy)
-
-		if not self.workspace_data.metadata.numz == None:
-			self.spinBox_numz.setValue(self.workspace_data.metadata.numz)
-
-		if not self.workspace_data.metadata.numt == None:
-			self.spinBox_numt.setValue(self.workspace_data.metadata.numt)
-
-		if not self.workspace_data.metadata.numch == None:
-			self.spinBox_numch.setValue(self.workspace_data.metadata.numch)
-
-		# TODO: if number of chnnels is not set
-		if not self.workspace_data.metadata.mem_ch == None:
-			for i in xrange(self.workspace_data.metadata.numch):
-				self.comboBox_mem_chan.addItem(str(i))
 
 
 

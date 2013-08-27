@@ -63,6 +63,42 @@ class Metadata(object):
 
 
 
+	def populate_metadata_boxes(self, ui):
+
+		if not self.xres == None:
+			ui.doubleSpinBox_xres.setValue(self.xres)
+
+		if not self.yres == None:
+			ui.doubleSpinBox_yres.setValue(self.yres)
+
+		if not self.zres == None:
+			ui.doubleSpinBox_zres.setValue(self.zres)
+
+		if not self.tres == None:
+			ui.doubleSpinBox_tres .setValue(self.tres)
+	
+		if not self.numx == None:
+			ui.spinBox_numx.setValue(self.numx)
+
+		if not self.numy == None:
+			ui.spinBox_numy .setValue(self.numy)
+
+		if not self.numz == None:
+			ui.spinBox_numz.setValue(self.numz)
+
+		if not self.numt == None:
+			ui.spinBox_numt.setValue(self.numt)
+
+		if not self.numch == None:
+			ui.spinBox_numch.setValue(self.numch)
+
+		# TODO: if number of chnnels is not set
+		if not self.mem_ch == None:
+			for i in xrange(self.numch):
+				ui.comboBox_mem_chan.addItem(str(i))
+
+
+
 
 
 	def load_bq_csv_file(self, file_name):

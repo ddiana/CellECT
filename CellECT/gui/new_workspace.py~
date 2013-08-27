@@ -2,11 +2,15 @@
 # Vision Research Lab, University of California Santa Barbara
 
 # Imports
-
+from libtiff import TIFF
 from PySide import QtGui
+import os
+
 
 # Imports from this project
 from CellECT.gui import newWorkspaceGui
+
+from CellECT.workspace_management import metadata as md
 
 class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
@@ -17,3 +21,42 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.setupUi(self)
 
 		self.btn_cancel.clicked.connect(self.close)
+
+		self.btn_select_img.clicked.connect(self.load_stack)
+
+		self.metadata = md.Metadata()
+	
+		self.btn_load_metadata.clicked.connect(self.load_metadata)
+
+		self.btn_choose_location.clicked.connect(self.get_ws_location)
+
+
+	def get_ws_location(self):
+
+
+
+		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "Nuclei Detector Output (*.csv);; All files (*.*)",QtGui.QFileDialog.ShowDirsOnly )
+
+
+
+
+	def load_metadata(self):
+
+
+		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "Nuclei Detector Output (*.csv);; All files (*.*)")
+
+		self.metadata.load_bq_csv_file(filename)
+		self.metadata.populate_metadata_boxes(self)
+
+
+	def load_stack(self):
+
+
+		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "TIFF (*.tif *.tiff);; All files (*.*)")
+
+		tif = TIFF.open(filename)
+
+#		pic = tif.read_image()
+
+		pic = QtGui.QImage(filename)
+		self.label_preview_img.setPixmap(QtGui.QPixmap.fromImage(pic))
