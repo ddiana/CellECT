@@ -130,6 +130,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		# Use the stock Qt dialog to look for VTK files.
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "*.cws")
 
+		self.open_cws_file(filename)
+
+
+	def open_cws_file(self, filename):
 
 		#self.workspace_data = pickle.load( open( filename, "rb" ) )
 
@@ -438,6 +442,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		form = new_workspace.NewWorkspaceWindow(self)
 		form.show()
+
 		
 
 

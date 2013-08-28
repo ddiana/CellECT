@@ -116,7 +116,7 @@
      <string>Preliminary Segmentation</string>
     </property>
     <property name="icon">
-     <iconset resource="app_icons.qrc">
+     <iconset>
       <normaloff>:/icons/1376909739_basket_empty.png</normaloff>:/icons/1376909739_basket_empty.png</iconset>
     </property>
     <property name="iconSize">
@@ -139,7 +139,7 @@
      <string>Run Segmentation Tool</string>
     </property>
     <property name="icon">
-     <iconset resource="app_icons.qrc">
+     <iconset>
       <normaloff>:/icons/1376909786_basket_edit.png</normaloff>:/icons/1376909786_basket_edit.png</iconset>
     </property>
     <property name="iconSize">
@@ -162,7 +162,7 @@
      <string>Run Tracking Tool</string>
     </property>
     <property name="icon">
-     <iconset resource="app_icons.qrc">
+     <iconset>
       <normaloff>:/icons/1376909756_basket_download.png</normaloff>:/icons/1376909756_basket_download.png</iconset>
     </property>
     <property name="iconSize">
@@ -651,7 +651,7 @@
      <x>0</x>
      <y>0</y>
      <width>1407</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWorkspace">
@@ -719,7 +719,7 @@
   </widget>
   <action name="actionNew_Workspace">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909654_folder_starred.png</normaloff>:/icons/1376909654_folder_starred.png</iconset>
    </property>
    <property name="text">
@@ -731,7 +731,7 @@
   </action>
   <action name="actionOpen_Workspace">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909673_folders.png</normaloff>:/icons/1376909673_folders.png</iconset>
    </property>
    <property name="text">
@@ -743,7 +743,7 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909512_bullet_info.png</normaloff>:/icons/1376909512_bullet_info.png</iconset>
    </property>
    <property name="text">
@@ -752,7 +752,7 @@
   </action>
   <action name="actionHelp">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909581_comment_error.png</normaloff>:/icons/1376909581_comment_error.png</iconset>
    </property>
    <property name="text">
@@ -767,7 +767,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909502_bullet_delete.png</normaloff>:/icons/1376909502_bullet_delete.png</iconset>
    </property>
    <property name="text">
@@ -776,7 +776,7 @@
   </action>
   <action name="actionGitHub_Repo">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376911320_file_encrypted.png</normaloff>:/icons/1376911320_file_encrypted.png</iconset>
    </property>
    <property name="text">
@@ -785,7 +785,7 @@
   </action>
   <action name="actionRun_Segmentation_Tool">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909786_basket_edit.png</normaloff>:/icons/1376909786_basket_edit.png</iconset>
    </property>
    <property name="text">
@@ -794,7 +794,7 @@
   </action>
   <action name="actionRun_Tracking_Tool">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909756_basket_download.png</normaloff>:/icons/1376909756_basket_download.png</iconset>
    </property>
    <property name="text">
@@ -803,7 +803,7 @@
   </action>
   <action name="actionPreliminary_Segmentation">
    <property name="icon">
-    <iconset resource="app_icons.qrc">
+    <iconset>
      <normaloff>:/icons/1376909739_basket_empty.png</normaloff>:/icons/1376909739_basket_empty.png</iconset>
    </property>
    <property name="text">

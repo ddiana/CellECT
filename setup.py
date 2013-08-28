@@ -43,7 +43,7 @@ setup(name='CellECT',\
 	author_email = 'diana.delibaltov@gmail.com',\
 	url = 'http://vision.ece.ucsb.edu',\
 	packages = CellECT_packages,\
-    package_data = {'CellECT': ['utils/*.py', 'utils/*.m', 'README.TXT','track_tool/resources/gui_thumbnails/*', 'resources/*']},\
+    package_data = {'CellECT': ['utils/*.py', 'utils/*.m', 'README.TXT','track_tool/resources/gui_thumbnails/*', 'resources/*',  'data/training/ascidian/*', 'data/training/purdue/*']},\
 	classifiers = [\
 		'Development Status :: 3 - Alpha',\
 		'Environment :: Console',\

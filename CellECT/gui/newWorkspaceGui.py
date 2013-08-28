@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Mon Aug 26 16:48:39 2013
+# Created: Tue Aug 27 18:51:49 2013
 #      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(587, 763)
+        Dialog.resize(587, 800)
         self.btn_select_img = QtGui.QPushButton(Dialog)
         self.btn_select_img.setGeometry(QtCore.QRect(20, 50, 161, 41))
         self.btn_select_img.setObjectName("btn_select_img")
@@ -21,9 +21,9 @@ class Ui_Dialog(object):
         self.label_preview_img.setAutoFillBackground(True)
         self.label_preview_img.setText("")
         self.label_preview_img.setObjectName("label_preview_img")
-        self.pushButton_2 = QtGui.QPushButton(Dialog)
-        self.pushButton_2.setGeometry(QtCore.QRect(20, 540, 251, 41))
-        self.pushButton_2.setObjectName("pushButton_2")
+        self.btn_import_nuclei_csv = QtGui.QPushButton(Dialog)
+        self.btn_import_nuclei_csv.setGeometry(QtCore.QRect(20, 540, 251, 41))
+        self.btn_import_nuclei_csv.setObjectName("btn_import_nuclei_csv")
         self.pushButton_3 = QtGui.QPushButton(Dialog)
         self.pushButton_3.setGeometry(QtCore.QRect(320, 540, 171, 41))
         self.pushButton_3.setObjectName("pushButton_3")
@@ -187,20 +187,24 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.label_18.setFont(font)
         self.label_18.setObjectName("label_18")
-        self.btnn_choose_location = QtGui.QPushButton(Dialog)
-        self.btnn_choose_location.setGeometry(QtCore.QRect(400, 620, 131, 41))
-        self.btnn_choose_location.setObjectName("btnn_choose_location")
+        self.btn_choose_location = QtGui.QPushButton(Dialog)
+        self.btn_choose_location.setGeometry(QtCore.QRect(400, 620, 131, 41))
+        self.btn_choose_location.setObjectName("btn_choose_location")
         self.label_19 = QtGui.QLabel(Dialog)
         self.label_19.setGeometry(QtCore.QRect(30, 640, 131, 21))
         self.label_19.setObjectName("label_19")
-        self.lineEdit = QtGui.QLineEdit(Dialog)
-        self.lineEdit.setGeometry(QtCore.QRect(160, 630, 191, 33))
-        self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit_ws_name = QtGui.QLineEdit(Dialog)
+        self.lineEdit_ws_name.setGeometry(QtCore.QRect(160, 630, 191, 33))
+        self.lineEdit_ws_name.setObjectName("lineEdit_ws_name")
         self.line = QtGui.QFrame(Dialog)
         self.line.setGeometry(QtCore.QRect(20, 680, 541, 16))
         self.line.setFrameShape(QtGui.QFrame.HLine)
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setObjectName("line")
+        self.progressBar = QtGui.QProgressBar(Dialog)
+        self.progressBar.setGeometry(QtCore.QRect(10, 770, 561, 23))
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setObjectName("progressBar")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -208,7 +212,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "New Workspace", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_select_img.setText(QtGui.QApplication.translate("Dialog", "Select 4D stack", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_2.setText(QtGui.QApplication.translate("Dialog", "Import nuclei locations .CSV", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_import_nuclei_csv.setText(QtGui.QApplication.translate("Dialog", "Import nuclei locations .CSV", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_3.setText(QtGui.QApplication.translate("Dialog", "Make Input Seeds", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_load_metadata.setText(QtGui.QApplication.translate("Dialog", "Load metadata file", None, QtGui.QApplication.UnicodeUTF8))
@@ -228,6 +232,6 @@ class Ui_Dialog(object):
         self.btn_create_ws.setText(QtGui.QApplication.translate("Dialog", "Create workspace!", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_cancel.setText(QtGui.QApplication.translate("Dialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.label_18.setText(QtGui.QApplication.translate("Dialog", "Step 4: Name the workspace and choose location.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btnn_choose_location.setText(QtGui.QApplication.translate("Dialog", "Choose location", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_choose_location.setText(QtGui.QApplication.translate("Dialog", "Choose location", None, QtGui.QApplication.UnicodeUTF8))
         self.label_19.setText(QtGui.QApplication.translate("Dialog", "Workspace name:", None, QtGui.QApplication.UnicodeUTF8))
 

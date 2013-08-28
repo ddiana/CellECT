@@ -38,6 +38,7 @@ from CellECT.seg_tool.run_watershed import run_watershed as ws
 
 
 
+
 import CellECT.seg_tool.globals
 
 
@@ -127,18 +128,28 @@ def main():
 	
 	print "Loading test volume..."
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
-	print "Loading initial segmentation..."
-	watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
-
+	
 
 	#watershed = shuffle_labels(watershed)
 
-	
 	print "Loading nuclei..."
 	nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_var"])
+	seed_collection = seedc.SeedCollection([])
+
+	print "Loading initial segmentation if any..."
+	try:
+		watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
+	except:
+		print "No initial segmentation found... Making initial segmentation."
+		# input pts
+		init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
+		# make first seg
+		watershed = ws.run_watershed(vol, init_pts)
+		# save it so that it does not need to be computed again
+		sp.io.savemat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
 	last_length_of_seeds_list = 0 
-	seed_collection = seedc.SeedCollection([])
+	
 	seed_segment_collection = ssc.SeedSegmentCollection()
 
 

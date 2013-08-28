@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>587</width>
-    <height>763</height>
+    <width>584</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,7 +42,7 @@
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="btn_import_nuclei_csv">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -518,7 +518,7 @@
     <string>Step 4: Name the workspace and choose location.</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="btnn_choose_location">
+  <widget class="QPushButton" name="btn_choose_location">
    <property name="geometry">
     <rect>
      <x>400</x>
@@ -544,7 +544,7 @@
     <string>Workspace name:</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit">
+  <widget class="QLineEdit" name="lineEdit_ws_name">
    <property name="geometry">
     <rect>
      <x>160</x>
@@ -565,6 +565,19 @@
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>770</y>
+     <width>561</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>0</number>
    </property>
   </widget>
  </widget>
