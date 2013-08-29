@@ -146,7 +146,7 @@ def main():
 		# make first seg
 		watershed = ws.run_watershed(vol, init_pts)
 		# save it so that it does not need to be computed again
-		sp.io.savemat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
+		spio.savemat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
 	last_length_of_seeds_list = 0 
 	

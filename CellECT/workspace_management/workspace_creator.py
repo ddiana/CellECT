@@ -153,6 +153,37 @@ class WorkspaceCreator(object):
 
 
 
+	def write_config_files(self):
+
+		for time in xrange(self.metadata.numt):
+			config_file_name = "%s/config_files/timestamp_%d.cnf" % (self.ws_location, time)
+			with open(config_file_name, "w") as f:
+				f.write("volume_mat_path = init_watershed_all_time_stamps/vol_t_%d.mat\n" % time)
+				f.write("volume_mat_var = vol\n")
+				f.write("first_seg_mat_path =  init_watershed_all_time_stamps/init_ws_%d.mat\n" % time)
+				f.write("first_seg_mat_var = ws\n")
+				f.write("nuclei_mat_path =  init_watershed_all_time_stamps/time_stamp_%d_nuclei.mat\n" % time)
+				f.write("nuclei_mat_var = seeds\n")
+				f.write("training_vol_mat_path =  training_data/positive_example.mat\n")
+				f.write("training_vol_mat_var = vol\n")
+				f.write("training_vol_nuclei_mat_path = training_data/positive_example.mat\n")
+				f.write("training_vol_nuclei_mat_var = seeds\n")
+				f.write("training_positive_seg_mat_path = training_data/positive_example.mat\n")
+				f.write("training_positive_seg_mat_var = label_map\n")
+				f.write("training_positive_labels_mat_path = training_data/positive_example.mat\n")
+				f.write("training_positive_labels_mat_var = labels\n")
+				f.write("training_negative_seg_mat_path = training_data/negative_example.mat\n")
+				f.write("training_negative_seg_mat_var = L\n")
+				f.write("training_negative_labels_mat_path = training_data/negative_example.mat\n")
+				f.write("training_negative_labels_mat_var = labels\n")
+				f.write("save_location_prefix = segs_all_time_stamps/timestamp_%d_\n" % time)
+				f.write("has_bg = 1\n")
+				f.write("use_size = 1\n")
+				f.write("use_border_intensity = 1\n")
+				f.write("use_border_distance = 0\n")
+
+
+
 	def build_workspace(self, ws_location, progressBar):
 		
 		self.ws_location = ws_location
@@ -168,6 +199,8 @@ class WorkspaceCreator(object):
 		self.image.prep_image(self.ws_location, progressBar)
 
 		self.prep_training_data()
+
+		self.write_config_files()
 
 
 

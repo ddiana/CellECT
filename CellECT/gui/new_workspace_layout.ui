@@ -81,17 +81,17 @@
     <string>or</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="btn_load_metadata">
+  <widget class="QPushButton" name="btn_load_metadata_csv">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>140</y>
-     <width>161</width>
+     <width>171</width>
      <height>41</height>
     </rect>
    </property>
    <property name="text">
-    <string>Load metadata file</string>
+    <string>Load metadata CSV file</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_10">
@@ -240,6 +240,9 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="maximum">
+    <double>100000.000000000000000</double>
+   </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numt">
    <property name="geometry">
@@ -277,6 +280,9 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="maximum">
+    <double>100000.000000000000000</double>
+   </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numch">
    <property name="geometry">
@@ -293,6 +299,9 @@
      <weight>75</weight>
      <bold>true</bold>
     </font>
+   </property>
+   <property name="maximum">
+    <number>9</number>
    </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numz">
@@ -388,6 +397,9 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="maximum">
+    <double>100000.000000000000000</double>
+   </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_tres">
    <property name="geometry">
@@ -406,7 +418,7 @@
     </font>
    </property>
    <property name="maximum">
-    <double>10000.000000000000000</double>
+    <double>100000.000000000000000</double>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -578,6 +590,32 @@
    </property>
    <property name="value">
     <number>0</number>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_load_metadata_xml">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>140</y>
+     <width>181</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load metadata XML file</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>150</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>or</string>
    </property>
   </widget>
  </widget>

@@ -1,6 +1,13 @@
 
 import xml.etree.ElementTree as ET
 
+from libtiff import TIFF
+import StringIO
+import re
+import pdb
+
+
+
 class Metadata(object):
 
 	def __init__(self):
@@ -61,6 +68,54 @@ class Metadata(object):
 			if meta_field.get("name") == "mem_ch":
 				self.mem_ch = int(meta_field.get("value"))
 
+
+	def load_info_from_tif(self, filename):
+
+		tif = TIFF.open(filename)
+		buf = StringIO. StringIO(tif.info())		
+
+		img = tif.read_image()
+		self.numx = img.shape[0]
+		self.numy = img.shape[1]
+
+		meta_needed = set(["XResolution", "YResolution", "images", "slices", "SizeC", "SizeZ",\
+	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement" ])
+	
+		line = buf.readline()
+
+
+
+		while line:
+
+			for meta in meta_needed:
+				# match:
+				# case insensitive metadata tag
+				# in the format tag = float or int
+				# with : or =
+				# with possible white spaces
+				# possibly the number being in quotations
+				matched = re.findall('(?i)%s\s*[=:]\s*"?[0-9]*\.?[0-9]+"?' % meta, line)
+				if len(matched):
+					# get the value out of the matched pattern
+					value = re.findall("[0-9]*\.?[0-9]+", matched[0])
+					value = float(value[0])
+					if meta in set( ["XResolution" , "PhysicalSizeX"]):
+						self.xres = value
+					if meta in set( ["YResolution" , "PhysicalSizeY"]):
+						self.yres = value
+					if meta in set( ["ZResolution" , "PhysicalSizeZ"]):
+						self.zres = value
+					if meta == "TimeIncrement":
+						self.tres = value
+					if meta == "SizeZ":
+						self.numz = int(value)
+					if meta == "SizeC":
+						self.numch = int(value)
+					if meta == "SizeT":
+						self.numt = int(value)
+
+			line = buf.readline()
+				
 
 
 	def populate_metadata_boxes(self, ui):

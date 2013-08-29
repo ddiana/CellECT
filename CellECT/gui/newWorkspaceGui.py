@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Tue Aug 27 18:51:49 2013
+# Created: Wed Aug 28 19:55:53 2013
 #      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(587, 800)
+        Dialog.resize(584, 802)
         self.btn_select_img = QtGui.QPushButton(Dialog)
         self.btn_select_img.setGeometry(QtCore.QRect(20, 50, 161, 41))
         self.btn_select_img.setObjectName("btn_select_img")
@@ -30,9 +30,9 @@ class Ui_Dialog(object):
         self.label_2 = QtGui.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(290, 550, 21, 21))
         self.label_2.setObjectName("label_2")
-        self.btn_load_metadata = QtGui.QPushButton(Dialog)
-        self.btn_load_metadata.setGeometry(QtCore.QRect(20, 140, 161, 41))
-        self.btn_load_metadata.setObjectName("btn_load_metadata")
+        self.btn_load_metadata_csv = QtGui.QPushButton(Dialog)
+        self.btn_load_metadata_csv.setGeometry(QtCore.QRect(20, 140, 171, 41))
+        self.btn_load_metadata_csv.setObjectName("btn_load_metadata_csv")
         self.label_10 = QtGui.QLabel(Dialog)
         self.label_10.setGeometry(QtCore.QRect(30, 290, 141, 17))
         self.label_10.setObjectName("label_10")
@@ -70,6 +70,7 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_yres.setFont(font)
+        self.doubleSpinBox_yres.setMaximum(100000.0)
         self.doubleSpinBox_yres.setObjectName("doubleSpinBox_yres")
         self.spinBox_numt = QtGui.QSpinBox(Dialog)
         self.spinBox_numt.setGeometry(QtCore.QRect(170, 410, 91, 21))
@@ -87,6 +88,7 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_xres.setFont(font)
+        self.doubleSpinBox_xres.setMaximum(100000.0)
         self.doubleSpinBox_xres.setObjectName("doubleSpinBox_xres")
         self.spinBox_numch = QtGui.QSpinBox(Dialog)
         self.spinBox_numch.setGeometry(QtCore.QRect(170, 440, 91, 21))
@@ -95,6 +97,7 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.spinBox_numch.setFont(font)
+        self.spinBox_numch.setMaximum(9)
         self.spinBox_numch.setObjectName("spinBox_numch")
         self.spinBox_numz = QtGui.QSpinBox(Dialog)
         self.spinBox_numz.setGeometry(QtCore.QRect(170, 380, 91, 21))
@@ -138,6 +141,7 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_zres.setFont(font)
+        self.doubleSpinBox_zres.setMaximum(100000.0)
         self.doubleSpinBox_zres.setObjectName("doubleSpinBox_zres")
         self.doubleSpinBox_tres = QtGui.QDoubleSpinBox(Dialog)
         self.doubleSpinBox_tres.setGeometry(QtCore.QRect(170, 290, 91, 21))
@@ -146,7 +150,7 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_tres.setFont(font)
-        self.doubleSpinBox_tres.setMaximum(10000.0)
+        self.doubleSpinBox_tres.setMaximum(100000.0)
         self.doubleSpinBox_tres.setObjectName("doubleSpinBox_tres")
         self.label_3 = QtGui.QLabel(Dialog)
         self.label_3.setGeometry(QtCore.QRect(20, 20, 451, 21))
@@ -205,6 +209,12 @@ class Ui_Dialog(object):
         self.progressBar.setGeometry(QtCore.QRect(10, 770, 561, 23))
         self.progressBar.setProperty("value", 0)
         self.progressBar.setObjectName("progressBar")
+        self.btn_load_metadata_xml = QtGui.QPushButton(Dialog)
+        self.btn_load_metadata_xml.setGeometry(QtCore.QRect(240, 140, 181, 41))
+        self.btn_load_metadata_xml.setObjectName("btn_load_metadata_xml")
+        self.label_4 = QtGui.QLabel(Dialog)
+        self.label_4.setGeometry(QtCore.QRect(210, 150, 21, 21))
+        self.label_4.setObjectName("label_4")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -215,7 +225,7 @@ class Ui_Dialog(object):
         self.btn_import_nuclei_csv.setText(QtGui.QApplication.translate("Dialog", "Import nuclei locations .CSV", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_3.setText(QtGui.QApplication.translate("Dialog", "Make Input Seeds", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_load_metadata.setText(QtGui.QApplication.translate("Dialog", "Load metadata file", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_load_metadata_csv.setText(QtGui.QApplication.translate("Dialog", "Load metadata CSV file", None, QtGui.QApplication.UnicodeUTF8))
         self.label_10.setText(QtGui.QApplication.translate("Dialog", "T-Resolution (s):", None, QtGui.QApplication.UnicodeUTF8))
         self.label_8.setText(QtGui.QApplication.translate("Dialog", "Y-Resolution (µm):", None, QtGui.QApplication.UnicodeUTF8))
         self.label_14.setText(QtGui.QApplication.translate("Dialog", "Number T units:", None, QtGui.QApplication.UnicodeUTF8))
@@ -234,4 +244,6 @@ class Ui_Dialog(object):
         self.label_18.setText(QtGui.QApplication.translate("Dialog", "Step 4: Name the workspace and choose location.", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_choose_location.setText(QtGui.QApplication.translate("Dialog", "Choose location", None, QtGui.QApplication.UnicodeUTF8))
         self.label_19.setText(QtGui.QApplication.translate("Dialog", "Workspace name:", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_load_metadata_xml.setText(QtGui.QApplication.translate("Dialog", "Load metadata XML file", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
 
