@@ -15,27 +15,36 @@ from CellECT.gui import newWorkspaceGui
 from CellECT.workspace_management import metadata as md
 from CellECT.workspace_management import workspace_creator
 from CellECT.workspace_management import workspace_data
-
+from CellECT.gui import meta_manager
 
 
 
 class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
-	
-	def __init__(self, parent=None):
-		super(NewWorkspaceWindow, self).__init__(parent)
+	def init_data(self):
 
-		self.main_ui = parent		
+
+
+		self.nuclei_csv = ""	
 
 		self.last_dir = os.curdir
+
+		self.metadata = md.Metadata()
+	
+
+	def __init__(self, parent=None):
+
+		super(NewWorkspaceWindow, self).__init__(parent)
+
+		self.main_ui = parent	
 		self.setupUi(self)
+
+		self.init_data()
 
 		self.btn_cancel.clicked.connect(self.close)
 
 		self.btn_select_img.clicked.connect(self.load_stack)
 
-		self.metadata = md.Metadata()
-	
 		self.btn_load_metadata_csv.clicked.connect(self.load_metadata_from_csv)
 		self.btn_load_metadata_xml.clicked.connect(self.load_metadata_from_xml)
 
@@ -46,74 +55,10 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.btn_import_nuclei_csv.clicked.connect(self.import_nuclei_csv)
 
 
-		self.spinBox_numx.valueChanged.connect(self.update_metadata)
-		self.spinBox_numy.valueChanged.connect(self.update_metadata)
-		self.spinBox_numz.valueChanged.connect(self.update_metadata)
-		self.spinBox_numt.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_xres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_yres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_zres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_tres.valueChanged.connect(self.update_metadata)
-		self.spinBox_numch.valueChanged.connect(self.make_list_of_channels_in_combobox)
-		self.comboBox_mem_chan.currentIndexChanged.connect(self.update_membrane_channel)
+		self.meta_manager = meta_manager. ManageMetadataInUI(self, self.metadata)
 
 
 
-	def update_metadata(self):
-
-		if self.doubleSpinBox_xres.value():
-			self.metadata.xres = self.doubleSpinBox_xres.value()
-
-		if self.doubleSpinBox_xres.value():
-			self.metadata.xres = self.doubleSpinBox_xres.value()
-
-		if self.doubleSpinBox_yres.value():
-			self.metadata.yres = self.doubleSpinBox_yres.value()
-
-		if self.doubleSpinBox_zres.value():
-			self.metadata.zres = self.doubleSpinBox_zres.value()
-
-		if self.doubleSpinBox_tres .value():
-			self.metadata.tres = self.doubleSpinBox_tres .value()
-
-		if self.spinBox_numx.value():
-			self.metadata.numx = self.spinBox_numx.value()
-
-		if self.spinBox_numy .value():
-			self.metadata.numy = self.spinBox_numy .value()
-
-		if self.spinBox_numz.value():
-			self.metadata.numz = self.spinBox_numz.value()
-
-		if self.spinBox_numt.value():
-			self.metadata.numt = self.spinBox_numt.value()
-
-		if self.spinBox_numch.value():
-			self.metadata.numch = self.spinBox_numch.value()
-
-		self.make_list_of_channels_in_combobox(self.spinBox_numch.value())
-
-
-
-
-
-	def make_list_of_channels_in_combobox(self, value):
-
-		if self.spinBox_numch.value():
-			self.metadata.numch = self.spinBox_numch.value()
-
-		try:
-			current_index = self.comboBox_mem_chan.currentIndex()
-		except:
-			pass
-
-		self.comboBox_mem_chan.clear()
-		self.comboBox_mem_chan.addItems([str(i) for i in xrange(value)])
-		self.comboBox_mem_chan.setCurrentIndex(current_index)
-
-
-	def update_membrane_channel(self):
-		self.metadata.memch = self.comboBox_mem_chan.currentIndex()
 
 	def import_nuclei_csv(self):
 
@@ -122,6 +67,25 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.last_dir = os.path.dirname(filename)
 
 		self.nuclei_csv = filename
+
+
+
+	def ask_if_random_nuclei(self):
+
+		flags = QtGui.QMessageBox.StandardButton.Yes 
+		flags |= QtGui.QMessageBox.StandardButton.No
+
+		question = "No nuclear detector output selected. Place random seeds?"
+
+		response = QtGui.QMessageBox.question(self, "Question", question, flags)
+
+
+		if response == QtGui.QMessageBox.Yes:
+			return True
+		elif QtGui.QMessageBox.No:
+			return False
+	
+	
 
 
 	def create_workspace(self):
@@ -137,9 +101,17 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		except:
 			self.ws_dir = self.last_dir
 
+		if not len(self.nuclei_csv):
+			put_random_nuclei = self.ask_if_random_nuclei()
+
+		if not put_random_nuclei:
+			# if the user wants to add nuclear detector output get back to the UI,
+			# if not, continue to make the ws with random inputs.
+			return
+
 		self.ws_location = self.ws_dir + "/" + self.lineEdit_ws_name.text()
 		self.new_ws = workspace_creator.WorkspaceCreator()
-		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata)
+		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, self.checkBox_has_bg.isChecked())
 		self.new_ws.build_workspace(self.ws_location, self.progressBar )
 
 
@@ -189,6 +161,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 	def load_stack(self):
 
+		self.init_data()
 
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.last_dir, "TIFF (*.tif *.tiff);; All files (*.*)")
 		

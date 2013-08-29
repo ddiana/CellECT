@@ -12,18 +12,18 @@ class Metadata(object):
 
 	def __init__(self):
 
-		self.xres = None
-		self.yres = None
-		self.zres = None
-		self.tres = None
+		self.xres = 0
+		self.yres = 0
+		self.zres = 0
+		self.tres = 0
 		
-		self.numx = None
-		self.numy = None
-		self.numz = None
-		self.numt = None
+		self.numx = 0
+		self.numy = 0
+		self.numz = 0
+		self.numt = 0
 
-		self.numch = None
-		self.mem_ch = None
+		self.numch = 0
+		self.mem_ch = 0
 
 
 	def metadata_etree(self):
@@ -69,6 +69,42 @@ class Metadata(object):
 				self.mem_ch = int(meta_field.get("value"))
 
 
+
+	def get_meta_from_line(self, line):
+
+		meta_needed = set(["XResolution", "YResolution", "images", "slices", "SizeC", "SizeZ", "slices"\
+	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement" ])
+
+
+		for meta in meta_needed:
+			# match:
+			# case insensitive metadata tag
+			# in the format tag = float or int
+			# with : or =
+			# with possible white spaces
+			# possibly the number being in quotations
+			matched = re.findall('(?i)%s\s*[=:]\s*"?[0-9]*\.?[0-9]+"?' % meta, line)
+			if len(matched):
+				# get the value out of the matched pattern
+				value = re.findall("[0-9]*\.?[0-9]+", matched[0])
+				value = float(value[0])
+				if meta in set( ["XResolution" , "PhysicalSizeX"]):
+					self.xres = value
+				if meta in set( ["YResolution" , "PhysicalSizeY"]):
+					self.yres = value
+				if meta in set( ["ZResolution" , "PhysicalSizeZ"]):
+					self.zres = value
+				if meta == "TimeIncrement":
+					self.tres = value
+				if meta in set(["SizeZ", "slices"]):
+					self.numz = int(value)
+				if meta == "SizeC":
+					self.numch = int(value)
+				if meta == "SizeT":
+					self.numt = int(value)
+
+
+
 	def load_info_from_tif(self, filename):
 
 		tif = TIFF.open(filename)
@@ -78,42 +114,11 @@ class Metadata(object):
 		self.numx = img.shape[0]
 		self.numy = img.shape[1]
 
-		meta_needed = set(["XResolution", "YResolution", "images", "slices", "SizeC", "SizeZ",\
-	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement" ])
-	
+			
 		line = buf.readline()
 
-
-
 		while line:
-
-			for meta in meta_needed:
-				# match:
-				# case insensitive metadata tag
-				# in the format tag = float or int
-				# with : or =
-				# with possible white spaces
-				# possibly the number being in quotations
-				matched = re.findall('(?i)%s\s*[=:]\s*"?[0-9]*\.?[0-9]+"?' % meta, line)
-				if len(matched):
-					# get the value out of the matched pattern
-					value = re.findall("[0-9]*\.?[0-9]+", matched[0])
-					value = float(value[0])
-					if meta in set( ["XResolution" , "PhysicalSizeX"]):
-						self.xres = value
-					if meta in set( ["YResolution" , "PhysicalSizeY"]):
-						self.yres = value
-					if meta in set( ["ZResolution" , "PhysicalSizeZ"]):
-						self.zres = value
-					if meta == "TimeIncrement":
-						self.tres = value
-					if meta == "SizeZ":
-						self.numz = int(value)
-					if meta == "SizeC":
-						self.numch = int(value)
-					if meta == "SizeT":
-						self.numt = int(value)
-
+			self.get_meta_from_line(line)
 			line = buf.readline()
 				
 

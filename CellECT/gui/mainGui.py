@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Sun Aug 25 14:37:58 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Thu Aug 29 12:23:34 2013
+#      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -241,7 +241,7 @@ class Ui_MainWindow(object):
         self.checkBox_use_metric.setObjectName("checkBox_use_metric")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1407, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1407, 25))
         self.menubar.setObjectName("menubar")
         self.menuWorkspace = QtGui.QMenu(self.menubar)
         self.menuWorkspace.setObjectName("menuWorkspace")

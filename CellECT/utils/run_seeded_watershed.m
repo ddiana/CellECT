@@ -5,7 +5,22 @@ load (input_mat_file, 'vol', 'seeds','has_bg');
 start_pts_mask = zeros(size(vol));
 
 for i = 1:size(seeds,2)
-    start_pts_mask(round(seeds(1,i)+1), round(seeds(2,i)+1), round(seeds(3,i)+1)) = 1;
+	for x = -5:5
+		for y = -5:5
+			for z = -2:2
+				xloc = max( round(seeds(1,i)+1) + x, 1);
+				xloc = min( xloc, size(vol,1));
+
+				yloc = max( round(seeds(2,i)+1) + y, 1);
+				yloc = min( yloc, size(vol,2));
+
+				zloc = max( round(seeds(3,i)+1) + z, 1);
+				zloc = min( zloc, size(vol,3));
+				
+			    start_pts_mask(xloc, yloc,zloc) = 1;
+			end
+		end
+	end
 end
 
 % if it has background, assume that this background surrounds the object of interest.

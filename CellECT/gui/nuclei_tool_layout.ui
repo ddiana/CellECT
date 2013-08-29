@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>521</width>
+    <width>531</width>
     <height>653</height>
    </rect>
   </property>
@@ -18,10 +18,13 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>20</y>
+      <y>40</y>
       <width>461</width>
       <height>441</height>
      </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>true</bool>
     </property>
     <property name="text">
      <string/>
@@ -31,7 +34,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>480</y>
+      <y>504</y>
       <width>421</width>
       <height>29</height>
      </rect>
@@ -44,7 +47,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>510</y>
+      <y>534</y>
       <width>421</width>
       <height>29</height>
      </rect>
@@ -57,7 +60,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>487</y>
+      <y>511</y>
       <width>81</width>
       <height>17</height>
      </rect>
@@ -70,7 +73,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>516</y>
+      <y>540</y>
       <width>81</width>
       <height>17</height>
      </rect>
@@ -83,33 +86,33 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>560</y>
+      <y>570</y>
       <width>141</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Save Seeds</string>
+     <string>Finish workspace</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
       <x>190</x>
-      <y>560</y>
+      <y>570</y>
       <width>141</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Undo Last</string>
+     <string>Undo last seed</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
       <x>350</x>
-      <y>560</y>
+      <y>570</y>
       <width>141</width>
       <height>27</height>
      </rect>
@@ -118,13 +121,26 @@
      <string>Cancel</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>421</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add seeds for every time stamp to complete workspace:</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>521</width>
+     <width>531</width>
      <height>25</height>
     </rect>
    </property>

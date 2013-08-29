@@ -29,7 +29,7 @@ from CellECT.workspace_management import metadata as md
 from CellECT.workspace_management import workspace_data as wd
 from CellECT.gui import about_window
 from CellECT.gui import new_workspace
-
+from CellECT.gui import meta_manager
 
 
 
@@ -105,18 +105,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
 		self.btn_select_all.clicked.connect(self.listView.selectAll)
 		
+		self.meta_manager = meta_manager.ManageMetadataInUI(self, self.workspace_data.metadata)
 
 
-		self.spinBox_numx.valueChanged.connect(self.update_metadata)
-		self.spinBox_numy.valueChanged.connect(self.update_metadata)
-		self.spinBox_numz.valueChanged.connect(self.update_metadata)
-		self.spinBox_numt.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_xres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_yres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_zres.valueChanged.connect(self.update_metadata)
-		self.doubleSpinBox_tres.valueChanged.connect(self.update_metadata)
-		self.spinBox_numch.valueChanged.connect(self.update_metadata)
-		self.comboBox_mem_chan.currentIndexChanged.connect(self.update_metadata)
 
 		# images
 		self.horizontalSlider_t.valueChanged.connect(self.set_images)
@@ -162,41 +153,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-
-	def update_metadata(self):
-
-		if self.doubleSpinBox_xres.value():
-			self.workspace_data.metadata.xres = self.doubleSpinBox_xres.value()
-
-		if self.doubleSpinBox_xres.value():
-			self.workspace_data.metadata.xres = self.doubleSpinBox_xres.value()
-
-		if self.doubleSpinBox_yres.value():
-			self.workspace_data.metadata.yres = self.doubleSpinBox_yres.value()
-
-		if self.doubleSpinBox_zres.value():
-			self.workspace_data.metadata.zres = self.doubleSpinBox_zres.value()
-
-		if self.doubleSpinBox_tres .value():
-			self.workspace_data.metadata.tres = self.doubleSpinBox_tres .value()
-
-		if self.spinBox_numx.value():
-			self.workspace_data.metadata.numx = self.spinBox_numx.value()
-
-		if self.spinBox_numy .value():
-			self.workspace_data.metadata.numy = self.spinBox_numy .value()
-
-		if self.spinBox_numz.value():
-			self.workspace_data.metadata.numz = self.spinBox_numz.value()
-
-		if self.spinBox_numt.value():
-			self.workspace_data.metadata.numt = self.spinBox_numt.value()
-
-		if self.spinBox_numch.value():
-			self.workspace_data.metadata.numch = self.spinBox_numch.value()
-
-		# TODO update number of channels in combobox
-		self.workspace_data.metadata.memch = self.comboBox_mem_chan.currentIndex()
 
 		
 	def write_tracker_config_file(self, selected_indices):

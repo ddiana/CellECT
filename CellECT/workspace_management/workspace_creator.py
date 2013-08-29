@@ -5,6 +5,7 @@ from scipy import misc
 import os
 import pdb
 import numpy as np
+import random
 
 class PrepNuclei(object):
 
@@ -20,6 +21,27 @@ class PrepNuclei(object):
 
 		self.ws_location = ws_location
 		self.load_nuclei(csv_file)
+		self.write_mat_files()
+
+	def prepare_random_nuclei(self, ws_location, metadata):
+
+		self.ws_location = ws_location
+		number_time_points = metadata.numt
+		number_x = metadata.numx
+		number_y = metadata.numy
+		number_z = metadata.numz
+
+		for time in xrange(number_time_points):
+			nuclei_mat = np.zeros((100,3))
+			counter = 0
+			for i in xrange(100):
+				x = float(random.randint(1, number_x-1))
+				y = float(random.randint(1, number_y-1))
+				z = float(random.randint(1, number_z-1))
+				nuclei_mat[counter,:] = np.array([x,y,z])
+				counter += 1
+			self.nuclei_dict[time] = nuclei_mat
+
 		self.write_mat_files()
 
 
@@ -57,7 +79,7 @@ class PrepNuclei(object):
 
 				line = f.readline()
 
-				
+	
 	
 
 
@@ -124,14 +146,14 @@ class WorkspaceCreator(object):
 		self.path_to_nuclei_csv = None
 		self.path_to_image = None
 		self.metadata = None
+		self.has_bg = None
 
-
-	def set_info(self, nuclei_csv, image_stack, metadata):
+	def set_info(self, nuclei_csv, image_stack, metadata, has_bg):
 
 		self.path_to_image = image_stack
 		self.path_to_nuclei_csv = nuclei_csv
 		self.metadata = metadata
-		
+		self.has_bg = has_bg
 
 	def make_dirs(self):
 	
@@ -177,7 +199,7 @@ class WorkspaceCreator(object):
 				f.write("training_negative_labels_mat_path = training_data/negative_example.mat\n")
 				f.write("training_negative_labels_mat_var = labels\n")
 				f.write("save_location_prefix = segs_all_time_stamps/timestamp_%d_\n" % time)
-				f.write("has_bg = 1\n")
+				f.write("has_bg = %d\n" % int(self.has_bg))
 				f.write("use_size = 1\n")
 				f.write("use_border_intensity = 1\n")
 				f.write("use_border_distance = 0\n")
@@ -191,7 +213,10 @@ class WorkspaceCreator(object):
 		progressBar.setValue(2)
 
 		self.nuclei = PrepNuclei()
-		self.nuclei.prepare_nuclei( self.path_to_nuclei_csv, self.ws_location  )
+		if len(self.path_to_nuclei_csv):
+			self.nuclei.prepare_nuclei( self.path_to_nuclei_csv, self.ws_location  )
+		else:
+			self.nuclei.prepare_random_nuclei (self.ws_location, self.metadata )
 		
 
 		self.image = PrepImage()

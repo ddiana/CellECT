@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Wed Aug 28 19:55:53 2013
+# Created: Thu Aug 29 13:01:14 2013
 #      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -24,12 +24,6 @@ class Ui_Dialog(object):
         self.btn_import_nuclei_csv = QtGui.QPushButton(Dialog)
         self.btn_import_nuclei_csv.setGeometry(QtCore.QRect(20, 540, 251, 41))
         self.btn_import_nuclei_csv.setObjectName("btn_import_nuclei_csv")
-        self.pushButton_3 = QtGui.QPushButton(Dialog)
-        self.pushButton_3.setGeometry(QtCore.QRect(320, 540, 171, 41))
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.label_2 = QtGui.QLabel(Dialog)
-        self.label_2.setGeometry(QtCore.QRect(290, 550, 21, 21))
-        self.label_2.setObjectName("label_2")
         self.btn_load_metadata_csv = QtGui.QPushButton(Dialog)
         self.btn_load_metadata_csv.setGeometry(QtCore.QRect(20, 140, 171, 41))
         self.btn_load_metadata_csv.setObjectName("btn_load_metadata_csv")
@@ -80,6 +74,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numt.setFont(font)
         self.spinBox_numt.setMaximum(10000)
+        self.spinBox_numt.setProperty("value", 1)
         self.spinBox_numt.setObjectName("spinBox_numt")
         self.doubleSpinBox_xres = QtGui.QDoubleSpinBox(Dialog)
         self.doubleSpinBox_xres.setGeometry(QtCore.QRect(170, 200, 91, 21))
@@ -98,6 +93,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numch.setFont(font)
         self.spinBox_numch.setMaximum(9)
+        self.spinBox_numch.setProperty("value", 1)
         self.spinBox_numch.setObjectName("spinBox_numch")
         self.spinBox_numz = QtGui.QSpinBox(Dialog)
         self.spinBox_numz.setGeometry(QtCore.QRect(170, 380, 91, 21))
@@ -107,6 +103,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numz.setFont(font)
         self.spinBox_numz.setMaximum(10000)
+        self.spinBox_numz.setProperty("value", 1)
         self.spinBox_numz.setObjectName("spinBox_numz")
         self.comboBox_mem_chan = QtGui.QComboBox(Dialog)
         self.comboBox_mem_chan.setGeometry(QtCore.QRect(170, 470, 91, 21))
@@ -215,6 +212,9 @@ class Ui_Dialog(object):
         self.label_4 = QtGui.QLabel(Dialog)
         self.label_4.setGeometry(QtCore.QRect(210, 150, 21, 21))
         self.label_4.setObjectName("label_4")
+        self.checkBox_has_bg = QtGui.QCheckBox(Dialog)
+        self.checkBox_has_bg.setGeometry(QtCore.QRect(220, 60, 281, 22))
+        self.checkBox_has_bg.setObjectName("checkBox_has_bg")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -223,8 +223,6 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "New Workspace", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_select_img.setText(QtGui.QApplication.translate("Dialog", "Select 4D stack", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_import_nuclei_csv.setText(QtGui.QApplication.translate("Dialog", "Import nuclei locations .CSV", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_3.setText(QtGui.QApplication.translate("Dialog", "Make Input Seeds", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_load_metadata_csv.setText(QtGui.QApplication.translate("Dialog", "Load metadata CSV file", None, QtGui.QApplication.UnicodeUTF8))
         self.label_10.setText(QtGui.QApplication.translate("Dialog", "T-Resolution (s):", None, QtGui.QApplication.UnicodeUTF8))
         self.label_8.setText(QtGui.QApplication.translate("Dialog", "Y-Resolution (µm):", None, QtGui.QApplication.UnicodeUTF8))
@@ -237,8 +235,8 @@ class Ui_Dialog(object):
         self.label_17.setText(QtGui.QApplication.translate("Dialog", "Membrane Channel:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_13.setText(QtGui.QApplication.translate("Dialog", "Number Z units:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("Dialog", "Step 1: Select a 3D or 4D tiff stack.", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("Dialog", "Step 2: Fill in or load .csv file with medata.", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("Dialog", "Step 3: Select nuclei detector out file or make your own seeds.", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("Dialog", "Step 2: Verify, fill in or load file with medata.", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(QtGui.QApplication.translate("Dialog", "Step 3: Select nuclei detector results file. (optional)", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_create_ws.setText(QtGui.QApplication.translate("Dialog", "Create workspace!", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_cancel.setText(QtGui.QApplication.translate("Dialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.label_18.setText(QtGui.QApplication.translate("Dialog", "Step 4: Name the workspace and choose location.", None, QtGui.QApplication.UnicodeUTF8))
@@ -246,4 +244,5 @@ class Ui_Dialog(object):
         self.label_19.setText(QtGui.QApplication.translate("Dialog", "Workspace name:", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_load_metadata_xml.setText(QtGui.QApplication.translate("Dialog", "Load metadata XML file", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkBox_has_bg.setText(QtGui.QApplication.translate("Dialog", "Dataset has background region.", None, QtGui.QApplication.UnicodeUTF8))
 

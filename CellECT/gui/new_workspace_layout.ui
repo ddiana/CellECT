@@ -55,32 +55,6 @@
     <string>Import nuclei locations .CSV</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>540</y>
-     <width>171</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Make Input Seeds</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>290</x>
-     <y>550</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>or</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="btn_load_metadata_csv">
    <property name="geometry">
     <rect>
@@ -263,6 +237,9 @@
    <property name="maximum">
     <number>10000</number>
    </property>
+   <property name="value">
+    <number>1</number>
+   </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_xres">
    <property name="geometry">
@@ -303,6 +280,9 @@
    <property name="maximum">
     <number>9</number>
    </property>
+   <property name="value">
+    <number>1</number>
+   </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numz">
    <property name="geometry">
@@ -322,6 +302,9 @@
    </property>
    <property name="maximum">
     <number>10000</number>
+   </property>
+   <property name="value">
+    <number>1</number>
    </property>
   </widget>
   <widget class="QComboBox" name="comboBox_mem_chan">
@@ -456,7 +439,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Step 2: Fill in or load .csv file with medata.</string>
+    <string>Step 2: Verify, fill in or load file with medata.</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_6">
@@ -475,7 +458,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Step 3: Select nuclei detector out file or make your own seeds.</string>
+    <string>Step 3: Select nuclei detector results file. (optional)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btn_create_ws">
@@ -616,6 +599,19 @@
    </property>
    <property name="text">
     <string>or</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox_has_bg">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>60</y>
+     <width>281</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Dataset has background region.</string>
    </property>
   </widget>
  </widget>
