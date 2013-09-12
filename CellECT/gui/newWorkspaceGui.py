@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Thu Aug 29 13:01:14 2013
+# Created: Fri Sep  6 15:53:42 2013
 #      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,9 +17,10 @@ class Ui_Dialog(object):
         self.btn_select_img.setGeometry(QtCore.QRect(20, 50, 161, 41))
         self.btn_select_img.setObjectName("btn_select_img")
         self.label_preview_img = QtGui.QLabel(Dialog)
-        self.label_preview_img.setGeometry(QtCore.QRect(280, 200, 271, 271))
+        self.label_preview_img.setGeometry(QtCore.QRect(280, 210, 271, 271))
         self.label_preview_img.setAutoFillBackground(True)
         self.label_preview_img.setText("")
+        self.label_preview_img.setScaledContents(True)
         self.label_preview_img.setObjectName("label_preview_img")
         self.btn_import_nuclei_csv = QtGui.QPushButton(Dialog)
         self.btn_import_nuclei_csv.setGeometry(QtCore.QRect(20, 540, 251, 41))
@@ -74,7 +75,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numt.setFont(font)
         self.spinBox_numt.setMaximum(10000)
-        self.spinBox_numt.setProperty("value", 1)
+        self.spinBox_numt.setProperty("value", 0)
         self.spinBox_numt.setObjectName("spinBox_numt")
         self.doubleSpinBox_xres = QtGui.QDoubleSpinBox(Dialog)
         self.doubleSpinBox_xres.setGeometry(QtCore.QRect(170, 200, 91, 21))
@@ -93,7 +94,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numch.setFont(font)
         self.spinBox_numch.setMaximum(9)
-        self.spinBox_numch.setProperty("value", 1)
+        self.spinBox_numch.setProperty("value", 0)
         self.spinBox_numch.setObjectName("spinBox_numch")
         self.spinBox_numz = QtGui.QSpinBox(Dialog)
         self.spinBox_numz.setGeometry(QtCore.QRect(170, 380, 91, 21))
@@ -103,7 +104,7 @@ class Ui_Dialog(object):
         font.setBold(True)
         self.spinBox_numz.setFont(font)
         self.spinBox_numz.setMaximum(10000)
-        self.spinBox_numz.setProperty("value", 1)
+        self.spinBox_numz.setProperty("value", 0)
         self.spinBox_numz.setObjectName("spinBox_numz")
         self.comboBox_mem_chan = QtGui.QComboBox(Dialog)
         self.comboBox_mem_chan.setGeometry(QtCore.QRect(170, 470, 91, 21))

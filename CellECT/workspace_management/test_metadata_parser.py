@@ -21,6 +21,7 @@ class ExtractMetadataFromTestSequence(unittest.TestCase):
 		exec meta_field_string_to_exec
 		self.assertEqual(meta_field, expected_meta_value)
 
+	# TODO check that '' and "" both work
 
 	def incorrect_sample(self, line, meta_field_string_to_exec):
 		# check that the value is not picked up
@@ -28,7 +29,7 @@ class ExtractMetadataFromTestSequence(unittest.TestCase):
 		meta = metadata.Metadata()
 		meta.get_meta_from_line(line)
 		exec meta_field_string_to_exec
-		self.assertEqual(meta_field, None)
+		self.assertEqual(meta_field, 0)
 
 
 	def test_simple_equal(self):
@@ -70,6 +71,26 @@ class ExtractMetadataFromTestSequence(unittest.TestCase):
 		# check that YResolution = 203d3 is not picked up
 		line = '        YResolution       \t : "203d3"     '
 		self.incorrect_sample(line, "meta_field = meta.yres")
+
+	def test_alphanumeric_values_without_quotes_not_picked_up(self):
+		# check that YResolution = 203d3 is not picked up
+		line = '        YResolution       \t : 203d3     '
+		self.incorrect_sample(line, "meta_field = meta.yres")
+
+	def test_alphanumeric_values_without_quotes_not_picked_up(self):
+		# check that YResolution = 203d3 is not picked up
+		line = '        YResolution       \t : 203d3     '
+		self.incorrect_sample(line, "meta_field = meta.yres")
+
+#	def test_groupings_in_quotations_not_picked_up(self):
+#		# check that YResolution = "203 3" is not picked up
+#		line = '        YResolution       \t : "203 3"     '
+#		self.incorrect_sample(line, "meta_field = meta.yres")
+
+	def test_groupings_without_quotations_are_picked_up(self):
+		# check that YResolution = "203 3" is not picked up
+		line = '        YResolution       \t : 203.3     '
+		self.correct_sample(line, "meta_field = meta.yres", 203.3)
 
 
 	def test_alpha_values_not_picked_up(self):

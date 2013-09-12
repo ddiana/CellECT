@@ -1,5 +1,8 @@
 <RCC>
   <qresource>
+    <file>icons/preiliminary.png</file>
+    <file>icons/seg_tool.png</file>
+    <file>icons/track_tool.png</file>
     <file>icons/1376911320_file_encrypted.png</file>
     <file>icons/octocat.png</file>
     <file>icons/1376906128_Card_file.png</file>

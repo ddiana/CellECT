@@ -16,7 +16,7 @@ class WorkSpaceData(object):
 	def __init__ (self):
 
 		self.metadata = md.Metadata()
-		self.available_segs = None
+		self.available_segs = []
 		self.workspace_location = None
 
 

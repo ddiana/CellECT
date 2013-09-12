@@ -7,6 +7,9 @@ import pdb
 import numpy as np
 import random
 
+
+from CellECT.workspace_management import cell_interior
+
 class PrepNuclei(object):
 
 	def __init__(self):
@@ -80,7 +83,16 @@ class PrepNuclei(object):
 				line = f.readline()
 
 	
+	def estimate_interiors(self, ws_location, metadata):
+
+		for i in xrange(metadata.numt):
+			vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_0" % ws_location)["vol"]
 	
+			interior_estimator = cell_interior.CellInterior(vol)
+			self.nuclei_dict[i] = interior_estimator.run_cell_centroid_estimator()
+
+		self.write_mat_files()
+
 
 
 class PrepImage(object):
@@ -147,25 +159,32 @@ class WorkspaceCreator(object):
 		self.path_to_image = None
 		self.metadata = None
 		self.has_bg = None
+		self.make_nuclei_option = None
 
-	def set_info(self, nuclei_csv, image_stack, metadata, has_bg):
+	def set_info(self, nuclei_csv, image_stack, metadata, has_bg, make_nuclei_option):
 
 		self.path_to_image = image_stack
 		self.path_to_nuclei_csv = nuclei_csv
 		self.metadata = metadata
 		self.has_bg = has_bg
+		self.make_nuclei_option = make_nuclei_option
 
 	def make_dirs(self):
 	
-		os.mkdir(self.ws_location)
+		try:
 
-		os.mkdir("%s/config_files" % self.ws_location)
-		os.mkdir("%s/init_watershed_all_time_stamps" % self.ws_location)
-		os.mkdir("%s/input_slices" % self.ws_location)
-		os.mkdir("%s/segs_all_time_stamps" % self.ws_location)
-		os.mkdir("%s/tracker_config" % self.ws_location)
-		os.mkdir("%s/training_data" % self.ws_location)
-		os.mkdir("%s/temp" % self.ws_location)
+			os.mkdir(self.ws_location)
+
+			os.mkdir("%s/config_files" % self.ws_location)
+			os.mkdir("%s/init_watershed_all_time_stamps" % self.ws_location)
+			os.mkdir("%s/input_slices" % self.ws_location)
+			os.mkdir("%s/segs_all_time_stamps" % self.ws_location)
+			os.mkdir("%s/tracker_config" % self.ws_location)
+			os.mkdir("%s/training_data" % self.ws_location)
+			os.mkdir("%s/temp" % self.ws_location)
+
+		except Exception as err:
+			raise err
 
 
 	def prep_training_data(self):
@@ -208,25 +227,32 @@ class WorkspaceCreator(object):
 
 	def build_workspace(self, ws_location, progressBar):
 		
-		self.ws_location = ws_location
-		self.make_dirs()
-		progressBar.setValue(2)
+		try:
+			self.ws_location = ws_location
+			self.make_dirs()
+			progressBar.setValue(2)
 
-		self.nuclei = PrepNuclei()
-		if len(self.path_to_nuclei_csv):
-			self.nuclei.prepare_nuclei( self.path_to_nuclei_csv, self.ws_location  )
-		else:
-			self.nuclei.prepare_random_nuclei (self.ws_location, self.metadata )
-		
+			self.image = PrepImage()
+			self.image.set_info(self.path_to_image, self.metadata)
+			self.image.prep_image(self.ws_location, progressBar)
 
-		self.image = PrepImage()
-		self.image.set_info(self.path_to_image, self.metadata)
-		self.image.prep_image(self.ws_location, progressBar)
+			self.nuclei = PrepNuclei()
+			if len(self.path_to_nuclei_csv):
+				self.nuclei.prepare_nuclei( self.path_to_nuclei_csv, self.ws_location  )
+			else:
+				if self.make_nuclei_option == "use_random":
+					self.nuclei.prepare_random_nuclei (self.ws_location, self.metadata )
+				if self.make_nuclei_option == "use_estimate":
+					self.nuclei.estimate_interiors(self.ws_location, self.metadata)
+					
+			
 
-		self.prep_training_data()
+			self.prep_training_data()
 
-		self.write_config_files()
+			self.write_config_files()
 
+		except Exception as err:
+			raise err
 
 
 

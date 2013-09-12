@@ -116,8 +116,8 @@
      <string>Preliminary Segmentation</string>
     </property>
     <property name="icon">
-     <iconset>
-      <normaloff>:/icons/1376909739_basket_empty.png</normaloff>:/icons/1376909739_basket_empty.png</iconset>
+     <iconset resource="app_icons.qrc">
+      <normaloff>:/icons/preiliminary.png</normaloff>:/icons/preiliminary.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -139,8 +139,8 @@
      <string>Run Segmentation Tool</string>
     </property>
     <property name="icon">
-     <iconset>
-      <normaloff>:/icons/1376909786_basket_edit.png</normaloff>:/icons/1376909786_basket_edit.png</iconset>
+     <iconset resource="app_icons.qrc">
+      <normaloff>:/icons/seg_tool.png</normaloff>:/icons/seg_tool.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -162,8 +162,8 @@
      <string>Run Tracking Tool</string>
     </property>
     <property name="icon">
-     <iconset>
-      <normaloff>:/icons/1376909756_basket_download.png</normaloff>:/icons/1376909756_basket_download.png</iconset>
+     <iconset resource="app_icons.qrc">
+      <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -430,7 +430,7 @@
      <string>Membrane Channel:</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btn_save_metadata">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -459,6 +459,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="maximum">
+     <double>10000000.000000000000000</double>
+    </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_yres">
     <property name="geometry">
@@ -476,6 +479,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="maximum">
+     <double>10000000.000000000000000</double>
+    </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_zres">
     <property name="geometry">
@@ -492,6 +498,9 @@
       <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="maximum">
+     <double>10000000.000000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_tres">
@@ -627,6 +636,9 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="maximum">
+     <number>9</number>
+    </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_use_metric">
     <property name="geometry">
@@ -719,7 +731,7 @@
   </widget>
   <action name="actionNew_Workspace">
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376909654_folder_starred.png</normaloff>:/icons/1376909654_folder_starred.png</iconset>
    </property>
    <property name="text">
@@ -731,7 +743,7 @@
   </action>
   <action name="actionOpen_Workspace">
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376909673_folders.png</normaloff>:/icons/1376909673_folders.png</iconset>
    </property>
    <property name="text">
@@ -743,7 +755,7 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376909512_bullet_info.png</normaloff>:/icons/1376909512_bullet_info.png</iconset>
    </property>
    <property name="text">
@@ -752,7 +764,7 @@
   </action>
   <action name="actionHelp">
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376909581_comment_error.png</normaloff>:/icons/1376909581_comment_error.png</iconset>
    </property>
    <property name="text">
@@ -767,7 +779,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376909502_bullet_delete.png</normaloff>:/icons/1376909502_bullet_delete.png</iconset>
    </property>
    <property name="text">
@@ -776,7 +788,7 @@
   </action>
   <action name="actionGitHub_Repo">
    <property name="icon">
-    <iconset>
+    <iconset resource="app_icons.qrc">
      <normaloff>:/icons/1376911320_file_encrypted.png</normaloff>:/icons/1376911320_file_encrypted.png</iconset>
    </property>
    <property name="text">
@@ -785,8 +797,8 @@
   </action>
   <action name="actionRun_Segmentation_Tool">
    <property name="icon">
-    <iconset>
-     <normaloff>:/icons/1376909786_basket_edit.png</normaloff>:/icons/1376909786_basket_edit.png</iconset>
+    <iconset resource="app_icons.qrc">
+     <normaloff>:/icons/seg_tool.png</normaloff>:/icons/seg_tool.png</iconset>
    </property>
    <property name="text">
     <string>Run Segmentation Tool</string>
@@ -794,8 +806,8 @@
   </action>
   <action name="actionRun_Tracking_Tool">
    <property name="icon">
-    <iconset>
-     <normaloff>:/icons/1376909756_basket_download.png</normaloff>:/icons/1376909756_basket_download.png</iconset>
+    <iconset resource="app_icons.qrc">
+     <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
    </property>
    <property name="text">
     <string>Run Tracking Tool</string>
@@ -803,8 +815,8 @@
   </action>
   <action name="actionPreliminary_Segmentation">
    <property name="icon">
-    <iconset>
-     <normaloff>:/icons/1376909739_basket_empty.png</normaloff>:/icons/1376909739_basket_empty.png</iconset>
+    <iconset resource="app_icons.qrc">
+     <normaloff>:/icons/preiliminary.png</normaloff>:/icons/preiliminary.png</iconset>
    </property>
    <property name="text">
     <string>Preliminary Segmentation</string>

@@ -7,7 +7,7 @@ from PySide import QtGui
 import os
 import os.path
 import pdb
-
+from scipy import misc
 
 # Imports from this project
 from CellECT.gui import newWorkspaceGui
@@ -16,6 +16,7 @@ from CellECT.workspace_management import metadata as md
 from CellECT.workspace_management import workspace_creator
 from CellECT.workspace_management import workspace_data
 from CellECT.gui import meta_manager
+from CellECT.gui import nuclei_options
 
 
 
@@ -28,6 +29,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.nuclei_csv = ""	
 
 		self.last_dir = os.curdir
+		self.image_location = None
 
 		self.metadata = md.Metadata()
 	
@@ -63,7 +65,10 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 	def import_nuclei_csv(self):
 
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.last_dir, "Nuclei Detector Output (*.csv);; All files (*.*)")
-		
+
+		if not len(filename):
+			return
+	
 		self.last_dir = os.path.dirname(filename)
 
 		self.nuclei_csv = filename
@@ -94,6 +99,33 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		# check if ws name is given
 		# check inputs
 
+		self.metadata = self.meta_manager.metadata
+
+
+		if self.image_location == None:
+			
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", "No input image selected. Cannot create workspace.")
+			return
+
+		if self.metadata.num_pages != self.metadata.numz * self.metadata.numt * self.metadata.numch:
+			message = "Metadata information incorrect. There are %d pages in this image stack. Metadata must satisfy T*Z*C = %d. Cannot create workspace." % (self.metadata.num_pages, self.metadata.num_pages)
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", message )
+			return	
+
+		if self.metadata.numx == 0 or self.metadata.numy == 0 or self.metadata.numch ==0:
+
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", "Metadata information incomplete. Cannot create workspace.")
+			return
+
+		if self.lineEdit_ws_name.text() == "":
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", "Please select a workspace name.")
+			return
+
+		if self.metadata.numz <3 :
+
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", "Input image must be 3D or 4D. If metadata is incorrect, please modify it.")
+			return
+
 
 		try:
 			if self.ws_dir != None:
@@ -101,18 +133,33 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		except:
 			self.ws_dir = self.last_dir
 
-		if not len(self.nuclei_csv):
-			put_random_nuclei = self.ask_if_random_nuclei()
+		action = "do_nothing"
 
-		if not put_random_nuclei:
+		if not len(self.nuclei_csv):
+			dlg = nuclei_options.NucleiOptionsGui()
+			dlg.exec_()
+			action = dlg.action
+
+
+
+		if action == "do_nothing":
 			# if the user wants to add nuclear detector output get back to the UI,
 			# if not, continue to make the ws with random inputs.
 			return
 
+
+
+
 		self.ws_location = self.ws_dir + "/" + self.lineEdit_ws_name.text()
 		self.new_ws = workspace_creator.WorkspaceCreator()
-		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, self.checkBox_has_bg.isChecked())
-		self.new_ws.build_workspace(self.ws_location, self.progressBar )
+		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, self.checkBox_has_bg.isChecked(), action)
+
+		try:
+			self.new_ws.build_workspace(self.ws_location, self.progressBar )
+		except Exception as err:
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", "Could not create workspace. Error: %s" % err)
+			return
+
 
 
 		ws_obj = workspace_data.WorkSpaceData()
@@ -141,6 +188,9 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.last_dir, "Nuclei Detector Output (*.csv);; All files (*.*)")
 
+		if not len(filename):
+			return 
+
 		self.last_dir = os.path.dirname(filename)
 		self.metadata.load_bq_csv_file(filename)
 		self.metadata.populate_metadata_boxes(self)
@@ -148,6 +198,9 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 	def load_metadata_from_xml(self):
 
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.last_dir, "Nuclei Detector Output (*.xml);; All files (*.*)")
+
+		if not len(filename):
+			return
 
 		self.last_dir = os.path.dirname(filename)
 		self.metadata.load_bq_xml_file(filename)
@@ -157,25 +210,32 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 		self.metadata.load_info_from_tif(self.image_location)
 
+		self.meta_manager.metadata = self.metadata
+		# TODO: fix this double variable shit!!!!!!!!
 		self.metadata.populate_metadata_boxes(self)	
 
 	def load_stack(self):
 
-		self.init_data()
+
 
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.last_dir, "TIFF (*.tif *.tiff);; All files (*.*)")
 		
+		if not len(filename):
+			return
 
+		self.init_data()
 		self.last_dir = os.path.dirname(filename)
 		self.image_location = filename
+		
 
 		tif = TIFF.open(self.image_location)
 
-#		pic = tif.read_image()
+		pic = tif.read_image()
+		misc.imsave("temp.jpg", pic)
 
 		self.load_metadata_from_tif_info()
-		pic = QtGui.QImage(filename)
-		self.label_preview_img.setPixmap(QtGui.QPixmap.fromImage(pic))
-
+		#pic = QtGui.QImage(filename)
+		#self.label_preview_img.setPixmap(QtGui.QPixmap.fromImage(pic))
+		self.label_preview_img.setPixmap("temp.jpg")
 
 

@@ -18,6 +18,7 @@ from scipy.ndimage import morphology
 import pickle
 import os.path
 import multiprocessing
+import webbrowser
 
 
 # Imports form this project
@@ -91,10 +92,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		# connect actions to functions
 		self.actionRun_Segmentation_Tool.triggered.connect(self.run_CellECT_seg_tool)
 		self.actionRun_Tracking_Tool.triggered.connect( self.run_CellECT_track_tool)
-		self.actionGitHub_Repo.triggered.connect( self.run_CellECT_seg_tool)
+		self.actionGitHub_Repo.triggered.connect( self.goto_repo)
 		self.actionOpen_Workspace.triggered.connect( self.open_workspace)
 		self.actionAbout.triggered.connect(self.show_about)
 		self.actionNew_Workspace.triggered.connect(self.show_new_workspace)
+		self.actionPreliminary_Segmentation.triggered.connect(self.run_preliminary_seg)
 
 		self.actionExit.triggered.connect(self.exit_app)
 
@@ -104,24 +106,47 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.btn_seg_tool.clicked.connect(self.run_CellECT_seg_tool)
 		self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
 		self.btn_select_all.clicked.connect(self.listView.selectAll)
+		self.btn_save_metadata.clicked.connect(self.save_metadata_to_file)
 		
 		self.meta_manager = meta_manager.ManageMetadataInUI(self, self.workspace_data.metadata)
-
-
 
 		# images
 		self.horizontalSlider_t.valueChanged.connect(self.set_images)
 		self.horizontalSlider_z.valueChanged.connect(self.set_images)
 
+
+	def save_metadata_to_file(self):
+		filename, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save file', os.curdir, "*.csv")
+
+		if filename[-4:] != ".csv":
+			filename += ".csv"
+
+		try:
+			self.workspace_data.metadata.save_csv_file(filename)		
+		except Exception as err:
+			QtGui.QMessageBox.information(self, "CellECT Open Workspace", "Could not save metadata to csv file. Error: %s" % err)
+
 		
-	
+	def goto_repo(self):
+
+		try:
+			webbrowser.open_new_tab("http://github.com/ddiana/CellECT")
+		except Exception as err:
+			QtGui.QMessageBox.information(self, "CellECT Open Repository", "Could not open repository. Error: %s" % err)
 
 
 	def open_workspace(self):
 		# Use the stock Qt dialog to look for VTK files.
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "*.cws")
 
-		self.open_cws_file(filename)
+		if not len(filename):
+			return 
+
+		try:
+			self.open_cws_file(filename)
+		except Exception as err:
+			QtGui.QMessageBox.information(self, "CellECT Open Workspace", "Could not open workspace. Error: %s" % err)
+
 
 
 	def open_cws_file(self, filename):
@@ -198,7 +223,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			i = (self.horizontalSlider_t.value() ) * self.workspace_data.metadata.numz*self.workspace_data.metadata.numch + self.horizontalSlider_z.value()*self.workspace_data.metadata.numch+1
 			img1_full_size = misc.imread("%s/input_slices/%d.tif" % (self.workspace_data.workspace_location, i))	
-
+			
 			max_size = 500
 			factor = min(1, 500./ max(img1_full_size.shape) )
 
@@ -320,7 +345,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				segmentation_index =  self.listView.selectionModel().selectedIndexes()[-1].row()
 		else:
 			QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Please select the time point to run the interactive segmentation on.")
-
+			return
 
 
 		config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)

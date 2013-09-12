@@ -22,14 +22,20 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>40</y>
+     <x>40</x>
+     <y>50</y>
      <width>341</width>
-     <height>161</height>
+     <height>31</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
    <property name="text">
-    <string>ABout CellECT</string>
+    <string>CellECT: Cell Evolution Capturing Tool</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
@@ -43,6 +49,22 @@
    </property>
    <property name="text">
     <string>KTnxBye</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>100</y>
+     <width>301</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>CellECT is developed at the Vision Research Lab at UCSB. This software includes an interactive segmentation tool, and a cell lineage (tracking) tool for 3-D confocal microscopy membrane images.</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

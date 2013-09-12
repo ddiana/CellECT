@@ -24,6 +24,8 @@ class Metadata(object):
 
 		self.numch = 0
 		self.mem_ch = 0
+		
+		self.num_pages = 0
 
 
 	def metadata_etree(self):
@@ -68,12 +70,52 @@ class Metadata(object):
 			if meta_field.get("name") == "mem_ch":
 				self.mem_ch = int(meta_field.get("value"))
 
+		if self.numt ==0:
+			self.numt = 1
 
+		if self.numz ==0:
+			self.numz =1
+
+		if self.numch == 0:
+			self.numch = 1
+
+		self.mem_ch = 0
+
+
+
+	def load_bq_xml_file(self, filename):
+	# open xml like text file, and read line by line just like tif metadata
+
+	
+		with open(filename, "r") as input_file:
+
+			line = input_file.readline()
+			while line:
+				self.get_meta_from_line(line)
+				line = input_file.readline()
+
+		if self.numt ==0:
+			self.numt = 1
+
+		if self.numz ==0:
+			self.numz =1
+
+		if self.numch == 0:
+			self.numch = 1
+
+		self.mem_ch = 0
+
+
+		
 
 	def get_meta_from_line(self, line):
 
-		meta_needed = set(["XResolution", "YResolution", "images", "slices", "SizeC", "SizeZ", "slices"\
-	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement" ])
+		# TODO unify metadata in a dictionary
+
+		meta_needed = set(["XResolution", "YResolution", "images", "slices", "SizeC", "SizeZ", "slices",\
+	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement",\
+	                       "pixel_resolution_x", "pixel_resolution_y", "pixel_resolution_z", "pixel_resolution_t",\
+	                       "image_num_c", "image_num_z", "image_num_t", "image_num_x", "image_num_y" ])
 
 
 		for meta in meta_needed:
@@ -83,25 +125,58 @@ class Metadata(object):
 			# with : or =
 			# with possible white spaces
 			# possibly the number being in quotations
-			matched = re.findall('(?i)%s\s*[=:]\s*"?[0-9]*\.?[0-9]+"?' % meta, line)
-			if len(matched):
+			matched = re.findall('(?i)%s\s*[=:]\s*("?[0-9a-zA-Z]*\.?[0-9a-zA-Z]+"?)' % meta, line)
+
+			# if nothing found, this can be an xml file, look for xml format:
+			matched = re.findall('name="(?i)%s"\s*value=("?[0-9a-zA-Z]*\.?[0-9a-zA-Z]+"?)' % meta, line)
+
+
+			# = re.search('[a-zA-Z]',matched[0])
+			if len(matched) :
 				# get the value out of the matched pattern
-				value = re.findall("[0-9]*\.?[0-9]+", matched[0])
-				value = float(value[0])
-				if meta in set( ["XResolution" , "PhysicalSizeX"]):
-					self.xres = value
-				if meta in set( ["YResolution" , "PhysicalSizeY"]):
-					self.yres = value
-				if meta in set( ["ZResolution" , "PhysicalSizeZ"]):
-					self.zres = value
-				if meta == "TimeIncrement":
-					self.tres = value
-				if meta in set(["SizeZ", "slices"]):
-					self.numz = int(value)
-				if meta == "SizeC":
-					self.numch = int(value)
-				if meta == "SizeT":
-					self.numt = int(value)
+
+				for match in matched:
+					#value = re.findall("[0-9]*\.?[0-9]+", match)
+					value = match.strip("'")
+					value = value.strip('"')
+
+					try:
+						value = float(value)
+					except:
+						continue
+	
+					if meta in set( ["XResolution" , "PhysicalSizeX", "pixel_resolution_x"]):
+						self.xres = value
+					if meta in set( ["YResolution" , "PhysicalSizeY", "pixel_resolution_y"]):
+						self.yres = value
+					if meta in set( ["ZResolution" , "PhysicalSizeZ", "pixel_resolution_z"]):
+						self.zres = value
+					if meta in set([ "TimeIncrement", "pixel_resolution_t"]):
+						self.tres = value
+					if meta in set(["SizeZ", "slices", "image_num_z"]):
+						if value > self.numz:   # because some datasets have two value for SizeZ
+							self.numz = int(value)
+					if meta in set(["image_num_ch","SizeC"]):
+						self.numch = int(value)
+					if meta in set(["SizeT", "image_num_t"]):
+						self.numt = int(value)
+
+					# only check x and y if reading metadata from xml (bq), otherwise get it from tif
+					if meta in set(["image_num_x"]):
+						self.numx = int(value)
+					if meta in set(["image_num_y"]):
+						self.numy = int(value)
+
+		if self.numt ==0:
+			self.numt = 1
+
+		if self.numz ==0:
+			self.numz =1
+
+		if self.numch == 0:
+			self.numch = 1
+
+		self.mem_ch = 0
 
 
 
@@ -111,6 +186,11 @@ class Metadata(object):
 		buf = StringIO. StringIO(tif.info())		
 
 		img = tif.read_image()
+
+		for image in tif.iter_images():
+			self.num_pages += 1
+
+		print self.num_pages
 		self.numx = img.shape[0]
 		self.numy = img.shape[1]
 
@@ -120,45 +200,71 @@ class Metadata(object):
 		while line:
 			self.get_meta_from_line(line)
 			line = buf.readline()
+
+		if self.numt ==0:
+			self.numt = 1
+
+		if self.numz ==0:
+			self.numz =1
+
+		if self.numch == 0:
+			self.numch = 1
 				
+		self.mem_ch = 0
+
 
 
 	def populate_metadata_boxes(self, ui):
 
-		if not self.xres == None:
-			ui.doubleSpinBox_xres.setValue(self.xres)
 
-		if not self.yres == None:
-			ui.doubleSpinBox_yres.setValue(self.yres)
+		ui.doubleSpinBox_xres.setValue(self.xres)
 
-		if not self.zres == None:
-			ui.doubleSpinBox_zres.setValue(self.zres)
+		ui.doubleSpinBox_yres.setValue(self.yres)
 
-		if not self.tres == None:
-			ui.doubleSpinBox_tres .setValue(self.tres)
+		ui.doubleSpinBox_zres.setValue(self.zres)
+
+		ui.doubleSpinBox_tres .setValue(self.tres)
 	
-		if not self.numx == None:
-			ui.spinBox_numx.setValue(self.numx)
+		ui.spinBox_numx.setValue(self.numx)
 
-		if not self.numy == None:
-			ui.spinBox_numy .setValue(self.numy)
+		ui.spinBox_numy .setValue(self.numy)
 
-		if not self.numz == None:
-			ui.spinBox_numz.setValue(self.numz)
+		ui.spinBox_numz.setValue(self.numz)
 
-		if not self.numt == None:
-			ui.spinBox_numt.setValue(self.numt)
+		ui.spinBox_numt.setValue(self.numt)
 
-		if not self.numch == None:
-			ui.spinBox_numch.setValue(self.numch)
+		ui.spinBox_numch.setValue(self.numch)
 
-		# TODO: if number of chnnels is not set
-		if not self.mem_ch == None:
-			for i in xrange(self.numch):
-				ui.comboBox_mem_chan.addItem(str(i))
+
+		# change in this value will also set the list for membrane channel.
+
+#		# TODO: if number of chnnels is not set
+#		if not self.mem_ch == None:
+#			for i in xrange(self.numch):
+#				ui.comboBox_mem_chan.addItem(str(i))
 
 
 
+
+
+	def save_csv_file(self,file_name):
+
+		try:
+			with open(file_name, "w") as f:
+
+				f.write("pixel_resolution_x, %f\n" % self.xres)
+				f.write("pixel_resolution_y, %f\n" % self.yres)
+				f.write("pixel_resolution_z, %f\n" % self.xres)
+				f.write("pixel_resolution_t, %f\n" % self.tres)
+				f.write("image_num_x, %d\n" % self.numx)
+				f.write("image_num_y, %d\n" % self.numy)
+				f.write("image_num_z, %d\n" % self.numz)
+				f.write("image_num_t, %d\n" % self.numt)
+				f.write("image_num_c, %d\n" % self.numch)
+				f.write("mem_ch, %d\n" % self.mem_ch)
+
+		except Exception as err:
+			raise err
 
 
 	def load_bq_csv_file(self, file_name):
@@ -199,6 +305,10 @@ class Metadata(object):
 				if name == "image_num_c":
 					self.numch = int(val)
 
+				if name == "mem_ch":
+					self.mem_ch = int(val)
+
+
 				info = f.readline().split(",")
 				name = info[0]
 				try:
@@ -206,4 +316,5 @@ class Metadata(object):
 				except:
 					val = None
 
-			self.mem_ch = 0
+			if self.mem_ch == None:
+				self.mem_ch = 0

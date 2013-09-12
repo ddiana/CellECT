@@ -7,18 +7,36 @@ import unittest
 # Imports from this project
 from CellECT.seg_tool.seg_io.load_parameters import parse_config_file_line as parser;
 
+import CellECT.seg_tool.globals
+
+
 
 class ParseConfigFileTestSequence(unittest.TestCase):
 
 	def correct_sample(self, line, expected_key, expected_val):
 
-		key, val = parser(line)
+		required_keys = CellECT.seg_tool.globals.default_parameter_dictionary_keys
+
+		all_keys = set(CellECT.seg_tool.globals.default_parameter_dictionary_keys)
+		all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_bq_only))
+		all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_cellness_metric_only))
+
+
+		key, val = parser(line, required_keys, all_keys)
 		self.assertEqual(key , expected_key)
 		self.assertEqual(val, expected_val)	
 
 	def fail_sample(self, line):
 		
-		self.assertRaises(IOError, parser, line)
+		required_keys = CellECT.seg_tool.globals.default_parameter_dictionary_keys
+
+		all_keys = set(CellECT.seg_tool.globals.default_parameter_dictionary_keys)
+		all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_bq_only))
+		all_keys = all_keys.union(set(CellECT.seg_tool.globals.default_parameter_dictionary_keys_cellness_metric_only))
+
+
+
+		self.assertRaises(IOError, parser, line, required_keys, all_keys)
 
 	
 	def test_simple_sample(self):
