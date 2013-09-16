@@ -207,9 +207,13 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_vol = vol.min()
 	max_var_cmap_vol = vol.max()
-	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat")  
+	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax1.add_line(line1)  
 	ax1.set_aspect(aspect1)
+	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
+	if seeds_at_z :
+		seeds_at_z = zip(*seeds_at_z)
+		ax1.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax1.axis([0, vol.shape[1], 0, vol.shape[0]])
 	ax1.set_autoscale_on(False)
 	ax1.invert_yaxis()
@@ -236,9 +240,13 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	ax3 = pylab.subplot(222)
 	ax3.set_aspect(aspect2)
 	pylab.subplots_adjust(bottom=0.25)
-	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat")  
+	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax3.add_line(line2) 
 	ax3.set_aspect(aspect2)
+	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
+	if seeds_at_y :
+		seeds_at_y = zip(*seeds_at_y)
+		ax3.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax3.axis([0, vol.shape[2], 0, vol.shape[0]])
 	ax3.set_autoscale_on(False)
 	ax3.invert_yaxis()
@@ -301,6 +309,21 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 						ax2.lines.pop(i)
 						any_left = True
 						break
+
+		any_left = True
+		while any_left :
+			any_left = False
+			for i in xrange (len(ax1.lines)):
+				if len(ax1.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
+					ax1.lines.pop(i)
+					any_left = True
+					break
+				else:  # check if it is the vertical line
+					coords = ax1.lines[i].get_xydata()
+					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
+						ax1.lines.pop(i)
+						any_left = True
+						break
 						
 						
 		ax4.add_line(line22)
@@ -310,13 +333,16 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		if seeds_at_z :
 			seeds_at_z = zip(*seeds_at_z)
 			ax2.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			ax1.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 			#print "seeds at z: ", seeds_at_z
 		# draw user seeds
 		user_seeds_at_z = get_nuclei_at_z(seed_coords, int(z))
 		if user_seeds_at_z :
 			user_seeds_at_z = zip(*user_seeds_at_z)
 			ax2.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+			ax1.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
 		pylab.draw()
+
 		
 	def update_y(val):
 		y = s_y.val
@@ -349,6 +375,21 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 						any_left = True
 						break
 
+
+		any_left = True
+		while any_left :
+			any_left = False
+			for i in xrange (len(ax3.lines)):				
+				if len(ax3.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
+					ax3.lines.pop(i)
+					any_left = True
+					break
+				else:  # check if it is the vertical line
+					coords = ax3.lines[i].get_xydata()
+					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
+						ax3.lines.pop(i)
+						any_left = True
+						break
 #		
 		ax1.add_line(line1)
 		line11 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5) 
@@ -360,12 +401,14 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		if seeds_at_y :
 			seeds_at_y = zip(*seeds_at_y)
 			ax4.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			ax3.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 			#print "seeds at y: ", seeds_at_y
 		# draw user seeds 
 		user_seeds_at_y = get_nuclei_at_y(seed_coords, int(y))
 		if user_seeds_at_y :
 			user_seeds_at_y = zip(*user_seeds_at_y)
 			ax4.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+			ax3.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
 			
 		pylab.draw()
 	
@@ -386,13 +429,13 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 		asc_coordinates = AscidianCoordinates()
 		
 		# which subplot was clicked:
-		if axClicked == ax2:   # the x-y plane
+		if axClicked == ax2 or axClicked == ax1:   # the x-y plane
 			xval = event.mouseevent.ydata
 			yval = event.mouseevent.xdata
 			zval = s_z.val
 			asc_coordinates.set_coordinates(xval,yval,zval)
 		
-		elif axClicked == ax4:    # the x-z plane
+		elif axClicked == ax4 or axClicked == ax3:   # the x-z plane
 			xval = event.mouseevent.ydata
 			yval = s_y.val
 			zval = event.mouseevent.xdata
@@ -421,10 +464,12 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 				if int(s_z.val) == zval:
 					seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					ax1.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
 				if int(s_y.val) == yval:
 					seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
 			
 			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)

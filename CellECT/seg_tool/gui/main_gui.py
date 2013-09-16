@@ -223,6 +223,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			else:
 				message = "Opening GUI for segment: Label %d @ (%d, %d, %d)" % (label, int(yval), int(xval), int(zval))
 				print message
+			
 				logging.info(message)
 			
 			
@@ -237,6 +238,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				cropped_vol = vol[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
+				print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
 				list_of_mouse_events_in_cropped_ascidian = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, z_default = zval - bounding_box.zmin, nuclei_coords =  cropped_nuclei_coords)
 					
 

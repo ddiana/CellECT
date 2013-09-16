@@ -63,6 +63,23 @@ class PrepNuclei(object):
 
 		
 
+	def use_no_nuclei(self, ws_location, metadata):
+		
+		self.ws_location = ws_location
+		number_time_points = metadata.numt
+		number_x = metadata.numx
+		number_y = metadata.numy
+		number_z = metadata.numz
+
+		for time in xrange(number_time_points):
+			nuclei_mat = np.zeros((1,3))
+			x = float(round(number_x / 2))
+			y = float(round(number_y / 2))
+			z = float(round(number_z / 2))
+			nuclei_mat[0,:] = np.array([x,y,z])
+			self.nuclei_dict[time] = nuclei_mat
+
+		self.write_mat_files()
 
 	def load_nuclei(self, csv_file):
 
@@ -244,6 +261,8 @@ class WorkspaceCreator(object):
 					self.nuclei.prepare_random_nuclei (self.ws_location, self.metadata )
 				if self.make_nuclei_option == "use_estimate":
 					self.nuclei.estimate_interiors(self.ws_location, self.metadata)
+				if self.make_nuclei_option == "no_nuclei":
+					self.nuclei.use_no_nuclei(self.ws_location, self.metadata)
 					
 			
 

@@ -4,6 +4,7 @@ load (input_mat_file, 'vol', 'seeds','has_bg');
 
 start_pts_mask = zeros(size(vol));
 
+
 for i = 1:size(seeds,2)
 	for x = -5:5
 		for y = -5:5
@@ -32,9 +33,26 @@ if has_bg
 	start_pts_mask(end-1,:,:) = 1;
 end
 
-vol = imimposemin (vol, start_pts_mask);
+% if there are no nuclei (just dummy) and no background, then just return one big box
 
-ws = watershed(vol);
+if (size(seeds,2) == 1) & (~has_bg)
+
+	ws = ones(size(vol));
+
+	ws(:,:,1) = zeros(size(vol,1), size(vol,2));
+	ws(:,:,end) = zeros(size(vol,1), size(vol,2));
+	ws(:,1,:) = zeros(size(vol,1),size(vol,3));
+	ws(:,end,:) = zeros(size(vol,1),size(vol,3));
+	ws(1,:,:) =  zeros(size(vol,2),size(vol,3));
+	ws(end,:,:) =  zeros(size(vol,2),size(vol,3));
+
+else
+	% actually run watershed
+	vol = imimposemin (vol, start_pts_mask);
+
+	ws = watershed(vol);
+end
+
 
 if ~has_bg
 % if it doesnt have a bg, skip label 1 since this is reserved for background
@@ -47,8 +65,8 @@ if ~has_bg
 			ws = ws + double(ws>0);
 		end
 	end
-	
 end
+
 
 save (output_mat_file, 'ws');
 

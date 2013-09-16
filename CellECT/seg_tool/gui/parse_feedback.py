@@ -115,7 +115,15 @@ def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, 
 
 	asc_coords = right_click.asc_coordinates
 	segment_label =  label_map[ box.xmin + asc_coords.xval, box.ymin + asc_coords.yval, box.zmin + asc_coords.zval  ]
+
 	nucleus_index_for_segment = -1
+	
+#	print segment_label , "@ %d, %d, %d in box %d, %d" % (asc_coords.xval, asc_coords.yval, asc_coords.zval, box.xmin, box.ymin )
+#	test = np.zeros((label_map.shape[0], label_map.shape[1]))
+#	test[box.xmin: box.xmax, box.ymin: box.ymax] = 1
+#	pylab.imshow(test + np.double(label_map[:,:,box.zmin +asc_coords.zval] == segment_label))
+#	pylab.show()
+
 
 	if segment_label >1:
 		# If the label selected is valid (no background/border), pick up the nucleus associated with it.		
@@ -209,6 +217,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		segment1, nucleus_index_for_segment1 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection)
 		segment2, nucleus_index_for_segment2 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-2], box, label_map, segment_collection)
 
+
 		# if either one came None
 		if not (segment1 and segment2 and nucleus_index_for_segment1 and nucleus_index_for_segment2):
 			message = "Ignoring MERGE TWO LABELS task. Bad label given."
@@ -243,6 +252,8 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 
 	# for each segment correction window that was open:
 	for segment_gui_feedback in all_user_feedback:
+
+		
 	
 		# for each click that was made in this segment correction window
 		# what task did that click associated with it?
@@ -251,16 +262,17 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 		# detect all the tasks that the user wanted
 		# make changes for the ones with complete information
 
-		box = segment_gui_feedback.bounding_box
+		
 
 		for user_mouse_click in segment_gui_feedback.list_of_cropped_ascidian_events:
 		
 			# task index starts at -1. Reinitialized to the index of current task from clicks.
 			# Also check if current task is legit (has all info), otherwise, discard it.
+			
 
 			if user_mouse_click.task_index != task_index:
 				# Finish business with current task                              
-				if current_task != "NO_TASK_SELECTED":
+				if current_task != "NO_TASK_SELECTED" and box:
 					confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection)
 				
 
@@ -271,11 +283,14 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 				# empty click buffers per task
 				task_left_click_buffer = []
 				task_right_click_buffer = []
+				box = segment_gui_feedback.bounding_box
 	
 			if user_mouse_click.right_click:
 				task_right_click_buffer.append(user_mouse_click)
 			else:
 				task_left_click_buffer.append(user_mouse_click)
+
+	pdb.set_trace()
 
 	if current_task != "NO_TASK_SELECTED" and box:
 		confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection)
