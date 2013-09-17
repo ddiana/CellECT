@@ -29,7 +29,7 @@ Prerequisites:
 * opencv python wrappers
 * matlab (needed for imimposemin, watershed)
 
-An install script tested on Fedora 18 is provided [here]((https://github.com/ddiana/CellECT/prereqs_install_fedora.sh)
+An install script tested on Fedora 18 is provided [here](https://github.com/ddiana/CellECT/blob/master/prereqs_install_fedora.sh)
 
 After the prerequisites, CellECT can be installed as follows:
 
