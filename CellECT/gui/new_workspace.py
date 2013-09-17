@@ -57,7 +57,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.btn_import_nuclei_csv.clicked.connect(self.import_nuclei_csv)
 
 
-		self.meta_manager = meta_manager. ManageMetadataInUI(self, self.metadata)
+		self.meta_manager = meta_manager.ManageMetadataInUI(self, self.metadata)
 
 
 

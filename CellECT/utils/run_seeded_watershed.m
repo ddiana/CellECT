@@ -7,7 +7,7 @@ start_pts_mask = zeros(size(vol));
 
 for i = 1:size(seeds,2)
 	for x = -5:5
-		for y = -5:5
+		for y = -3:3
 			for z = -2:2
 				xloc = max( round(seeds(1,i)+1) + x, 1);
 				xloc = min( xloc, size(vol,1));

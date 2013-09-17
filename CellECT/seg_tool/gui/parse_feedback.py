@@ -141,6 +141,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 	confirm that the user gave all the proper information for the requested task.
 	"""
 
+
 	if task_name == "ADD_SEEDS_TO_NEW_LABEL":
 		# if new label, then we need at least one left click. Take only the last left click.
 
@@ -158,19 +159,20 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		# (1) at least one seed is given, 
 		# (2) valid label is given (not background, not border)
 
+
 		# check if no seed
 		if not (len(left_clicks)):
 			message = "Ignoring ADD SEED TO NEW LABEL task. No seed given."
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
-			return
+			return False
 			
 		# check if no label
 		if not (len(right_clicks)):
 			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. No label given."
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
-			return
+			return False
 
 		# get the last right click information
 		segment_label, nucleus_index_for_segment = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection)
@@ -180,7 +182,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background or border)"
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
-			return
+			return False
 
 
 		# If we made it so far, that means we have a good label, and a nonzero list of seeds.
@@ -210,7 +212,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 			message = "Ignoring MERGE TWO LABELS task. Not enough labels given."
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
-			return
+			return False
 
 		# check the last 2 right clicks:
 
@@ -223,14 +225,14 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 			message = "Ignoring MERGE TWO LABELS task. Bad label given."
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
-			return
+			return False
 
 		# if we made it this far, merge the two labels (apply changes)
 		nucleus1 = nuclei_collection.nuclei_list[nucleus_index_for_segment1]
 		nucleus2 = nuclei_collection.nuclei_list[nucleus_index_for_segment2]			
 		nuclei_collection.merge_two_nuclei(nucleus1, nucleus2)
 
-
+	return True
 
 
 
@@ -249,6 +251,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 	task_right_click_buffer = []
 
 	box = None
+	made_changes = False
 
 	# for each segment correction window that was open:
 	for segment_gui_feedback in all_user_feedback:
@@ -262,7 +265,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 		# detect all the tasks that the user wanted
 		# make changes for the ones with complete information
 
-		
+
 
 		for user_mouse_click in segment_gui_feedback.list_of_cropped_ascidian_events:
 		
@@ -273,7 +276,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 			if user_mouse_click.task_index != task_index:
 				# Finish business with current task                              
 				if current_task != "NO_TASK_SELECTED" and box:
-					confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection)
+					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection) or made_changes 
 				
 
 				# Initialize next task
@@ -290,12 +293,11 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 			else:
 				task_left_click_buffer.append(user_mouse_click)
 
-	pdb.set_trace()
-
 	if current_task != "NO_TASK_SELECTED" and box:
-		confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection)
+		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection) or made_changes
 				
 
+	return made_changes
 
 
 

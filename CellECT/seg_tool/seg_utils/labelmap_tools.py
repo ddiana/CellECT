@@ -166,6 +166,8 @@ def remove_boundary(label_map):
 
 	# remove boundary:
 	# TODO make this way faster
+	
+
 
 	if label_map.size >0:
 	
@@ -191,7 +193,7 @@ def remove_boundary(label_map):
 
 			it.iternext()
 		t2 = time.time()
-		#print "time to remove border:", t2-t1
+		print "time to remove border:", t2-t1
 
 	
 
