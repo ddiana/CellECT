@@ -23,7 +23,7 @@ CellECT can work with TIFF stacks which contain membrane channel (and optionally
 
 The CellECT tracking tool can be run on a subset of time points, selected from the list on the left of the UI. The tracking tool constructs the cell lineage and offers the multiple visualizations of the result, as illustrated in the screenshot below.
 
-![CellECT Tracking Tool](CellECT/CellECT/doc/md_figures/CellECT_tracker.png "CellECT Tracking Tool")
+![CellECT Tracking Tool](https://raw.github.com/ddiana/CellECT/master/CellECT/doc/md_figures/CellECT_tracker.png "CellECT Tracking Tool")
 
 
 
