@@ -5,7 +5,7 @@ CellECT Segmentation Tool is the interactive segmentation component of the CellE
 
 Back to [CellECT](https://github.com/ddiana/CellECT#cellect-cell-evolution-capturing-tool)
 
-Move to [CellECT Tracking Tool](https://github.com/ddiana/CellECT/tree/master/CellECT/track_tool#cellect-segmentation-tool)
+Move to [CellECT Tracking Tool](https://github.com/ddiana/CellECT/tree/master/CellECT/track_tool#cellect-tracking-tool)
 
 
 Installation
