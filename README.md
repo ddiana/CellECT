@@ -50,7 +50,7 @@ CellECT
 
 CellECT can work with TIFF stacks which contain membrane channel (and optionally nuclei channel), at one or multiple time points. You can create a workspace from a new TIFF dataset, or you can open an existing workspace and continue working with it. A new workspace will optionally take as input the output of a nuclear detector as a .csv file. If no such file is provided, the user can manually add points later, or or opt for randomized input points.
 
-![CellECT Segmentation Tool](CellECT/doc/md_figures/CellECT.png "CellECT: Cell Evolution Capturing Tool")
+![CellECT Segmentation Tool](https://github.com/ddiana/CellECT/blob/master/doc/md_figures/CellECT.png "CellECT: Cell Evolution Capturing Tool")
 
 
 
