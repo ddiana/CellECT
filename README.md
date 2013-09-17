@@ -6,9 +6,9 @@ About
 
 CellECT is a tool for cell analysis in 3-D confocal microscopy membrane volumes. CellECT provides a segmentation tool, which runs seeded watershed on the volume, predicts uncertain areas and allows the user to interact with the segmentation in order to correct it. CellECT also provides a tracking tool for discovering cell lineage across multiple 3-D volumes.
 
-Skip to [CellECT Segmentation Tool](https://github.com/ddiana/CellECT/seg_tool)
+Skip to [CellECT Segmentation Tool](https://github.com/ddiana/CellECT/tree/master/CellECT/track_tool#cellect-segmentation-tool)
 
-Skip to [CellECT Tracking Tool](https://github.com/ddiana/CellECT/track_tool)
+Skip to [CellECT Tracking Tool](https://github.com/ddiana/CellECT/tree/master/CellECT/track_tool#cellect-tracking-tool)
 
 Installation
 ------------
