@@ -62,7 +62,7 @@ def display_segment_to_correct(vol, label_map, segment):
 	return split_mouse_event, merge_mouse_event1, merge_mouse_event2
 
 
-def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = []):
+def correct_segment_gui (vol, watershed, label, color_map, watershed_max, vol_max , z_default = -1,  nuclei_coords = []):
 
 	"""
 	GUI to allow the user to interact with the segment to correct.
@@ -201,12 +201,13 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	line22 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)
 	 
 	z0 = int(z0) 
+
 	
 # x-y plane, volume
 	ax1 = pylab.subplot(221)	
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_vol = vol.min()
-	max_var_cmap_vol = vol.max()
+	max_var_cmap_vol = vol_max
 	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax1.add_line(line1)  
 	ax1.set_aspect(aspect1)
@@ -223,9 +224,9 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	ax2 = pylab.subplot(223)
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_ws = watershed.min()
-	max_var_cmap_ws = watershed.max()
+	max_var_cmap_ws = watershed_max
 
-	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = "spectral", vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
 	ax2.add_line(line11) 	
 	ax2.set_aspect(aspect1)
 	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
@@ -256,7 +257,7 @@ def correct_segment_gui (vol, watershed, label, z_default = -1, nuclei_coords = 
 	ax4 = pylab.subplot(224)
 	ax4.set_aspect(aspect2)
 	pylab.subplots_adjust(bottom=0.25)
-	l4 =  pylab.imshow(watershed[:,y0,:], interpolation="nearest", cmap = "spectral", vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	l4 =  pylab.imshow(watershed[:,y0,:], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
 	ax4.add_line(line22) 
 	ax4.set_aspect(aspect2)
 	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)

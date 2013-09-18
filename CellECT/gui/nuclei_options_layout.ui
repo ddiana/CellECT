@@ -95,6 +95,9 @@
     <property name="text">
      <string>Manually add nuclei later. (default)</string>
     </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
    </widget>
   </widget>
   <widget class="QPushButton" name="btn_cancel">

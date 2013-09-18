@@ -110,6 +110,11 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	else:
 		z0 = int(np.floor(watershed.shape[2]/2))
 
+
+
+	colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
+	color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
+
 	ax1 = pylab.subplot(141)
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_vol = vol.min()
@@ -118,7 +123,6 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	pylab.axis()#[0, vol1.shape[0], 0, vol1.shape[1]])
 	ax1.set_title("Input Volume")
 	
-
 	ax2 = pylab.subplot(142)
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_uncert = uncertainty_map.min()
@@ -131,9 +135,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_uncert = watershed.min()
 	max_var_cmap_uncert = watershed.max()
-	colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
-	new_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
-	l3 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = new_map, vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
+	l3 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
 	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
 	ax3.set_title("Segmentation Label Map")
 
@@ -242,7 +244,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
 				#print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
-				list_of_mouse_events_in_cropped_ascidian = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, new_map, z_default = zval - bounding_box.zmin, new_map, nuclei_coords =  cropped_nuclei_coords)
+				list_of_mouse_events_in_cropped_ascidian = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed.max() z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords)
 					
 
 				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))
