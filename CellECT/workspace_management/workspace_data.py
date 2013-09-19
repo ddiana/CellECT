@@ -2,7 +2,6 @@
 # Vision Research Lab, University of California Santa Barbara
 
 # Imports
-
 import os
 import pdb
 import xml.etree.ElementTree as ET

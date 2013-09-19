@@ -1,6 +1,9 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
+
+# Imports
 import numpy as np
 import scipy as sp
-
 from numpy import histogram
 
 

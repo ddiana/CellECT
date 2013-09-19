@@ -1,8 +1,11 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
 
-
+# Imports
 from PySide import QtGui
 from PySide import QtCore
 
+# Imports from this project
 from CellECT.gui import nucleiOptionsGui
 
 

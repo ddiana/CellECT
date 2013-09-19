@@ -1,3 +1,7 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
+
+
 class ManageMetadataInUI(object):
 
 

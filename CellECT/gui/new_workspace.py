@@ -11,7 +11,6 @@ from scipy import misc
 
 # Imports from this project
 from CellECT.gui import newWorkspaceGui
-
 from CellECT.workspace_management import metadata as md
 from CellECT.workspace_management import workspace_creator
 from CellECT.workspace_management import workspace_data
@@ -139,6 +138,8 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 			dlg = nuclei_options.NucleiOptionsGui()
 			dlg.exec_()
 			action = dlg.action
+		else:
+			action = "has_nuclei"
 
 
 
@@ -154,11 +155,15 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		self.new_ws = workspace_creator.WorkspaceCreator()
 		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, self.checkBox_has_bg.isChecked(), action)
 
+	
 		try:
 			self.new_ws.build_workspace(self.ws_location, self.progressBar )
+		except IOError as err:
+			QtGui.QMessageBox.information(self, "CellECT New Workspace", err.message)			
 		except Exception as err:
 			QtGui.QMessageBox.information(self, "CellECT New Workspace", "Could not create workspace. Error: %s" % err)
 			return
+		
 
 
 
@@ -178,6 +183,9 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 	def get_ws_location(self):
 
 		dirname = QtGui.QFileDialog.getExistingDirectory(self, 'Open file', self.last_dir, options= QtGui.QFileDialog.ShowDirsOnly )
+
+		if not len(dirname):
+			return 
 
 		self.last_dir = dirname
 		self.ws_dir = dirname
@@ -232,8 +240,11 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 		pic = tif.read_image()
 		misc.imsave("temp.jpg", pic)
-
+	
+		# TODO: wait message
+		#msg_box = QtGui.QMessageBox.information(self, "CellECT New Workspace", "Loading a large stack may take time. Press OK to continue.", defaultB = QtGui.QMessageBox.NoButton )
 		self.load_metadata_from_tif_info()
+
 		#pic = QtGui.QImage(filename)
 		#self.label_preview_img.setPixmap(QtGui.QPixmap.fromImage(pic))
 		self.label_preview_img.setPixmap("temp.jpg")

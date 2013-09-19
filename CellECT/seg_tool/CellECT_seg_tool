@@ -264,7 +264,8 @@ def main():
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
 					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
-
+			else:
+				made_changes = False
 		
 			new_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			new_number_of_seeds = len(seed_collection.list_of_seeds)
@@ -292,12 +293,12 @@ def main():
 
 
 			
-	## Show final output #######################################################
-	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
-		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
-			display_tools.display_volume_two(vol, watershed)
-		else:
-			logging.info("Not displaying final volume (bisque).")
+#	## Show final output #######################################################
+#	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
+#		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+#			display_tools.display_volume_two(vol, watershed)
+#		else:
+#			logging.info("Not displaying final volume (bisque).")
 
 
 	## Ask if save #############################################################

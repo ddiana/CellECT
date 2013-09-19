@@ -1,6 +1,8 @@
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
 
+# Imports
 import xml.etree.ElementTree as ET
-
 from libtiff import TIFF
 import StringIO
 import re

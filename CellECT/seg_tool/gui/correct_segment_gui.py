@@ -62,7 +62,7 @@ def display_segment_to_correct(vol, label_map, segment):
 	return split_mouse_event, merge_mouse_event1, merge_mouse_event2
 
 
-def correct_segment_gui (vol, watershed, label, color_map, watershed_max, vol_max , z_default = -1,  nuclei_coords = []):
+def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_max , z_default = -1,  nuclei_coords = []):
 
 	"""
 	GUI to allow the user to interact with the segment to correct.
@@ -223,7 +223,7 @@ def correct_segment_gui (vol, watershed, label, color_map, watershed_max, vol_ma
 # x-y plane, watershed
 	ax2 = pylab.subplot(223)
 	pylab.subplots_adjust(bottom=0.25)
-	min_var_cmap_ws = watershed.min()
+	min_var_cmap_ws = 0
 	max_var_cmap_ws = watershed_max
 
 	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2

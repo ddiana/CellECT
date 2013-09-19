@@ -19,13 +19,13 @@ import pickle
 import os.path
 import multiprocessing
 import webbrowser
+from scipy import io as spio
 
 
 # Imports form this project
 
 from CellECT.gui import mainGui
 from CellECT.gui import newWorkspaceGui
-
 from CellECT.workspace_management import metadata as md
 from CellECT.workspace_management import workspace_data as wd
 from CellECT.gui import about_window
@@ -269,11 +269,17 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def call_cellect_seg_tool_preliminary(self, config_file_location, index):
 
-		os.system('CellECT_seg_tool -m -i -f %s' % config_file_location)
 
+		command = 'CellECT_seg_tool -m -i -f %s' % config_file_location
+		print command
+		os.system(command)
 
-		print self.model.contents[index] 
+		#print self.model.contents[index] 
 		self.model.contents[index] += " has segmentation"
+		self.listView().update()
+
+
+
 
 	def run_preliminary_seg(self):
 	
@@ -322,16 +328,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-
-	def run_CellECT_readme(self):
-
-		"""
-		Open firefox at the GitHub project page.
-		"""
-
-		os.system('firefox https://github.com/ddiana/CellECT')
-
-
 	def run_CellECT_seg_tool(self):
 
 		"""
@@ -350,13 +346,27 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
 
-		print config_file_location
 
 		use_metric = ""		
 		if not self.checkBox_use_metric.isChecked():
-			use_metric = "-m"
 
-		os.system('gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location))
+			use_metric = "-m"
+		else:
+
+			try:
+				training_data_location = "%s/training_data/positive_example.mat" % self.workspace_data.workspace_location
+				spio.loadmat(training_data_location)
+				training_data_location = '%s/training_data/negative_example.mat' % self.workspace_data.workspace_location
+				spio.loadmat(training_data_location)
+			except:
+				use_metric = "-m"
+				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "No training data available. Running without cellness metric.")
+
+
+
+		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location)
+		print command
+		os.system(command)
 
 
 	def run_CellECT_track_tool(self):
@@ -381,8 +391,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		config_file_location = self.write_tracker_config_file(self.listView.selectionModel().selectedIndexes())
 
-
-		os.system('gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 1"' % config_file_location)
+		command = 'gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 1"' % config_file_location
+		print command
+		os.system(command)
 
 
 

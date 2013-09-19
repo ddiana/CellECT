@@ -1,5 +1,8 @@
-from scipy import io
+# Author: Diana Delibaltov
+# Vision Research Lab, University of California Santa Barbara
 
+# Imports
+from scipy import io
 from libtiff import TIFF
 from scipy import misc
 import os
@@ -7,7 +10,7 @@ import pdb
 import numpy as np
 import random
 
-
+# Imports from this project
 from CellECT.workspace_management import cell_interior
 
 class PrepNuclei(object):
@@ -92,10 +95,11 @@ class PrepNuclei(object):
 				
 				items = [float(item.strip()) for item in line.split(",")]
 				time = int(items[3])
+		
 				if not self.nuclei_dict.has_key(time):
 					self.nuclei_dict[time] = []
 	
-				self.nuclei_dict[time].append([items[0:3]])
+				self.nuclei_dict[time].append([items[1], items[0], items[2]])
 
 				line = f.readline()
 
@@ -207,7 +211,17 @@ class WorkspaceCreator(object):
 	def prep_training_data(self):
 
 		import CellECT
-		data_location = os.system('cp %s/data/training/ascidian/* %s/training_data/' % (CellECT.__path__[0], self.ws_location))
+		try:
+			training_data_location = '%s/data/training/ascidian/positive_example.mat' % (CellECT.__path__[0])
+			io.loadmat(training_data_location)
+			training_data_location = '%s/data/training/ascidian/negative_example.mat' % (CellECT.__path__[0])
+			io.loadmat(training_data_location)
+			data_location = os.system('cp %s/data/training/ascidian/* %s/training_data/' % (CellECT.__path__[0], self.ws_location))
+		except IOError as err:
+			err.message = "no_cellness"
+			raise err
+
+
 
 
 
@@ -269,6 +283,11 @@ class WorkspaceCreator(object):
 			self.prep_training_data()
 
 			self.write_config_files()
+		except IOError as err:
+			if err.message == "no_cellness":
+				err.message = "No training data available. You will only be able to run without cellness metric."
+				self.write_config_files()
+			raise err
 
 		except Exception as err:
 			raise err
