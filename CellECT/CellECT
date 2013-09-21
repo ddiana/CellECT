@@ -35,21 +35,29 @@ from CellECT.gui import meta_manager
 
 
 class SimpleList(QtCore.QAbstractListModel):
-    def __init__(self, contents):
-        super(SimpleList, self).__init__()
-        self.contents = contents
 
-    def rowCount(self, parent):
-        return len(self.contents)
+	"""
+	Abstract list model for the segmentations at each time point.
+	"""
 
-    def data(self, index, role):
-        if role == QtCore.Qt.DisplayRole:
-            return str(self.contents[index.row()])
+	def __init__(self, contents):
+		super(SimpleList, self).__init__()
+		self.contents = contents
+
+	def rowCount(self, parent):
+		return len(self.contents)
+
+	def data(self, index, role):
+		if role == QtCore.Qt.DisplayRole:
+			return str(self.contents[index.row()])
 	
 			
 
 class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
+	"""
+	Main CellECT UI.
+	"""
 
 	def setup_ui_data(self):
 
@@ -116,6 +124,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 	def save_metadata_to_file(self):
+
+		"""
+		Save info from metadata boxes to csv file.
+		"""
+
 		filename, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save file', os.curdir, "*.csv")
 
 		if filename[-4:] != ".csv":
@@ -129,6 +142,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		
 	def goto_repo(self):
 
+		"""
+		Open github repo in default browser.
+		"""
+
 		try:
 			webbrowser.open_new_tab("http://github.com/ddiana/CellECT")
 		except Exception as err:
@@ -136,6 +153,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 	def open_workspace(self):
+
+		"""
+		Open window to select cws file.
+		"""
+
 		# Use the stock Qt dialog to look for VTK files.
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "*.cws")
 
@@ -150,6 +172,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 	def open_cws_file(self, filename):
+
+		"""
+		Load workspace from selected cws file.
+		"""
 
 		#self.workspace_data = pickle.load( open( filename, "rb" ) )
 
@@ -167,6 +193,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def time_selected_in_list(self):
 
+		"""
+		Update time slider to the time selected from the list.
+		"""
+
 		try:
 			current_selection = self.listView.selectionModel().selectedIndexes()[-1].row()
 		except:
@@ -176,11 +206,12 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-
-
-
 		
 	def write_tracker_config_file(self, selected_indices):
+
+		"""
+		Write config file to run tracker app when tracker is run.
+		"""
 
 		file_name = "%s/tracker_config/config_file_tracker.cnf" % self.workspace_data.workspace_location
 		with open(file_name,'w') as f:
@@ -207,6 +238,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def set_images(self):
 
+		"""
+		Update images from panel when Z or T was changed.
+		"""
 		
 		#print "t: %d, z: %d" % (self.horizontalSlider_t.value(), self.horizontalSlider_z.value())
 
@@ -269,6 +303,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def call_cellect_seg_tool_preliminary(self, config_file_location, index):
 
+		"""
+		Run preliminary seg tool, without any user interaction.
+		"""
 
 		command = 'CellECT_seg_tool -m -i -f %s' % config_file_location
 		print command

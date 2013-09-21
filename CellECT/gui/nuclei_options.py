@@ -21,7 +21,7 @@ class NucleiOptionsGui(QtGui.QDialog, nucleiOptionsGui.Ui_Dialog):
 		self.btn_cancel.clicked.connect(self.go_back_do_nothing)
 
 		self.radioButton_no_nuclei.clicked.connect(self.set_no_nuclei)
-		self.radioButton_estimate.clicked.connect(self.set_estimate)
+		#self.radioButton_estimate.clicked.connect(self.set_estimate)
 		self.radioButton_random.clicked.connect(self.set_random)
 		self.btn_continue.clicked.connect(self.close)
 		self.action = "no_nuclei"
