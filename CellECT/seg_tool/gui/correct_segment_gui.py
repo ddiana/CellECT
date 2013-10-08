@@ -36,6 +36,7 @@ def display_segment_to_correct(vol, label_map, segment):
 	Return GUI interactions.
 	"""
 
+
 	#x,y,z = zip(*segment.list_of_voxel_tuples)	
 
 	zsum = reduce(lambda a,b: a[2] + b[2], self.list_of_voxel_tuples)		
@@ -202,6 +203,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	 
 	z0 = int(z0) 
 
+
 	
 # x-y plane, volume
 	ax1 = pylab.subplot(221)	
@@ -276,6 +278,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	ax_y = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
 	s_y = Slider(ax_y, 'y-slice', 0, vol.shape[1]-1, valinit=y0)
 
+	pylab.show()
 	def update_z(val):
 		z = s_z.val
 		# draw lines
@@ -492,8 +495,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 #	print '.......'
 	
 
-	pylab.show()
-	if matplotlib.get_backend().lower() != "GTK3Agg".lower():
+	if matplotlib.get_backend().lower() != "GTK3Agg".lower() and matplotlib.get_backend().lower() != "GTKAgg".lower():
 		pylab.close()
 		gc.collect()
 
