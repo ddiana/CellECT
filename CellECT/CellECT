@@ -50,6 +50,34 @@ class SimpleList(QtCore.QAbstractListModel):
 	def data(self, index, role):
 		if role == QtCore.Qt.DisplayRole:
 			return str(self.contents[index.row()])
+		#return None
+
+#	# the view is asking us to *change* some aspect of our data.
+#	# as in the above, it can be any aspect of the data, not *just* the information contained in the model.
+# 	# remember to return true if you handle a data change, and false otherwise, always!
+#	# for more information, see:
+#	# http://doc.trolltech.com/4.6/qabstractitemmodel.html#setData
+#	def setData(self, index, value, role = QtCore.Qt.EditRole):
+#		# You might be expecting Qt.DisplayRole here, but no.
+#		# Qt.DisplayRole is the *displayed* value of an item, like, a formatted currency value: "$44.00"
+#		# Qt.EditRole is the raw data of an item, e.g. "4400" (as in cents).
+#		if role == QtCore.Qt.EditRole:
+#			# set the data.
+#			# the str() cast here is mostly for peace of mind, you can't perform some operations
+#			# in python with Qt types, like pickling.
+#			self.contents[index.row()] = value
+
+#			# *always* emit the dataChanged() signal after changing any data inside the model.
+#			# this is so e.g. the different views know they need to do things with it.
+#			#
+#			# don't be lazy and pass a huge range of values to this, because it is processing-heavy.
+#			#
+#			# because we are a simple list, we only have one index to worry about for topleft/bottom right,
+#			# so just reuse the index we are passed.
+#			QtCore.QObject.emit(self, QtCore.SIGNAL("dataChanged(const QModelIndex&, const QModelIndex &)"), index, index)
+#			return True
+#		# unhandled change.
+#		return False
 	
 			
 
@@ -227,9 +255,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			# TODO tracker relative path
 
-			f.write("\nsegs-path = %s/segs_all_time_stamps\n" % self.workspace_data.workspace_location)
+			f.write("\nsegs-path = segs_all_time_stamps\n")
 			f.write('z-slices-per-stack = %d\n' %  self.workspace_data.metadata.numz)
-			f.write('tif-slices-path = %s/input_slices/\n' % self.workspace_data.workspace_location)
+			f.write('tif-slices-path = input_slices/\n')
 			f.write('gui-thumbnail-path = gui_thumbnails/\n')
 			f.write('cell-association-distance-threshold = 200\n')
 			f.write('max-cell-growth-rate = 1.3\n')
@@ -305,15 +333,28 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		"""
 		Run preliminary seg tool, without any user interaction.
-		"""
+		"""		
+
 
 		command = 'CellECT_seg_tool -m -i -f %s' % config_file_location
 		print command
 		os.system(command)
 
+
+
 		#print self.model.contents[index] 
 		self.model.contents[index] += " has segmentation"
-		self.listView().update()
+		
+		#model_index = self.model.index(index,0)
+		#self.model.setData(model_index, new_value)
+		self.model = SimpleList(self.model.contents)
+		self.listView.setModel(self.model)
+		print self.model.contents[index]
+
+	
+
+		self.listView.show()
+
 
 
 
@@ -428,7 +469,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		config_file_location = self.write_tracker_config_file(self.listView.selectionModel().selectedIndexes())
 
-		command = 'gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 1"' % config_file_location
+		command = 'gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 10"' % config_file_location
 		print command
 		os.system(command)
 
@@ -445,6 +486,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			for i in xrange(self.workspace_data.metadata.numt):
 				if i in self.workspace_data.available_segs:
 					list_item = "Volume at t=%d has segmentation" % i
+
 				else:
 					list_item = "Volume at t=%d" %i
 
