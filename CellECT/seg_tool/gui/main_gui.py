@@ -218,6 +218,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			print "Border/Backdround selected. Try again."
 		
 		else:
+
 			if event.mouseevent.button != 1:
 				# right click to mark as correct
 				# print "Correct segment: ", label, "@", int(yval), int(xval), int(zval)
