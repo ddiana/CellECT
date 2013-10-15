@@ -82,7 +82,7 @@ def load_cell_tracker():
 		cell_tracker.add_cell_profiles_per_timestamp(cell_profile_per_ts)
 
 
-	cell_tracker.build_graph()
+	cell_tracker.build_lineage()
 	
 
 	return cell_tracker

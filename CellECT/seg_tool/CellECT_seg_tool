@@ -163,7 +163,7 @@ def main():
 	## MAIN LOOP ###############################################################
 	sum_new = None
 
-
+	made_changes = False
 
 	while ask_feedback or CellECT.seg_tool.globals.should_load_last_save:
 
@@ -254,13 +254,15 @@ def main():
 			print "Processing user feedback..."
 			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			old_number_of_seeds = len(seed_collection.list_of_seeds)
-		
+
+
 			if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
 				# Get feedback #####################################################
 				if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 					# TODO: bisque UI parser
 					print colored("BISQUE UI PARSER","red")
 					logging.info("BISQUE UI PARSER.")
+					made_changes = False
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
 					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
@@ -292,7 +294,7 @@ def main():
 				ask_feedback = False
 
 
-			
+
 #	## Show final output #######################################################
 #	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
 #		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
@@ -328,7 +330,7 @@ def main():
 	print "KTnxBye."
 
 
-
+	
 
 
 if __name__ == "__main__":
@@ -336,8 +338,13 @@ if __name__ == "__main__":
 
 
 
+	try:
+		main()
+		sys.exit(0)
 
-	main()
+	except Exception as err:
+		logging.error(err)
+		sys.exit(1)
 
 
 

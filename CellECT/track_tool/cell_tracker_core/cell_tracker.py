@@ -12,6 +12,7 @@ import pdb
 
 # Imports from this project
 import CellECT.track_tool.globals
+import CellECT.track_tool.cell_tracker_core.tracklet_connector as tc
 
 
 """
@@ -52,13 +53,25 @@ class CellTracker(object):
 			self.distance_matrix_list.append(self.get_distance_matrix_for_t1_t2( t1, t2 ))
 
 
-	def build_graph(self):
+	def build_lineage(self):
+
+
+		"""
+		Build graph of cells. Do confident associations, and then connect resulting
+		tracklets.
+		"""
 
 		self.add_nodes_to_graph()
-		self.add_weak_associations_to_graph()	
+		self.add_confident_associations_to_graph()	
+
+		#tc.TrackletConnector(self)
+
+		
 	
 		#self.create_program()
 
+
+	
 
 #	def connect_program():
 
@@ -102,7 +115,7 @@ class CellTracker(object):
 
 
 
-	def add_weak_associations_to_graph(self):
+	def add_confident_associations_to_graph(self):
 
 		"""
 		Associate nuclei from two consecutive time stamps based on how close
