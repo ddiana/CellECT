@@ -36,6 +36,8 @@ class CellTracker(object):
 		self.list_of_cell_profiles_per_timestamp = []
 		self.distance_matrix_list = []
 		self.graph = digraph()
+		self.max_time = 0
+
 
 
 	def add_cell_profiles_per_timestamp(self, cell_profiles):
@@ -47,10 +49,58 @@ class CellTracker(object):
 			
 		copy_cell_profiles = copy.deepcopy(cell_profiles)
 		self.list_of_cell_profiles_per_timestamp.append(copy_cell_profiles)
+	
+		self.max_time = len(self.list_of_cell_profiles_per_timestamp)-1
+
 		if len(self.list_of_cell_profiles_per_timestamp) > 1:
 			t1 = len(self.list_of_cell_profiles_per_timestamp)-2
 			t2 = len(self.list_of_cell_profiles_per_timestamp)-1
 			self.distance_matrix_list.append(self.get_distance_matrix_for_t1_t2( t1, t2 ))
+
+	def test_number_incoming_connections_equals_number_outgoing_connections(self):
+
+		outgoing_dict = dict( map(lambda x,y: (x,y), self.ct.graph.nodes(), [0 for i in xrange(len(self.ct.graph.nodes()))]))
+
+		incoming_dict = dict( map(lambda x,y: (x,y), self.ct.graph.nodes(), [0 for i in xrange(len(self.ct.graph.nodes()))]))
+
+		for edge in pygraph.edges():
+
+			outgoing_dict[edge[0]] += 1
+			incoming_dict[edge[1]] += 1
+
+		for node in outgoing_dict.keys():
+
+			self.assertEqual( outgoing_dict[node] , incoming_dict[node])
+
+
+	def test_one_incoming_track_per_node(self):		
+			
+			
+	
+		incoming_dict = dict( map(lambda x,y: (x,y), self.ct.graph.nodes(), [0 for i in xrange(len(self.ct.graph.nodes()))]))
+
+		for edge in pygraph.edges():
+
+			incoming_dict[edge[1]] += 1
+
+		for node in outgoing_dict.keys():
+
+			self.assertLessThanOrEqual( incoming_dict[node], 1)
+
+
+	def test_one_incoming_track_per_node(self):		
+			
+		
+		outgoing_dict = dict( map(lambda x,y: (x,y), self.ct.graph.nodes(), [0 for i in xrange(len(self.ct.graph.nodes()))]))
+
+		for edge in pygraph.edges():
+
+			outgoing_dict[edge[0]] += 1
+
+		for node in outgoing_dict.keys():
+
+			self.assertLessThanOrEqual( outgoing_dict[node], 1)
+
 
 
 	def build_lineage(self):
@@ -64,7 +114,7 @@ class CellTracker(object):
 		self.add_nodes_to_graph()
 		self.add_confident_associations_to_graph()	
 
-		#tc.TrackletConnector(self)
+#		tc.TrackletConnector(self)
 
 		
 	
@@ -99,6 +149,8 @@ class CellTracker(object):
 
 #		return r.xf, f
 #				
+
+
 
 
 	def add_nodes_to_graph(self):

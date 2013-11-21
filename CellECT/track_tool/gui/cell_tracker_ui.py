@@ -398,7 +398,7 @@ class CellTrackerUI:
 		Slider bars to navigate time and z.
 		"""
 
-		fig = pylab.figure(figsize=(35,11))
+		fig = pylab.figure(figsize=(25,11))
 		fig.canvas.set_window_title("Cell lineage visualization")
 
 		from matplotlib.widgets import Slider
@@ -421,14 +421,14 @@ class CellTrackerUI:
 		Seg2 = []
 
 	
-		def make_cell_lineage_mask(tval, target_cc_index):
+		def make_cell_lineage_mask(tval, target_cc_index, Seg):
 
-			labels = np.unique(Seg2[0])
+			labels = np.unique(Seg)
 			
 			# make the segment border max value 
 			max_val = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[tval].list_of_cell_profiles)
 			half_val = int(max_val / 2.)
-			mask = np.uint(Seg2[0] == 0) * max_val
+			mask = np.uint(Seg == 0) * max_val
 
 			for label in labels:
 				if label>1:
@@ -437,23 +437,17 @@ class CellTrackerUI:
 					cc_index = cc_dict[node_name]
 					
 					if cc_index == target_cc_index:
-						mask += np.uint(Seg2[0]==label) * half_val
+						mask += np.uint(Seg==label) * half_val
 						print "--- LINK: Label:", label,"| Tracklet:", cc_index,"| CellProfile:", cp_index, "| Node:", node_name, "| t:",tval
 			return mask
 
 
 
-		blank_page = [np.zeros(I1.shape)]		
-		
 
-		if init_t1 <= init_t2:
-			I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-			Seg2.append(sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")	)
-			lineage_mask = make_cell_lineage_mask(init_t2, cc_of_interest[0])
-		else:
-			I2 = blank_page[0]
-			Seg2.append(blank_page[0])
-			lineage_mask = blank_page[0]
+		I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
+		Seg2.append(sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")	)
+		lineage_mask = make_cell_lineage_mask(init_t2, cc_of_interest[0],Seg2[0])
+		selection_mask = make_cell_lineage_mask(init_t1,cc_of_interest[0], Seg1[0])
 
 		
 		
@@ -461,25 +455,38 @@ class CellTrackerUI:
 
 
 		# image subplot
-		ax1 = pylab.subplot(141)
+		ax1 = pylab.subplot(161)
 		pylab.subplots_adjust(bottom=0.25)
 		l1 =  pylab.imshow(I1, cmap = "gray")
 		pylab.axis([0, I1.shape[1], 0, I1.shape[0]])
 
 		# segmentation subplot
-		ax2 = pylab.subplot(142)
+		ax2 = pylab.subplot(162)
 		pylab.subplots_adjust(bottom=0.25)
 		l2 =  pylab.imshow(Seg1[0], cmap = "spectral", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles), picker = True)
 		pylab.axis([0, Seg1[0].shape[1], 0, Seg1[0].shape[0]])
 
+		# user selection mask
+		ax21 = pylab.subplot(163)
+		pylab.subplots_adjust(bottom=0.25)
+		l21 =  pylab.imshow(selection_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles))
+		pylab.axis([0, Seg1[0].shape[1], 0, Seg1[0].shape[0]])
+
 		# image subplot
-		ax3 = pylab.subplot(143)
+		ax3 = pylab.subplot(164)
 		pylab.subplots_adjust(bottom=0.25)
 		l3 =  pylab.imshow(I2, cmap = "gray")
 		pylab.axis([0, I2.shape[1], 0, I2.shape[0]])
 
 		# segmentation subplot
-		ax4 = pylab.subplot(144)
+		ax31 = pylab.subplot(165)
+		pylab.subplots_adjust(bottom=0.25)
+		l31 =  pylab.imshow(Seg2[0], cmap = "spectral")
+		pylab.axis([0, Seg2[0].shape[1], 0, Seg2[0].shape[0]], vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t2].list_of_cell_profiles))
+
+
+		# segmentation subplot
+		ax4 = pylab.subplot(166)
 		pylab.subplots_adjust(bottom=0.25)
 		l4 =  pylab.imshow(lineage_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t2].list_of_cell_profiles))
 		pylab.axis([0, Seg2[0].shape[1], 0, Seg2[0].shape[0]])
@@ -521,10 +528,6 @@ class CellTrackerUI:
 		t_old2 = [-1]
 
 
-		I1_is_blank = [False]
-		I2_is_blank = [t1 > t2]
-		
-
 
 		# call back for time slider
 		def update_t1(val):
@@ -536,28 +539,14 @@ class CellTrackerUI:
 
 			if (z_old1[0] != z1) or (t_old1[0] !=t1):
 
-				if t1<=t2:
-					I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-					Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
+				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
+				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 
-					I1_is_blank[0] = False
+				selection_mask = make_cell_lineage_mask(t1, cc_of_interest[0], Seg1[0])
 
-					# if the other panel is set to blank_page, restore it..
-					if I2_is_blank[0]:
-						I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-						Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
-						lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0])
-						l3.set_data(I1)
-						l4.set_data(lineage_mask)
-						I2_is_blank[0] = False
-
-				else:
-					I1 = blank_page[0]
-					Seg1[0] = blank_page[0]
-					I1_is_blank[0] = True
-				
 				l1.set_data(I1)
 				l2.set_data(Seg1[0])
+				l21.set_data(selection_mask)
 
 				pylab.draw()
 
@@ -575,28 +564,15 @@ class CellTrackerUI:
 			z_seg1 = int(s_z1.val)
 
 			if (z_old1[0] != z1) or (t_old1[0] !=t1):
-				if t1 <= t2:
-					I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-					Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 
-					I1_is_blank[0] = False
+				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
+				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 
-					# if the other panel is set to blank_page, restore it..
-					if I2_is_blank[0]:
-						I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-						Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
-						lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0])
-						l3.set_data(I1)
-						l4.set_data(lineage_mask)
-						I2_is_blank[0] = False
-
-				else:
-					I1 = blank_page[0]
-					Seg1[0] = blank_page[0]
-					I1_is_blank[0] = True
+				selection_mask = make_cell_lineage_mask(t1, cc_of_interest[0], Seg1[0])
 
 				l1.set_data(I1)	
 				l2.set_data(Seg1[0])
+				l21.set_data(selection_mask)
 
 				pylab.draw()
 	
@@ -614,28 +590,14 @@ class CellTrackerUI:
 			z_seg2 = int(s_z2.val)
 
 			if (z_old2[0] != z2) or (t_old2[0] !=t2):
-				if t1 <= t2:
-					I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-					Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 
-					I2_is_blank[0] = False
+				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
+				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 
-					# if the other panel is set to blank_page, restore it..
-					if I1_is_blank[0]:
-						I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-						Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
-						l1.set_data(I1)
-						l2.set_data(Seg1[0])	
-						I1_is_blank[0] = False
-
-					lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0])
-				else:
-					I2 = blank_page[0]
-					Seg2[0] = blank_page[0]
-					lineage_mask = blank_page[0]
-					I2_is_blank[0] = True
+				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0], Seg2[0])
 
 				l3.set_data(I2)
+				l31.set_data(Seg2[0])
 				l4.set_data(lineage_mask)
 
 				pylab.draw()
@@ -654,27 +616,15 @@ class CellTrackerUI:
 			z_seg2 = int(s_z2.val)
 
 			if (z_old2[0] != z2) or (t_old2[0] !=t2):
-				if t1 <= t2:
-					I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-					Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
-					I2_is_blank[0] = False
+		
+				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
+				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 
-					# if the other panel is set to blank_page, restore it..
-					if I1_is_blank[0]:
-						I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-						Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
-						l1.set_data(I1)
-						l2.set_data(Seg1[0])
-						I1_is_blank[0] = False
+				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0], Seg2[0])
 
-					lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0])
-				else:
-					I2 = blank_page[0]
-					Seg2[0] = blank_page[0]
-					lineage_mask = blank_page[0]
-					I2_is_blank[0] = True
 
 				l3.set_data(I2)
+				l31.set_data(Seg2[0])
 				l4.set_data(lineage_mask)
 
 				pylab.draw()
@@ -705,9 +655,12 @@ class CellTrackerUI:
 				print "SELECTED: Label:", label, "| Tracklet:", cc_of_interest[0], "| CellProfile:", cp_index, "| Node:", node_name, "| t:", tval
 
 				t2 = int(s_t2.val)
-				lineage_mask = make_cell_lineage_mask( t2, cc_of_interest[0])
+				t1 = int(s_t1.val)
+				lineage_mask = make_cell_lineage_mask( t2, cc_of_interest[0], Seg2[0])
+				selection_mask = make_cell_lineage_mask( t1, cc_of_interest[0], Seg1[0])
 
 				l4.set_data(lineage_mask )
+				l21.set_data(selection_mask)
 				pylab.draw()
 
 	

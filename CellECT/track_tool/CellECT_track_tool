@@ -33,6 +33,7 @@ from termcolor import colored
 from CellECT.track_tool.track_io import load_parameters
 from CellECT.track_tool.cell_tracker_core import load_tracker
 from CellECT.track_tool.gui import cell_tracker_ui as ctui
+import CellECT.track_tool.cell_tracker_core.tracklet_connector as tc
 
 
 def setup_logging():
@@ -73,7 +74,15 @@ def main():
 
 	ct = load_tracker.load_cell_tracker()
 
+	print "EDGES: ", len(ct.graph.edges())
+
 	ct_ui = ctui.CellTrackerUI(ct)
+	ct_ui.gui_menu()
+
+	tc.TrackletConnector(ct)
+
+	print "EDGES: ", len(ct.graph.edges())
+
 	ct_ui.gui_menu()
 
 
