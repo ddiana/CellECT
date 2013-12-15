@@ -398,11 +398,11 @@ class CellTrackerUI:
 		Slider bars to navigate time and z.
 		"""
 
-		fig = pylab.figure(figsize=(25,11))
+		fig = pylab.figure(figsize=(19,8))
 		fig.canvas.set_window_title("Cell lineage visualization")
 
 		from matplotlib.widgets import Slider
-
+		from matplotlib.widgets import Button
 
 		t1 = init_t1
 		z1 = init_z1
@@ -424,6 +424,7 @@ class CellTrackerUI:
 		def make_cell_lineage_mask(tval, target_cc_index, Seg):
 
 			labels = np.unique(Seg)
+			target_cc_index = set(target_cc_index)
 			
 			# make the segment border max value 
 			max_val = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[tval].list_of_cell_profiles)
@@ -436,18 +437,61 @@ class CellTrackerUI:
 					node_name = "t%d_c%d" % (tval, cp_index) 
 					cc_index = cc_dict[node_name]
 					
-					if cc_index == target_cc_index:
+					if cc_index in target_cc_index:
 						mask += np.uint(Seg==label) * half_val
 						print "--- LINK: Label:", label,"| Tracklet:", cc_index,"| CellProfile:", cp_index, "| Node:", node_name, "| t:",tval
 			return mask
 
 
 
+		def select_similar_cells(event):
+
+			print "Select similar cells"
+
+			# get cell profile indices of cells of interest
+			target_cp_index = [  ]
+
+			cc_of_interest_set = set(cc_of_interest)
+
+			t1 = int(s_t1.val)
+
+			# TODO: no need to search all time series, just search current time
+			for node in self.cell_tracker.graph.nodes():
+
+				t,c = self.cell_tracker.get_cell_profile_info_from_node_name(node)
+
+				if t == t1:
+					if cc_dict[node] in cc_of_interest_set:
+						target_cp_index.append(c)
+
+			similar_cp_index = self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].get_similar(target_cp_index)
+
+
+			# get the connected components correspondng to these
+			for cp_index in similar_cp_index:
+				node_name = "t" + str(t1) + "_c" + str(cp_index)
+				cc_of_interest.append(cc_dict[node_name])
+
+			# remake selection mask and lineage_mask
+	
+			
+
+			lineage_mask = make_cell_lineage_mask(int(s_t2.val), cc_of_interest,Seg2[0])
+			selection_mask = make_cell_lineage_mask(t1,cc_of_interest, Seg1[0])
+
+
+
+			l4.set_data(lineage_mask )
+			l21.set_data(selection_mask)
+			pylab.draw()
+
+
+
 
 		I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
 		Seg2.append(sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")	)
-		lineage_mask = make_cell_lineage_mask(init_t2, cc_of_interest[0],Seg2[0])
-		selection_mask = make_cell_lineage_mask(init_t1,cc_of_interest[0], Seg1[0])
+		lineage_mask = make_cell_lineage_mask(init_t2, cc_of_interest,Seg2[0])
+		selection_mask = make_cell_lineage_mask(init_t1,cc_of_interest, Seg1[0])
 
 		
 		
@@ -469,7 +513,7 @@ class CellTrackerUI:
 		# user selection mask
 		ax21 = pylab.subplot(163)
 		pylab.subplots_adjust(bottom=0.25)
-		l21 =  pylab.imshow(selection_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles))
+		l21 =  pylab.imshow(selection_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles), picker = True)
 		pylab.axis([0, Seg1[0].shape[1], 0, Seg1[0].shape[0]])
 
 		# image subplot
@@ -493,28 +537,39 @@ class CellTrackerUI:
 
 
 
+
+
 		# slider for time
 		axcolor = 'lightgoldenrodyellow'
-		ax_t1 = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
+		ax_t1 = pylab.axes([0.2, 0.2, 0.25, 0.03], axisbg=axcolor)
 		s_t1 = Slider(ax_t1, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_t1)
 
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
-		ax_z1 = pylab.axes([0.2, 0.10, 0.25, 0.03], axisbg=axcolor)
+		ax_z1 = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
 		s_z1 = Slider(ax_z1, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z1)
 
 
 		# slider for time
 		axcolor = 'lightgoldenrodyellow'
-		ax_t2 = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
+		ax_t2 = pylab.axes([0.6, 0.2, 0.25, 0.03], axisbg=axcolor)
 		s_t2 = Slider(ax_t2, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_t2)
 
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
-		ax_z2 = pylab.axes([0.6, 0.10, 0.25, 0.03], axisbg=axcolor)
+		ax_z2 = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
 		s_z2 = Slider(ax_z2, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z2)
+
+
+
+
+		# select similar cells button
+		ax_button1 = pylab.axes([0.3, 0.025, 0.4, 0.05])
+		button1 = Button(ax_button1, "Select similar cells.")
+		button1.on_clicked(select_similar_cells)
+
 
 
 		t1 = init_t1
@@ -542,7 +597,7 @@ class CellTrackerUI:
 				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
 				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 
-				selection_mask = make_cell_lineage_mask(t1, cc_of_interest[0], Seg1[0])
+				selection_mask = make_cell_lineage_mask(t1, cc_of_interest, Seg1[0])
 
 				l1.set_data(I1)
 				l2.set_data(Seg1[0])
@@ -568,7 +623,7 @@ class CellTrackerUI:
 				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
 				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
 
-				selection_mask = make_cell_lineage_mask(t1, cc_of_interest[0], Seg1[0])
+				selection_mask = make_cell_lineage_mask(t1, cc_of_interest, Seg1[0])
 
 				l1.set_data(I1)	
 				l2.set_data(Seg1[0])
@@ -594,7 +649,7 @@ class CellTrackerUI:
 				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
 				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 
-				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0], Seg2[0])
+				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest, Seg2[0])
 
 				l3.set_data(I2)
 				l31.set_data(Seg2[0])
@@ -620,7 +675,7 @@ class CellTrackerUI:
 				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
 				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
 
-				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest[0], Seg2[0])
+				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest, Seg2[0])
 
 
 				l3.set_data(I2)
@@ -641,6 +696,7 @@ class CellTrackerUI:
 			tval = int(s_t1.val)
 			label = Seg1[0][yval, xval]
 
+
 			if label == 0:
 				print "Border selected."
 			if label == 1:
@@ -650,14 +706,31 @@ class CellTrackerUI:
 				cp_index = self.cell_tracker.list_of_cell_profiles_per_timestamp[tval].seg_label_to_cp_list_index[label]
 
 				node_name = "t" + str(tval) + "_c" + str(cp_index)
-				cc_of_interest[0] = cc_dict[node_name]
+				if event.mouseevent.button == 1:  
+					# left click starts new set
+					for i in xrange(0,len(cc_of_interest)):
+						cc_of_interest.pop(0)
+					cc_of_interest.append(cc_dict[node_name])
 
-				print "SELECTED: Label:", label, "| Tracklet:", cc_of_interest[0], "| CellProfile:", cp_index, "| Node:", node_name, "| t:", tval
+				elif event.mouseevent.button == 3:
+					# right click adds to the selection set
+					cc_name = cc_dict[node_name]
+					if not cc_name in cc_of_interest:
+						cc_of_interest.append(cc_name)
+					else:
+						cc_of_interest.remove(cc_name)						
+
+
+				print cc_of_interest
+
+				print event.mouseevent.button
+				if len(cc_of_interest):
+					print "SELECTED: Label:", label, "| Tracklet:", cc_of_interest[-1], "| CellProfile:", cp_index, "| Node:", node_name, "| t:", tval
 
 				t2 = int(s_t2.val)
 				t1 = int(s_t1.val)
-				lineage_mask = make_cell_lineage_mask( t2, cc_of_interest[0], Seg2[0])
-				selection_mask = make_cell_lineage_mask( t1, cc_of_interest[0], Seg1[0])
+				lineage_mask = make_cell_lineage_mask( t2, cc_of_interest, Seg2[0])
+				selection_mask = make_cell_lineage_mask( t1, cc_of_interest, Seg1[0])
 
 				l4.set_data(lineage_mask )
 				l21.set_data(selection_mask)

@@ -4,6 +4,7 @@
 # Imports
 import numpy as np
 import copy
+import pdb
 
 
 """
@@ -56,6 +57,73 @@ class CellProfilesPerTimestamp(object):
 		self.size_hist_vals = hist[0] / float(np.sum(hist[0]))
 		self.size_mean = np.mean(sizes_list)
 		self.size_stdev = np.std(sizes_list)
+
+
+	def get_target_cells_size(self,target_cells):
+
+		stddev_size = 0
+		mean_size = 0
+
+		if len(target_cells) ==0:
+			return 0,0
+	
+
+		if len(target_cells) >1:
+
+			cell_sizes = [cp.size for cp in target_cells]
+			mean_size = np.mean(cell_sizes)
+			stddev_size = np.std(cell_sizes)
+		else:
+			stddev_size = self.size_stdev
+			mean_size = target_cells[0].size
+
+		print mean_size, stddev_size
+
+
+		return mean_size, stddev_size
+
+
+
+	def get_similar(self,cell_cp_index):
+
+		target_cells = []
+
+		similar_cells_cp_index = set()
+
+
+		# get cell profile index and cell profiles for the labels of interest
+		for index in cell_cp_index:
+			target_cells.append(self.list_of_cell_profiles[index])
+
+
+		target_cell_indices_set = set(cell_cp_index)
+
+		mean_size, stddev_size = self.get_target_cells_size(target_cells)
+
+		# test every cell against the target cells
+		for index in self.seg_label_to_cp_list_index.values():
+
+			# if this is a target cell, skip
+			if index in target_cell_indices_set:
+				continue 
+
+			cp = self.list_of_cell_profiles[index]
+
+			# for every target cell
+			for cp_target in target_cells:
+
+
+				if abs(mean_size - cp.size) < stddev_size:
+
+					if index not in similar_cells_cp_index:
+						similar_cells_cp_index.add(index)
+
+
+
+		return list(similar_cells_cp_index)
+
+
+
 
 		
 
