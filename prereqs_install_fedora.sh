@@ -16,3 +16,6 @@ python setup.py install
 cd ..
 yum install -y python-pyside
 yum install -y opencv-python
+pip install https://pypi.python.org/packages/source/t/termcolor/termcolor-1.1.0.tar.gz
+easy_install openopt
+
