@@ -169,7 +169,6 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	def onpick(event):
 
 
-		print "CLICKED"
 		axClicked = event.artist.axes
 
 		
@@ -493,9 +492,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	s_z.on_changed(update_z)
 	s_y.on_changed(update_y)
 
-	pylab.show()
-	fig.canvas.mpl_connect('pick_event', onpick)
 
+	fig.canvas.mpl_connect('pick_event', onpick)
+	pylab.show()
 
 	
 	mouse_event = MouseEvent(-2,0,0,0)
