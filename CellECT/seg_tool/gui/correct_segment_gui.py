@@ -165,121 +165,77 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		nuclei_at_y = filter(lambda x: x[1]== y, nuclei_coords)	
 		return nuclei_at_y
 
-	callback = ButtonCallback()
-	a_seed_old_label = pylab.axes([0.1, 0.05, 0.22, 0.05])
-	a_seed_new_label = pylab.axes([0.34, 0.05, 0.22, 0.05])
-	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.18, 0.05])
-	a_clear_task = pylab.axes( [0.78, 0.05, 0.12, 0.05 ])
-	
-	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for an old label')
-	b_seed_old_label.on_clicked(callback.seed_old_label)
-	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for a new label")
-	b_seed_new_label.on_clicked(callback.seed_new_label)
-	b_merge_two_labels = Button(a_merge_two_labels, 'Merge two labels')
-	b_merge_two_labels.on_clicked(callback.merge_two_labels)
-	b_clear_task = Button(a_clear_task, "Clear task")
-	b_clear_task.on_clicked(callback.clear_task)
 
-	fig._seed_for_old_label_button = b_seed_old_label
-	fig._seed_for_new_label_button = b_seed_new_label
-	fig._merge_two_labels_button = b_merge_two_labels
-	fig._clear_task_button = b_clear_task
+	def onpick(event):
 
 
-	if z_default > -1:
-		z0 = z_default
-	else:		
-		z0 = int(np.floor(watershed.shape[2]/2))
+		print "CLICKED"
+		axClicked = event.artist.axes
+
 		
-	y0 = int(watershed.shape[1]/2)
-	
-	aspect1 = abs(watershed.shape[1]/float(watershed.shape[0]))
-	aspect2 = abs(watershed.shape[2]/float(watershed.shape[0]))
-	
-	line1 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)
-	line11 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                    
-	line2 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                     
-	line22 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)
-	 
-	z0 = int(z0) 
+		asc_coordinates = AscidianCoordinates()
+		
+		# which subplot was clicked:
+		if axClicked == ax2 or axClicked == ax1:   # the x-y plane
+			xval = event.mouseevent.ydata
+			yval = event.mouseevent.xdata
+			zval = s_z.val
+			asc_coordinates.set_coordinates(xval,yval,zval)
+		
+		elif axClicked == ax4 or axClicked == ax3:   # the x-z plane
+			xval = event.mouseevent.ydata
+			yval = s_y.val
+			zval = event.mouseevent.xdata
+			asc_coordinates.set_coordinates(xval,yval,zval)
+			
+		
+		xval = asc_coordinates.xval
+		yval = asc_coordinates.yval
+		zval = asc_coordinates.zval
+				
+		mouse_event = MouseEvent(event.mouseevent.button, event.mouseevent.xdata, event.mouseevent.ydata, axClicked)	
+		
+
+		if event.mouseevent.button == 3:
+			# right		
+			print "Label %d @ (%d, %d, %d)" % (watershed[int(xval), int(yval), int (zval)], xval, yval, zval)
+
+			
+		elif event.mouseevent.button == 1: 
+			# left
+			
+			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
+			
+			if CellECT.seg_tool.globals.current_button_task != "NO_TASK_SELECTED":
+				
+				if int(s_z.val) == zval:
+					seed_coords.append ((int(xval), int(yval), int(zval)))
+					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					ax1.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					pylab.draw()
+				if int(s_y.val) == yval:
+					seed_coords.append ((int(xval), int(yval), int(zval)))
+					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					pylab.draw()
+			
+			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
+		
+		
 
 
-	
-# x-y plane, volume
-	ax1 = pylab.subplot(221)	
-	pylab.subplots_adjust(bottom=0.25)
-	min_var_cmap_vol = vol.min()
-	max_var_cmap_vol = vol_max
-	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
-	ax1.add_line(line1)  
-	ax1.set_aspect(aspect1)
-	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
-	if seeds_at_z :
-		seeds_at_z = zip(*seeds_at_z)
-		ax1.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-	ax1.axis([0, vol.shape[1], 0, vol.shape[0]])
-	ax1.set_autoscale_on(False)
-	ax1.invert_yaxis()
-	ax1.set_title("x-y slice")
+		if event.mouseevent.button in set([1,3]):
+			if CellECT.seg_tool.globals.current_button_task in button_tasks:
+				list_of_mouse_events_in_ascidian.append( MouseEventInAscidian( asc_coordinates, CellECT.seg_tool.globals.current_button_task, mouse_event, CellECT.seg_tool.globals.task_index ) )
+			
 
-# x-y plane, watershed
-	ax2 = pylab.subplot(223)
-	pylab.subplots_adjust(bottom=0.25)
-	min_var_cmap_ws = 0
-	max_var_cmap_ws = watershed_max
 
-	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
-	ax2.add_line(line11) 	
-	ax2.set_aspect(aspect1)
-	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
-	if seeds_at_z :
-		seeds_at_z = zip(*seeds_at_z)
-		ax2.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-	ax2.axis([0, vol.shape[1], 0, vol.shape[0]])
-	ax2.set_autoscale_on(False)
-	ax2.invert_yaxis()
-	
-# x-z plane, volume
-	ax3 = pylab.subplot(222)
-	ax3.set_aspect(aspect2)
-	pylab.subplots_adjust(bottom=0.25)
-	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
-	ax3.add_line(line2) 
-	ax3.set_aspect(aspect2)
-	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
-	if seeds_at_y :
-		seeds_at_y = zip(*seeds_at_y)
-		ax3.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-	ax3.axis([0, vol.shape[2], 0, vol.shape[0]])
-	ax3.set_autoscale_on(False)
-	ax3.invert_yaxis()
-	ax3.set_title("x-z slice")
 
-# x-z plane, watershed
-	ax4 = pylab.subplot(224)
-	ax4.set_aspect(aspect2)
-	pylab.subplots_adjust(bottom=0.25)
-	l4 =  pylab.imshow(watershed[:,y0,:], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
-	ax4.add_line(line22) 
-	ax4.set_aspect(aspect2)
-	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
-	if seeds_at_y :
-		seeds_at_y = zip(*seeds_at_y)
-		ax4.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-	ax4.axis([0, vol.shape[2], 0, vol.shape[0]])
-	ax4.set_autoscale_on(False)
-	ax4.invert_yaxis()
-	
 
-	axcolor = 'lightgoldenrodyellow'
-	ax_z = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
-	s_z = Slider(ax_z, 'z-slice', 0, vol.shape[2]-1, valinit=z0)
 
-	ax_y = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
-	s_y = Slider(ax_y, 'y-slice', 0, vol.shape[1]-1, valinit=y0)
-
-	pylab.show()
 	def update_z(val):
+
+		print "HERE"
 		z = s_z.val
 		# draw lines
 		l1.set_data(vol[:,:,z])
@@ -415,9 +371,132 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			ax3.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
 			
 		pylab.draw()
+
+
+
+
+
+	callback = ButtonCallback()
+	a_seed_old_label = pylab.axes([0.1, 0.05, 0.22, 0.05])
+	a_seed_new_label = pylab.axes([0.34, 0.05, 0.22, 0.05])
+	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.18, 0.05])
+	a_clear_task = pylab.axes( [0.78, 0.05, 0.12, 0.05 ])
 	
+	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for an old label')
+	b_seed_old_label.on_clicked(callback.seed_old_label)
+	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for a new label")
+	b_seed_new_label.on_clicked(callback.seed_new_label)
+	b_merge_two_labels = Button(a_merge_two_labels, 'Merge two labels')
+	b_merge_two_labels.on_clicked(callback.merge_two_labels)
+	b_clear_task = Button(a_clear_task, "Clear task")
+	b_clear_task.on_clicked(callback.clear_task)
+
+	fig._seed_for_old_label_button = b_seed_old_label
+	fig._seed_for_new_label_button = b_seed_new_label
+	fig._merge_two_labels_button = b_merge_two_labels
+	fig._clear_task_button = b_clear_task
+
+
+	if z_default > -1:
+		z0 = z_default
+	else:		
+		z0 = int(np.floor(watershed.shape[2]/2))
+		
+	y0 = int(watershed.shape[1]/2)
+	
+	aspect1 = abs(watershed.shape[1]/float(watershed.shape[0]))
+	aspect2 = abs(watershed.shape[2]/float(watershed.shape[0]))
+	
+	line1 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)
+	line11 = Line2D([ y0,y0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                    
+	line2 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)                                     
+	line22 = Line2D([ z0,z0], [0,watershed.shape[0]], color = "white", linewidth = 5)
+	 
+	z0 = int(z0) 
+
+
+	
+# x-y plane, volume
+	ax1 = pylab.subplot(221)	
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_vol = vol.min()
+	max_var_cmap_vol = vol_max
+	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	ax1.add_line(line1)  
+	ax1.set_aspect(aspect1)
+	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
+	if seeds_at_z :
+		seeds_at_z = zip(*seeds_at_z)
+		ax1.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax1.axis([0, vol.shape[1], 0, vol.shape[0]])
+	ax1.set_autoscale_on(False)
+	ax1.invert_yaxis()
+	ax1.set_title("x-y slice")
+
+# x-y plane, watershed
+	ax2 = pylab.subplot(223)
+	pylab.subplots_adjust(bottom=0.25)
+	min_var_cmap_ws = 0
+	max_var_cmap_ws = watershed_max
+
+	l2 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	ax2.add_line(line11) 	
+	ax2.set_aspect(aspect1)
+	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
+	if seeds_at_z :
+		seeds_at_z = zip(*seeds_at_z)
+		ax2.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax2.axis([0, vol.shape[1], 0, vol.shape[0]])
+	ax2.set_autoscale_on(False)
+	ax2.invert_yaxis()
+	
+# x-z plane, volume
+	ax3 = pylab.subplot(222)
+	ax3.set_aspect(aspect2)
+	pylab.subplots_adjust(bottom=0.25)
+	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	ax3.add_line(line2) 
+	ax3.set_aspect(aspect2)
+	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
+	if seeds_at_y :
+		seeds_at_y = zip(*seeds_at_y)
+		ax3.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax3.axis([0, vol.shape[2], 0, vol.shape[0]])
+	ax3.set_autoscale_on(False)
+	ax3.invert_yaxis()
+	ax3.set_title("x-z slice")
+
+# x-z plane, watershed
+	ax4 = pylab.subplot(224)
+	ax4.set_aspect(aspect2)
+	pylab.subplots_adjust(bottom=0.25)
+	l4 =  pylab.imshow(watershed[:,y0,:], interpolation="nearest", cmap = color_map, vmin = min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
+	ax4.add_line(line22) 
+	ax4.set_aspect(aspect2)
+	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
+	if seeds_at_y :
+		seeds_at_y = zip(*seeds_at_y)
+		ax4.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+	ax4.axis([0, vol.shape[2], 0, vol.shape[0]])
+	ax4.set_autoscale_on(False)
+	ax4.invert_yaxis()
+
+	
+
+	axcolor = 'lightgoldenrodyellow'
+	ax_z = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
+	s_z = Slider(ax_z, 'z-slice', 0, vol.shape[2]-1, valinit=z0)
+
+	ax_y = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
+	s_y = Slider(ax_y, 'y-slice', 0, vol.shape[1]-1, valinit=y0)
+
 	s_z.on_changed(update_z)
 	s_y.on_changed(update_y)
+
+	pylab.show()
+	fig.canvas.mpl_connect('pick_event', onpick)
+
+
 	
 	mouse_event = MouseEvent(-2,0,0,0)
 	
@@ -425,69 +504,11 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	list_of_all_mouse_events = []
 	
 	
-	def onpick(event):
 
-		axClicked = event.artist.axes
-
-		
-		asc_coordinates = AscidianCoordinates()
-		
-		# which subplot was clicked:
-		if axClicked == ax2 or axClicked == ax1:   # the x-y plane
-			xval = event.mouseevent.ydata
-			yval = event.mouseevent.xdata
-			zval = s_z.val
-			asc_coordinates.set_coordinates(xval,yval,zval)
-		
-		elif axClicked == ax4 or axClicked == ax3:   # the x-z plane
-			xval = event.mouseevent.ydata
-			yval = s_y.val
-			zval = event.mouseevent.xdata
-			asc_coordinates.set_coordinates(xval,yval,zval)
-			
-		
-		xval = asc_coordinates.xval
-		yval = asc_coordinates.yval
-		zval = asc_coordinates.zval
-				
-		mouse_event = MouseEvent(event.mouseevent.button, event.mouseevent.xdata, event.mouseevent.ydata, axClicked)	
-		
-
-		if event.mouseevent.button == 3:
-			# right		
-			print "Label %d @ (%d, %d, %d)" % (watershed[int(xval), int(yval), int (zval)], xval, yval, zval)
-
-			
-		elif event.mouseevent.button == 1: 
-			# left
-			
-			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
-			
-			if CellECT.seg_tool.globals.current_button_task != "NO_TASK_SELECTED":
-				
-				if int(s_z.val) == zval:
-					seed_coords.append ((int(xval), int(yval), int(zval)))
-					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
-					ax1.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
-					pylab.draw()
-				if int(s_y.val) == yval:
-					seed_coords.append ((int(xval), int(yval), int(zval)))
-					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
-					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
-					pylab.draw()
-			
-			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
-		
-		
-
-
-		if event.mouseevent.button in set([1,3]):
-			if CellECT.seg_tool.globals.current_button_task in button_tasks:
-				list_of_mouse_events_in_ascidian.append( MouseEventInAscidian( asc_coordinates, CellECT.seg_tool.globals.current_button_task, mouse_event, CellECT.seg_tool.globals.task_index ) )
-			
 	
 	
-	fig.canvas.mpl_connect('pick_event', onpick)
+
+	
 
 	
 #	for ev in list_of_mouse_events_in_ascidian:
