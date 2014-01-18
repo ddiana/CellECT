@@ -153,6 +153,17 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			print "--------------------------------------------------------------------------------"
 			print colored("NO BUTTON TASK SELECTED: You can left/right click anywhere to get info.","blue")
 			logging.info(CellECT.seg_tool.globals.current_button_task)
+
+		def undo_task(self, event):
+			print "--------------------------------------------------------------------------------"
+			print colored("UNDO LAST TASK: Removed last task click from stack.","blue")
+			logging.info("Undo")
+			logging.info(CellECT.seg_tool.globals.current_button_task)
+			update_z()
+			update_y()
+			
+		
+
 	
 	def get_nuclei_at_z(nuclei_coords, z):
 	
@@ -232,9 +243,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 
-	def update_z(val):
+	def update_z(val=None):
 
-		print "HERE"
 		z = s_z.val
 		# draw lines
 		l1.set_data(vol[:,:,z])
@@ -303,7 +313,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		pylab.draw()
 
 		
-	def update_y(val):
+	def update_y(val= None):
 		y = s_y.val
 		# draw lines
 		# draw image
@@ -378,8 +388,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	callback = ButtonCallback()
 	a_seed_old_label = pylab.axes([0.1, 0.05, 0.22, 0.05])
 	a_seed_new_label = pylab.axes([0.34, 0.05, 0.22, 0.05])
-	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.18, 0.05])
-	a_clear_task = pylab.axes( [0.78, 0.05, 0.12, 0.05 ])
+	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.15, 0.05])
+	a_clear_task = pylab.axes( [0.75, 0.05, 0.09, 0.05 ])
+	a_undo = pylab.axes( [0.86, 0.05, 0.06, 0.05 ])
 	
 	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for an old label')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
@@ -387,13 +398,17 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	b_seed_new_label.on_clicked(callback.seed_new_label)
 	b_merge_two_labels = Button(a_merge_two_labels, 'Merge two labels')
 	b_merge_two_labels.on_clicked(callback.merge_two_labels)
-	b_clear_task = Button(a_clear_task, "Clear task")
+	b_clear_task = Button(a_clear_task, "No task")
 	b_clear_task.on_clicked(callback.clear_task)
+	b_undo_task = Button(a_undo, "Undo")
+	b_undo_task.on_clicked(callback.undo_task)
+
 
 	fig._seed_for_old_label_button = b_seed_old_label
 	fig._seed_for_new_label_button = b_seed_new_label
 	fig._merge_two_labels_button = b_merge_two_labels
 	fig._clear_task_button = b_clear_task
+	fig._undo_button = b_undo_task
 
 
 	if z_default > -1:

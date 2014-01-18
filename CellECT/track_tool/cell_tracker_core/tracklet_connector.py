@@ -1,5 +1,5 @@
 import numpy as np
-from openopt import LP
+#from openopt import LP
 import pygraph.algorithms.accessibility as algos
 import pdb
 import re
@@ -22,9 +22,12 @@ class TrackletConnectorOptProgram(object):
 
 		print "Solving LP"
 
-		self.p = LP(self.f, A=self.A, Aeq=[], b=self.b, beq=[], lb=self.lb, ub=self.ub)
 
-		self.r = self.p.maximize('cplex')
+	
+
+		#self.p = LP(self.f, A=self.A, Aeq=[], b=self.b, beq=[], lb=self.lb, ub=self.ub)
+
+		#self.r = self.p.maximize('linprog')
 
 		pdb.set_trace()
 
