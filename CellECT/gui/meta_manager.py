@@ -1,6 +1,7 @@
 # Author: Diana Delibaltov
 # Vision Research Lab, University of California Santa Barbara
 
+import pdb
 
 class ManageMetadataInUI(object):
 
@@ -61,6 +62,7 @@ class ManageMetadataInUI(object):
 		if self.ui.spinBox_numt.value():
 			self.metadata.numt = self.ui.spinBox_numt.value()
 
+
 #	def update_metadata_numch(self):
 
 #		if self.ui.spinBox_numch.value():
@@ -87,6 +89,7 @@ class ManageMetadataInUI(object):
 
 
 	def update_membrane_channel(self):
+
 		self.metadata.memch = self.ui.comboBox_mem_chan.currentIndex()
 
 

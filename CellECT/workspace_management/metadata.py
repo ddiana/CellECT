@@ -25,7 +25,7 @@ class Metadata(object):
 		self.numt = 0
 
 		self.numch = 0
-		self.mem_ch = 0
+		self.memch = 0
 		
 		self.num_pages = 0
 
@@ -43,7 +43,7 @@ class Metadata(object):
 		ET.SubElement(metadata_field, "metafield", attrib={"name": "numz", "value" : str(self.numz)})
 		ET.SubElement(metadata_field, "metafield", attrib={"name": "numt", "value" : str(self.numt)})
 		ET.SubElement(metadata_field, "metafield", attrib={"name": "numch", "value" : str(self.numch)})
-		ET.SubElement(metadata_field, "metafield", attrib={"name": "mem_ch", "value" : str(self.mem_ch)})
+		ET.SubElement(metadata_field, "metafield", attrib={"name": "memch", "value" : str(self.memch)})
 
 
 		return metadata_field
@@ -69,8 +69,8 @@ class Metadata(object):
 				self.numt = int(meta_field.get("value"))
 			if meta_field.get("name") == "numch":
 				self.numch = int(meta_field.get("value"))
-			if meta_field.get("name") == "mem_ch":
-				self.mem_ch = int(meta_field.get("value"))
+			if meta_field.get("name") == "memch":
+				self.memch = int(meta_field.get("value"))
 
 		if self.numt ==0:
 			self.numt = 1
@@ -81,7 +81,7 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 
-		self.mem_ch = 0
+		self.memch = 0
 
 
 
@@ -105,7 +105,7 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 
-		self.mem_ch = 0
+		self.memch = 0
 
 
 		
@@ -118,6 +118,7 @@ class Metadata(object):
 	                       "SizeT", "PhysicalSizeX", "PhysicalSizeY", "PhysicalSizeZ", "TimeIncrement",\
 	                       "pixel_resolution_x", "pixel_resolution_y", "pixel_resolution_z", "pixel_resolution_t",\
 	                       "image_num_c", "image_num_z", "image_num_t", "image_num_x", "image_num_y" ])
+
 
 
 		for meta in meta_needed:
@@ -178,7 +179,10 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 
-		self.mem_ch = 0
+
+		self.memch = 0
+
+
 
 
 
@@ -212,7 +216,7 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 				
-		self.mem_ch = 0
+		self.memch = 0
 
 
 
@@ -241,7 +245,7 @@ class Metadata(object):
 		# change in this value will also set the list for membrane channel.
 
 #		# TODO: if number of chnnels is not set
-#		if not self.mem_ch == None:
+#		if not self.memch == None:
 #			for i in xrange(self.numch):
 #				ui.comboBox_mem_chan.addItem(str(i))
 
@@ -263,7 +267,7 @@ class Metadata(object):
 				f.write("image_num_z, %d\n" % self.numz)
 				f.write("image_num_t, %d\n" % self.numt)
 				f.write("image_num_c, %d\n" % self.numch)
-				f.write("mem_ch, %d\n" % self.mem_ch)
+				f.write("memch, %d\n" % self.memch)
 
 		except Exception as err:
 			raise err
@@ -307,8 +311,8 @@ class Metadata(object):
 				if name == "image_num_c":
 					self.numch = int(val)
 
-				if name == "mem_ch":
-					self.mem_ch = int(val)
+				if name == "memch":
+					self.memch = int(val)
 
 
 				info = f.readline().split(",")
@@ -318,5 +322,5 @@ class Metadata(object):
 				except:
 					val = None
 
-			if self.mem_ch == None:
-				self.mem_ch = 0
+			if self.memch == None:
+				self.memch = 0

@@ -129,7 +129,6 @@ def main():
 	print "Loading test volume..."
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
 	
-
 	#watershed = shuffle_labels(watershed)
 
 	print "Loading nuclei..."
@@ -149,7 +148,7 @@ def main():
 		spio.savemat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
 	last_length_of_seeds_list = 0 
-	
+
 	seed_segment_collection = ssc.SeedSegmentCollection()
 
 

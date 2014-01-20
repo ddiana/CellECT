@@ -73,6 +73,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		- merge existing segments.
 	"""
 
+
 	#print "Nuclei in this cropped section: ", nuclei_coords
 	seed_coords = []
 	
@@ -122,6 +123,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 
 
+
 	class ButtonCallback(object):
 	
 		def seed_old_label(self,event):
@@ -137,7 +139,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			CellECT.seg_tool.globals.task_index += 1
 			print "--------------------------------------------------------------------------------"
 			print colored("ADD ONE SEED FOR A NEW LABEL: Left click to put one seed.","blue")
-			print colored("(Only latest left click counts)", "grey")
+			print colored("(One click per new label)", "grey")
 			logging.info(CellECT.seg_tool.globals.current_button_task)
 			
 		def merge_two_labels(self, event):			
@@ -156,9 +158,11 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 		def undo_task(self, event):
 			print "--------------------------------------------------------------------------------"
-			print colored("UNDO LAST TASK: Removed last task click from stack.","blue")
+			print colored("UNDO LAST TASK: Removing last task click from stack.","blue")
+			CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 			logging.info("Undo")
 			logging.info(CellECT.seg_tool.globals.current_button_task)
+			undo_item()
 			update_z()
 			update_y()
 			
@@ -176,6 +180,30 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		nuclei_at_y = filter(lambda x: x[1]== y, nuclei_coords)	
 		return nuclei_at_y
 
+
+	def undo_item():
+		if len(list_of_mouse_events_in_ascidian):
+			counter = 1
+			item = list_of_mouse_events_in_ascidian[-1]
+			# these should really be deques, but since i'm deleting -1 it is still O(1)
+			# also, TODO: make sure seed_coods[-1] and list_of_mouse_events_in_ascidian[-1]
+			# model the exact same click. 
+			
+			if not	list_of_mouse_events_in_ascidian[-1].right_click:
+				del seed_coords[-1]
+			del list_of_mouse_events_in_ascidian[-1]
+			task_index = item.task_index
+
+			while len(list_of_mouse_events_in_ascidian) and list_of_mouse_events_in_ascidian[-1].task_index == task_index:
+				if not	list_of_mouse_events_in_ascidian[-1].right_click:
+					del seed_coords[-1]
+				del list_of_mouse_events_in_ascidian[-1]
+				counter += 1
+		
+			print "Removed latest task: %d clicks for %s." % (counter, item.button_task)
+		else:
+			print "No task to undo."
+		print "No task selected."
 
 	def onpick(event):
 
@@ -217,19 +245,30 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
 			
 			if CellECT.seg_tool.globals.current_button_task != "NO_TASK_SELECTED":
-				
+
+				# if second seed for new label click in a row, then make a new label task:
+				if CellECT.seg_tool.globals.current_button_task == "ADD_SEEDS_TO_NEW_LABEL":
+					if len(list_of_mouse_events_in_ascidian) and list_of_mouse_events_in_ascidian[-1].button_task == "ADD_SEEDS_TO_NEW_LABEL":
+						callback.seed_new_label(None)
+
+
 				if int(s_z.val) == zval:
 					seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					ax1.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
 				if int(s_y.val) == yval:
-					seed_coords.append ((int(xval), int(yval), int(zval)))
+					# don't add it twice in case it was added in the above if-statement
+					# this happens when you click on the intersection of the two planes
+					if seed_coords[-1] != (int(xval), int(yval), int(zval)):
+						seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
 			
-			print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
+				print "Seed at: (%d, %d, %d)" % (xval, yval, zval)
+			else:
+				print "Clicked at: (%d, %d, %d)" % (xval, yval, zval)
 		
 		
 
@@ -242,6 +281,83 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 
+	def update_points():
+
+		# delete all points/lines from all views:
+
+		try:
+			while True:
+				ax1.lines.pop()
+		except:
+			pass
+
+		try:
+			while True:
+				ax2.lines.pop()
+		except:
+			pass
+
+		try:
+			while True:
+				ax3.lines.pop()
+		except:
+			pass
+
+		try:
+			while True:
+				ax4.lines.pop()
+		except:
+			pass
+
+
+		y = s_y.val
+		z = s_z.val
+
+		# draw vertical lines in all views:
+
+		line1 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5)
+		ax1.add_line(line1)
+		line11 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5)
+		ax2.add_line(line11)
+
+		line2 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5)
+		ax3.add_line(line2)
+		line22 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5)
+		ax4.add_line(line22)
+		
+		# draw nuclei in y-planes:
+		seeds_at_y = get_nuclei_at_y(nuclei_coords, int(y))
+		if seeds_at_y :
+			seeds_at_y = zip(*seeds_at_y)
+			ax4.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			ax3.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			#print "seeds at y: ", seeds_at_y
+
+		# draw user seeds in y-planes 
+		user_seeds_at_y = get_nuclei_at_y(seed_coords, int(y))
+		if user_seeds_at_y :
+			user_seeds_at_y = zip(*user_seeds_at_y)
+			ax4.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+			ax3.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+
+		# draw nuclei in z planes
+		seeds_at_z = get_nuclei_at_z(nuclei_coords, int(z))
+		if seeds_at_z :
+			seeds_at_z = zip(*seeds_at_z)
+			ax2.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			ax1.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+			#print "seeds at z: ", seeds_at_z
+
+		# draw user seeds in z planes
+		user_seeds_at_z = get_nuclei_at_z(seed_coords, int(z))
+		if user_seeds_at_z :
+			user_seeds_at_z = zip(*user_seeds_at_z)
+			ax2.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+			ax1.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
+
+		pylab.draw()
+
+
 
 	def update_z(val=None):
 
@@ -249,68 +365,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		# draw lines
 		l1.set_data(vol[:,:,z])
 		l2.set_data(watershed[:,:,z])
-		line2 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5) 
-		del ax3.lines[0]
-		ax3.add_line(line2)
-		line22 = Line2D([ z,z], [0,watershed.shape[0]], color = "white", linewidth = 5) 
-		
-		
-		try:
-			while True:
-				del ax4.lines[0]
-		except:
-			pass
-		
-		
-		# to remove old dots from current view
-		
-		any_left = True
-		while any_left :
-			any_left = False
-			for i in xrange (len(ax2.lines)):
-				if len(ax2.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
-					ax2.lines.pop(i)
-					any_left = True
-					break
-				else:  # check if it is the vertical line
-					coords = ax2.lines[i].get_xydata()
-					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
-						ax2.lines.pop(i)
-						any_left = True
-						break
+		update_points()
 
-		any_left = True
-		while any_left :
-			any_left = False
-			for i in xrange (len(ax1.lines)):
-				if len(ax1.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
-					ax1.lines.pop(i)
-					any_left = True
-					break
-				else:  # check if it is the vertical line
-					coords = ax1.lines[i].get_xydata()
-					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
-						ax1.lines.pop(i)
-						any_left = True
-						break
-						
-						
-		ax4.add_line(line22)
-		
-		# draw nuclei
-		seeds_at_z = get_nuclei_at_z(nuclei_coords, int(z))
-		if seeds_at_z :
-			seeds_at_z = zip(*seeds_at_z)
-			ax2.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-			ax1.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-			#print "seeds at z: ", seeds_at_z
-		# draw user seeds
-		user_seeds_at_z = get_nuclei_at_z(seed_coords, int(z))
-		if user_seeds_at_z :
-			user_seeds_at_z = zip(*user_seeds_at_z)
-			ax2.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
-			ax1.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
-		pylab.draw()
+
 
 		
 	def update_y(val= None):
@@ -319,68 +376,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		# draw image
 		l4.set_data(watershed[:,y,:])
 		l3.set_data(vol[:,y,:])
-		line1 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5)  
-		l3.set_data(vol[:,y,:])
-		# to remove the dots and the vertical line from the other view (cross view)
-		try:
-			while True:
-				del ax2.lines[0]				
-		except:
-			pass
-			
-
-		any_left = True
-		while any_left :
-			any_left = False
-			for i in xrange (len(ax4.lines)):				
-				if len(ax4.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
-					ax4.lines.pop(i)
-					any_left = True
-					break
-				else:  # check if it is the vertical line
-					coords = ax4.lines[i].get_xydata()
-					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
-						ax4.lines.pop(i)
-						any_left = True
-						break
-
-
-		any_left = True
-		while any_left :
-			any_left = False
-			for i in xrange (len(ax3.lines)):				
-				if len(ax3.lines[i].get_xydata()) != 2:   # clearly not the vertinal line
-					ax3.lines.pop(i)
-					any_left = True
-					break
-				else:  # check if it is the vertical line
-					coords = ax3.lines[i].get_xydata()
-					if not( coords[0][0] == coords[1][0] and coords[0][1] == 0 and coords[1][1] == watershed.shape[0] ):
-						ax3.lines.pop(i)
-						any_left = True
-						break
-#		
-		ax1.add_line(line1)
-		line11 = Line2D([ y,y], [0,watershed.shape[0]], color = "white", linewidth = 5) 
-		del ax1.lines[0]
-		ax2.add_line(line11)
-			
-		# draw nuclei
-		seeds_at_y = get_nuclei_at_y(nuclei_coords, int(y))
-		if seeds_at_y :
-			seeds_at_y = zip(*seeds_at_y)
-			ax4.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-			ax3.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
-			#print "seeds at y: ", seeds_at_y
-		# draw user seeds 
-		user_seeds_at_y = get_nuclei_at_y(seed_coords, int(y))
-		if user_seeds_at_y :
-			user_seeds_at_y = zip(*user_seeds_at_y)
-			ax4.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
-			ax3.plot(user_seeds_at_y[2], user_seeds_at_y[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
-			
-		pylab.draw()
-
+		update_points()
+		
 
 
 
@@ -441,7 +438,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
 	if seeds_at_z :
 		seeds_at_z = zip(*seeds_at_z)
-		ax1.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+		ax1.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax1.axis([0, vol.shape[1], 0, vol.shape[0]])
 	ax1.set_autoscale_on(False)
 	ax1.invert_yaxis()
@@ -459,7 +456,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
 	if seeds_at_z :
 		seeds_at_z = zip(*seeds_at_z)
-		ax2.plot(seeds_at_z[0], seeds_at_z[1], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+		ax2.plot(seeds_at_z[1], seeds_at_z[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax2.axis([0, vol.shape[1], 0, vol.shape[0]])
 	ax2.set_autoscale_on(False)
 	ax2.invert_yaxis()
@@ -474,7 +471,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
 	if seeds_at_y :
 		seeds_at_y = zip(*seeds_at_y)
-		ax3.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+		ax3.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax3.axis([0, vol.shape[2], 0, vol.shape[0]])
 	ax3.set_autoscale_on(False)
 	ax3.invert_yaxis()
@@ -490,7 +487,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
 	if seeds_at_y :
 		seeds_at_y = zip(*seeds_at_y)
-		ax4.plot(seeds_at_y[0], seeds_at_y[2], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
+		ax4.plot(seeds_at_y[2], seeds_at_y[0], 'w.', markersize = 20., markeredgecolor = "k", markeredgewidth = 3.)
 	ax4.axis([0, vol.shape[2], 0, vol.shape[0]])
 	ax4.set_autoscale_on(False)
 	ax4.invert_yaxis()

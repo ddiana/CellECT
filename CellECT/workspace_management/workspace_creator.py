@@ -136,32 +136,75 @@ class PrepImage(object):
 
 		counter = 0
 	
-		z_counter = 0
+		z_counter_mem = 0
+		z_counter_nuc = 0
 
 		mat = np.zeros((self.metadata.numx, self.metadata.numy, self.metadata.numz))
 		time_counter = 0
+
+
+		mat_nuclei = None
+		if self.metadata.numch >1:
+			mat_nuclei = np.zeros_like(mat)
+		
 
 		for img in tif.iter_images():
 
 			filename = "%s/input_slices/%d.tif" % (ws_location, counter+1)
 			misc.imsave(filename, img)
 
-			should_add_slice = False
-
-			if 	counter % self.metadata.numch == self.metadata.mem_ch:
-				should_add_slice = True
+			membrane_slice = False
 
 
-			if should_add_slice:
-				mat[:,:,z_counter] = img
-				z_counter += 1
-				if z_counter >= self.metadata.numz:
-					z_counter = 0
+			if 	counter % self.metadata.numch == self.metadata.memch:
+				membrane_slice = True
 
-					io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
-					time_counter += 1
+			if membrane_slice:
+				mat[:,:,z_counter_mem] = img
+				z_counter_mem += 1
 
-					progressBar.setValue( int(time_counter/ float(self.metadata.numt) * 100) )
+			else:
+				mat_nuclei[:,:,z_counter_nuc] = img
+				z_counter_nuc += 1
+
+
+			if z_counter_mem >= self.metadata.numz:
+				z_counter_mem = 0
+				io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
+
+			if z_counter_nuc >= self.metadata.numz:
+				z_counter_nuc = 0
+				io.savemat("%s/init_watershed_all_time_stamps/vol_nuclei_t_%d.mat" % (ws_location, time_counter), {"vol_nuclei": mat_nuclei})
+
+			if z_counter_mem == 0 and z_counter_nuc == 0:
+				time_counter += 1
+	
+
+				progressBar.setValue( int(time_counter/ float(self.metadata.numt) * 100) )
+
+
+
+#			if membrane_slice:
+#				mat[:,:,z_counter] = img
+#				z_counter += 1
+#				if z_counter >= self.metadata.numz:
+#					z_counter = 0
+
+#					io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
+#					time_counter += 1
+
+#					progressBar.setValue( int(time_counter/ float(self.metadata.numt) * 100) )
+
+#			else:
+#				mat_nuclei[:,:,z_counter] = img
+
+#				if z_counter >= self.metadata.numz:
+#					z_counter = 0
+
+#					io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
+#					time_counter += 1
+
+#					progressBar.setValue( int(time_counter/ float(self.metadata.numt) * 100) )
 
 			counter += 1
 
@@ -257,6 +300,7 @@ class WorkspaceCreator(object):
 
 
 	def build_workspace(self, ws_location, progressBar):
+		# called from new_workspace.py
 		
 		try:
 			self.ws_location = ws_location
