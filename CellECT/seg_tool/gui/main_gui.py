@@ -61,13 +61,22 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
-def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, z_default = -1	):
+def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, **kwargs):
 
 	"""
 	Main GUI which shows uncertainty map and allows user to select which segment
 	they want to modify.
 	Also possible to load an old result or save the current result.	
 	"""
+
+	z_default = -1
+	vol_nuclei = None
+	
+	if "z_default" in kwargs.keys():
+		z_default = kwargs["z_default"]
+
+	if "vol_nuclei" in kwargs.keys():
+		vol_nuclei = kwargs["vol_nuclei"]
 
 	logging.info ("STARTING USER FEEDBACK")
 	print colored("============================== START USER FEEDBACK =============================", "yellow")
@@ -76,7 +85,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	uncertainty_map = get_segment_uncertainty_map(watershed, segment_collection, classified_segments)
 	
-
+	sub_figs = []
 
 	CellECT.seg_tool.globals.task_index = 0
 	
@@ -118,9 +127,22 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	ax1 = pylab.subplot(141)
 	pylab.subplots_adjust(bottom=0.25)
+
+	l1 = None
 	min_var_cmap_vol = vol.min()
 	max_var_cmap_vol = vol.max()
-	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", cmap = "gist_heat", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol)  
+	# if nuclear channel, show 3 color image. else show just membrane
+	slice_to_show = np.zeros((vol.shape[0], vol.shape[1], 3))
+	slice_to_show[:,:,0] = vol[:,:,z0]
+
+	if not vol_nuclei is None:
+		slice_to_show[:,:,1] = vol_nuclei[:,:,z0]		
+
+	l1 =  pylab.imshow(slice_to_show.astype("uint8"), interpolation="nearest")  
+
+	
+	#l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", cmap = "gist_heat", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol)  
+
 	pylab.axis()#[0, vol1.shape[0], 0, vol1.shape[1]])
 	ax1.set_title("Input Volume")
 	
@@ -180,21 +202,35 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	def save_current_status_callback(event):
 		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed)
 
-	a_load = pylab.axes([0.2, 0.05, 0.3, 0.05])
-	a_save = pylab.axes([0.55, 0.05, 0.3, 0.05])
+
+	def test(event):
+		
+		for subfig in sub_figs:
+			pylab.close(subfig)
+		pylab.close(fig)
+
+	a_load = pylab.axes([0.2, 0.05, 0.2, 0.05])
+	a_save = pylab.axes([0.425, 0.05, 0.2, 0.05])
+	a_rerun = pylab.axes([0.65, 0.05, 0.2, 0.05])
 	
 	b_load = Button(a_load, 'Load last save (if any)')
 	b_load.on_clicked(load_last_save_callback)
 	b_save = Button(a_save, "Save current state")
 	b_save.on_clicked(save_current_status_callback)
-
+	b_rerun = Button(a_rerun, "RERUN with user feedback")
+	b_rerun.on_clicked(test)
 
 
 
 
 	def update(val):
 		z = s_z.val
-		l1.set_data(vol[:,:,z])
+
+		slice_to_show[:,:,0] = vol[:,:,z]
+		if not vol_nuclei is None:
+			slice_to_show[:,:,1] = vol_nuclei[:,:,z]
+
+		l1.set_data(slice_to_show.astype("uint8"))
 		l2.set_data(uncertainty_map[:,:,z])
 		l3.set_data(watershed[:,:,z])
 		l4.set_data(dif_watershed[:,:,z])
@@ -203,7 +239,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	s_z.on_changed(update)
 	
 	mouse_event = MouseEvent(-2,0,0,0)
-	
+
 	
 	def onpick(event):
 
@@ -240,14 +276,18 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				bounding_box.extend_by(10,vol.shape)
 			
 				cropped_nuclei_coords = filter(lambda nucl: nucl[0] > bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] > bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] > bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
-				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]
-			
+				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]			
+
 				cropped_vol = vol[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
+				cropped_vol_nuclei = None
+				if not vol_nuclei is None:
+					cropped_vol_nuclei = vol_nuclei[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
+
 				#print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
-				list_of_mouse_events_in_cropped_ascidian = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max, z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords)
-					
+				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max, z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
+				sub_figs.append(temp_fig)
 
 				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))
 

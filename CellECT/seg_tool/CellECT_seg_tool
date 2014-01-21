@@ -128,6 +128,17 @@ def main():
 	
 	print "Loading test volume..."
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
+
+	# load nuclei channel volume, if available
+	vol_nuclei = None
+	try:
+		vol_nuclei = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_nuclei_mat_var"])
+	except:
+		print "Warning: Did not find nuclei channel volume."
+		logging.warning("Did not find nuclei channel volume.")
+
+
+	# TODO: if nuclear channel, subtract that from membrane channel.
 	
 	#watershed = shuffle_labels(watershed)
 
@@ -241,7 +252,8 @@ def main():
 				from CellECT.seg_tool.gui import parse_feedback as gui_parse
 				from CellECT.seg_tool.seg_utils import display_tools
 				logging.info("DESKTOP CLIENT ")
-				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old)
+
+				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, vol_nuclei=vol_nuclei)
 	
 
 

@@ -275,6 +275,8 @@ class WorkspaceCreator(object):
 			with open(config_file_name, "w") as f:
 				f.write("volume_mat_path = init_watershed_all_time_stamps/vol_t_%d.mat\n" % time)
 				f.write("volume_mat_var = vol\n")
+				f.write("volume_nuclei_mat_path = init_watershed_all_time_stamps/vol_nuclei_t_%d.mat\n" % time)
+				f.write("volume_nuclei_mat_var = vol_nuclei\n")
 				f.write("first_seg_mat_path =  init_watershed_all_time_stamps/init_ws_%d.mat\n" % time)
 				f.write("first_seg_mat_var = ws\n")
 				f.write("nuclei_mat_path =  init_watershed_all_time_stamps/time_stamp_%d_nuclei.mat\n" % time)

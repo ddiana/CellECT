@@ -63,7 +63,7 @@ def display_segment_to_correct(vol, label_map, segment):
 	return split_mouse_event, merge_mouse_event1, merge_mouse_event2
 
 
-def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_max , z_default = -1,  nuclei_coords = []):
+def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_max, **kwargs ):
 
 	"""
 	GUI to allow the user to interact with the segment to correct.
@@ -73,17 +73,44 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		- merge existing segments.
 	"""
 
+	nuclei_coords = []
+	vol_nuclei = None
+	z_default = -1
+
+	if "z_default" in kwargs.keys():
+		z_default = kwargs["z_default"]
+	
+	if "nuclei_coords" in kwargs.keys():
+		nuclei_coords = kwargs["nuclei_coords"]
+
+	if "vol_nuclei" in kwargs.keys():
+		vol_nuclei = kwargs["vol_nuclei"]
 
 	#print "Nuclei in this cropped section: ", nuclei_coords
 	seed_coords = []
 	
-	fig = pylab.figure(figsize=(12,8))
+	fig = pylab.figure(figsize=(10,10))
 	fig.canvas.set_window_title("Segment Correction")	
 	
 	#color_map = pylab.cm.to_rgba(watershed.unique())
 	
 	print "--------------------------------------------------------------------------------"
 	print colored("NO BUTTON TASK SELECTED","blue")
+
+
+	def get_slice_to_show_z(vol, vol_nuclei,z):
+		slice_to_show = np.zeros((vol.shape[0], vol.shape[1],3))
+		slice_to_show[:,:,0] = vol[:,:,z]
+		if not vol_nuclei is None:
+			slice_to_show[:,:,1] = vol_nuclei[:,:,z]
+		return slice_to_show.astype("uint8")
+
+	def get_slice_to_show_y(vol, vol_nuclei,y):
+		slice_to_show = np.zeros((vol.shape[0], vol.shape[2],3))
+		slice_to_show[:,:,0] = vol[:,y,:]
+		if not vol_nuclei is None:
+			slice_to_show[:,:,1] = vol_nuclei[:,y,:]
+		return slice_to_show.astype("uint8")
 	
 	class MouseEvent:
 		def __init__(self, button, xval, yval, axis):
@@ -363,11 +390,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 		z = s_z.val
 		# draw lines
-		l1.set_data(vol[:,:,z])
+		l1.set_data(get_slice_to_show_z(vol, vol_nuclei,z))
 		l2.set_data(watershed[:,:,z])
 		update_points()
-
-
 
 		
 	def update_y(val= None):
@@ -375,7 +400,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		# draw lines
 		# draw image
 		l4.set_data(watershed[:,y,:])
-		l3.set_data(vol[:,y,:])
+		l3.set_data(get_slice_to_show_y(vol, vol_nuclei,y))
 		update_points()
 		
 
@@ -432,7 +457,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_vol = vol.min()
 	max_var_cmap_vol = vol_max
-	l1 =  pylab.imshow(vol[:,:,z0], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	l1 =  pylab.imshow(get_slice_to_show_z(vol, vol_nuclei, z0), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax1.add_line(line1)  
 	ax1.set_aspect(aspect1)
 	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
@@ -465,7 +490,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	ax3 = pylab.subplot(222)
 	ax3.set_aspect(aspect2)
 	pylab.subplots_adjust(bottom=0.25)
-	l3 =  pylab.imshow(vol[:,y0,:], interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	l3 =  pylab.imshow(get_slice_to_show_y(vol, vol_nuclei,y0), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax3.add_line(line2) 
 	ax3.set_aspect(aspect2)
 	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
@@ -531,6 +556,6 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		pylab.close()
 		gc.collect()
 
-	return list_of_mouse_events_in_ascidian
+	return list_of_mouse_events_in_ascidian, fig
 
 

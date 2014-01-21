@@ -37,6 +37,8 @@ default_parameter_dictionary_keys_cellness_metric_only = ( "training_vol_mat_pat
 
 default_parameter_dictionary_keys = ("volume_mat_path",
    "volume_mat_var",\
+   "volume_nuclei_mat_path",\
+   "volume_nuclei_mat_var",\
    "first_seg_mat_path",\
    "first_seg_mat_var", \
    "nuclei_mat_path",\

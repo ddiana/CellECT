@@ -442,7 +442,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location)
+		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 10"' %  (use_metric, config_file_location)
 		print command
 		os.system(command)
 
