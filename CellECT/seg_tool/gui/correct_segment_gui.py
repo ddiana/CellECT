@@ -101,15 +101,19 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	def get_slice_to_show_z(vol, vol_nuclei,z):
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[1],3))
 		slice_to_show[:,:,0] = vol[:,:,z]
+		slice_to_show[:,:,0] = slice_to_show[:,:,0].astype("float")/np.max(slice_to_show[:,:,0])*255
 		if not vol_nuclei is None:
 			slice_to_show[:,:,1] = vol_nuclei[:,:,z]
+			slice_to_show[:,:,1] = slice_to_show[:,:,1].astype("float")/np.max(slice_to_show[:,:,1])*255
 		return slice_to_show.astype("uint8")
 
 	def get_slice_to_show_y(vol, vol_nuclei,y):
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[2],3))
 		slice_to_show[:,:,0] = vol[:,y,:]
+		slice_to_show[:,:,0] = slice_to_show[:,:,0].astype("float")/np.max(slice_to_show[:,:,0])*255
 		if not vol_nuclei is None:
 			slice_to_show[:,:,1] = vol_nuclei[:,y,:]
+			slice_to_show[:,:,1] = slice_to_show[:,:,1].astype("float")/np.max(slice_to_show[:,:,1])*255
 		return slice_to_show.astype("uint8")
 	
 	class MouseEvent:

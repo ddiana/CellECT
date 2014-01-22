@@ -285,17 +285,24 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			i = (self.horizontalSlider_t.value() ) * self.workspace_data.metadata.numz*self.workspace_data.metadata.numch + self.horizontalSlider_z.value()*self.workspace_data.metadata.numch+1
 			img1_full_size = misc.imread("%s/input_slices/%d.tif" % (self.workspace_data.workspace_location, i))	
-			
+			img1_full_size = img1_full_size.astype("float")/np.max(img1_full_size)*255
+
 			max_size = 500
 			factor = min(1, 500./ max(img1_full_size.shape) )
 
-			img1 = misc.imresize(img1_full_size, (int(img1_full_size.shape[0]*factor), int(img1_full_size.shape[1]*factor)))
+			img1 = img1_full_size
+			if factor != 1:
+				img1 = misc.imresize(img1_full_size, (int(img1_full_size.shape[0]*factor), int(img1_full_size.shape[1]*factor)))
 
+			
 
+			# if there is a nuclear channel image
 			if self.workspace_data.metadata.numch>1:			
 	
 				img2_full_size = misc.imread("%s/input_slices/%d.tif"  % (self.workspace_data.workspace_location, i+1))	
+				img2_full_size = img2_full_size.astype("float")/np.max(img2_full_size)*255
 				img2 = misc.imresize(img2_full_size, (int(img2_full_size.shape[0]*factor), int(img2_full_size.shape[1]*factor)))
+				
 			else:
 				img2 = np.zeros_like(img1)		
 				img2_full_size = np.zeros_like(img1_full_size)
@@ -310,6 +317,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			self.label_original_image.setPixmap(QtGui.QPixmap.fromImage(image1))
 
 		
+			# if there is a segmentation
 			try:
 
 				seg_img = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % ( self.workspace_data.workspace_location, self.horizontalSlider_t.value()))["ws"][:,:,self.horizontalSlider_z.value()]
@@ -442,7 +450,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 10"' %  (use_metric, config_file_location)
+		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location)
 		print command
 		os.system(command)
 
