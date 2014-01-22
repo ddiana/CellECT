@@ -272,7 +272,7 @@ class CellTrackerUI:
 
 
 	def get_membrane_file_number_in_tif_sequence(self,t,z):
-		return t* int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])*2 + z*2 +1
+		return t* int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])*2 + z*2 +2
 
 
 
@@ -947,13 +947,13 @@ class CellTrackerUI:
 			self. plot_tracklets_one_slice(1,15)
 
 		def call_plot_color_tracklets_time_sequence(event):
-			self.plot_color_tracklets_time_sequence(1,2)
+			self.plot_color_tracklets_time_sequence(1,15)
 
 		def call_cell_lineage_gui(event):
 			self.cell_lineage_gui(1,1, 20, 20)
 	
 		def call_plot_tracklets_in_slice_with_seg(event):
-			self. plot_tracklets_in_slice_with_seg(1,10)
+			self. plot_tracklets_in_slice_with_seg(1,15)
 
 
 		def enter_debug(event):
