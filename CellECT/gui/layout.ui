@@ -444,6 +444,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_xres">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -464,6 +467,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_yres">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -484,6 +490,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_zres">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -504,6 +513,9 @@
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_tres">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -524,6 +536,9 @@
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox_mem_chan">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -541,6 +556,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_numx">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -561,6 +579,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_numy">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -581,6 +602,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_numz">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -601,6 +625,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_numt">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -621,6 +648,9 @@
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_numch">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -663,7 +693,7 @@
      <x>0</x>
      <y>0</y>
      <width>1407</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWorkspace">
@@ -672,6 +702,7 @@
     </property>
     <addaction name="actionNew_Workspace"/>
     <addaction name="actionOpen_Workspace"/>
+    <addaction name="actionAppend_Workspace"/>
     <addaction name="separator"/>
     <addaction name="actionPreliminary_Segmentation"/>
     <addaction name="actionRun_Segmentation_Tool"/>
@@ -718,6 +749,7 @@
    </attribute>
    <addaction name="actionNew_Workspace"/>
    <addaction name="actionOpen_Workspace"/>
+   <addaction name="actionAppend_Workspace"/>
    <addaction name="separator"/>
    <addaction name="actionPreliminary_Segmentation"/>
    <addaction name="actionRun_Segmentation_Tool"/>
@@ -744,7 +776,7 @@
   <action name="actionOpen_Workspace">
    <property name="icon">
     <iconset resource="app_icons.qrc">
-     <normaloff>:/icons/1376909673_folders.png</normaloff>:/icons/1376909673_folders.png</iconset>
+     <normaloff>:/icons/folder_full.png</normaloff>:/icons/folder_full.png</iconset>
    </property>
    <property name="text">
     <string>Open Workspace</string>
@@ -789,7 +821,7 @@
   <action name="actionGitHub_Repo">
    <property name="icon">
     <iconset resource="app_icons.qrc">
-     <normaloff>:/icons/1376911320_file_encrypted.png</normaloff>:/icons/1376911320_file_encrypted.png</iconset>
+     <normaloff>:/icons/note_settings.png</normaloff>:/icons/note_settings.png</iconset>
    </property>
    <property name="text">
     <string>GitHub Repo</string>
@@ -820,6 +852,18 @@
    </property>
    <property name="text">
     <string>Preliminary Segmentation</string>
+   </property>
+  </action>
+  <action name="actionAppend_Workspace">
+   <property name="icon">
+    <iconset resource="app_icons.qrc">
+     <normaloff>:/icons/1376909673_folders.png</normaloff>:/icons/1376909673_folders.png</iconset>
+   </property>
+   <property name="text">
+    <string>Append Workspace</string>
+   </property>
+   <property name="toolTip">
+    <string>Append Workspace</string>
    </property>
   </action>
  </widget>

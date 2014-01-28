@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Fri Sep  6 15:19:22 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.2
+# Created: Sun Jan 26 14:04:38 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -151,6 +151,7 @@ class Ui_MainWindow(object):
         self.btn_save_metadata.setGeometry(QtCore.QRect(20, 370, 231, 27))
         self.btn_save_metadata.setObjectName("btn_save_metadata")
         self.doubleSpinBox_xres = QtGui.QDoubleSpinBox(self.centralwidget)
+        self.doubleSpinBox_xres.setEnabled(False)
         self.doubleSpinBox_xres.setGeometry(QtCore.QRect(160, 60, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -160,6 +161,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBox_xres.setMaximum(10000000.0)
         self.doubleSpinBox_xres.setObjectName("doubleSpinBox_xres")
         self.doubleSpinBox_yres = QtGui.QDoubleSpinBox(self.centralwidget)
+        self.doubleSpinBox_yres.setEnabled(False)
         self.doubleSpinBox_yres.setGeometry(QtCore.QRect(160, 90, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -169,6 +171,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBox_yres.setMaximum(10000000.0)
         self.doubleSpinBox_yres.setObjectName("doubleSpinBox_yres")
         self.doubleSpinBox_zres = QtGui.QDoubleSpinBox(self.centralwidget)
+        self.doubleSpinBox_zres.setEnabled(False)
         self.doubleSpinBox_zres.setGeometry(QtCore.QRect(160, 120, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -178,6 +181,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBox_zres.setMaximum(10000000.0)
         self.doubleSpinBox_zres.setObjectName("doubleSpinBox_zres")
         self.doubleSpinBox_tres = QtGui.QDoubleSpinBox(self.centralwidget)
+        self.doubleSpinBox_tres.setEnabled(False)
         self.doubleSpinBox_tres.setGeometry(QtCore.QRect(160, 150, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -187,6 +191,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBox_tres.setMaximum(10000.0)
         self.doubleSpinBox_tres.setObjectName("doubleSpinBox_tres")
         self.comboBox_mem_chan = QtGui.QComboBox(self.centralwidget)
+        self.comboBox_mem_chan.setEnabled(False)
         self.comboBox_mem_chan.setGeometry(QtCore.QRect(160, 330, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -195,6 +200,7 @@ class Ui_MainWindow(object):
         self.comboBox_mem_chan.setFont(font)
         self.comboBox_mem_chan.setObjectName("comboBox_mem_chan")
         self.spinBox_numx = QtGui.QSpinBox(self.centralwidget)
+        self.spinBox_numx.setEnabled(False)
         self.spinBox_numx.setGeometry(QtCore.QRect(160, 180, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -204,6 +210,7 @@ class Ui_MainWindow(object):
         self.spinBox_numx.setMaximum(10000)
         self.spinBox_numx.setObjectName("spinBox_numx")
         self.spinBox_numy = QtGui.QSpinBox(self.centralwidget)
+        self.spinBox_numy.setEnabled(False)
         self.spinBox_numy.setGeometry(QtCore.QRect(160, 210, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -213,6 +220,7 @@ class Ui_MainWindow(object):
         self.spinBox_numy.setMaximum(10000)
         self.spinBox_numy.setObjectName("spinBox_numy")
         self.spinBox_numz = QtGui.QSpinBox(self.centralwidget)
+        self.spinBox_numz.setEnabled(False)
         self.spinBox_numz.setGeometry(QtCore.QRect(160, 240, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -222,6 +230,7 @@ class Ui_MainWindow(object):
         self.spinBox_numz.setMaximum(10000)
         self.spinBox_numz.setObjectName("spinBox_numz")
         self.spinBox_numt = QtGui.QSpinBox(self.centralwidget)
+        self.spinBox_numt.setEnabled(False)
         self.spinBox_numt.setGeometry(QtCore.QRect(160, 270, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -231,6 +240,7 @@ class Ui_MainWindow(object):
         self.spinBox_numt.setMaximum(10000)
         self.spinBox_numt.setObjectName("spinBox_numt")
         self.spinBox_numch = QtGui.QSpinBox(self.centralwidget)
+        self.spinBox_numch.setEnabled(False)
         self.spinBox_numch.setGeometry(QtCore.QRect(160, 300, 91, 21))
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -245,7 +255,7 @@ class Ui_MainWindow(object):
         self.checkBox_use_metric.setObjectName("checkBox_use_metric")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1407, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1407, 27))
         self.menubar.setObjectName("menubar")
         self.menuWorkspace = QtGui.QMenu(self.menubar)
         self.menuWorkspace.setObjectName("menuWorkspace")
@@ -269,7 +279,7 @@ class Ui_MainWindow(object):
         self.actionNew_Workspace.setObjectName("actionNew_Workspace")
         self.actionOpen_Workspace = QtGui.QAction(MainWindow)
         icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/icons/1376909673_folders.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon4.addPixmap(QtGui.QPixmap(":/icons/folder_full.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionOpen_Workspace.setIcon(icon4)
         self.actionOpen_Workspace.setObjectName("actionOpen_Workspace")
         self.actionAbout = QtGui.QAction(MainWindow)
@@ -290,7 +300,7 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
         self.actionGitHub_Repo = QtGui.QAction(MainWindow)
         icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap(":/icons/1376911320_file_encrypted.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon8.addPixmap(QtGui.QPixmap(":/icons/note_settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionGitHub_Repo.setIcon(icon8)
         self.actionGitHub_Repo.setObjectName("actionGitHub_Repo")
         self.actionRun_Segmentation_Tool = QtGui.QAction(MainWindow)
@@ -302,8 +312,14 @@ class Ui_MainWindow(object):
         self.actionPreliminary_Segmentation = QtGui.QAction(MainWindow)
         self.actionPreliminary_Segmentation.setIcon(icon)
         self.actionPreliminary_Segmentation.setObjectName("actionPreliminary_Segmentation")
+        self.actionAppend_Workspace = QtGui.QAction(MainWindow)
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/icons/1376909673_folders.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.actionAppend_Workspace.setIcon(icon9)
+        self.actionAppend_Workspace.setObjectName("actionAppend_Workspace")
         self.menuWorkspace.addAction(self.actionNew_Workspace)
         self.menuWorkspace.addAction(self.actionOpen_Workspace)
+        self.menuWorkspace.addAction(self.actionAppend_Workspace)
         self.menuWorkspace.addSeparator()
         self.menuWorkspace.addAction(self.actionPreliminary_Segmentation)
         self.menuWorkspace.addAction(self.actionRun_Segmentation_Tool)
@@ -318,6 +334,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
         self.toolBar.addAction(self.actionNew_Workspace)
         self.toolBar.addAction(self.actionOpen_Workspace)
+        self.toolBar.addAction(self.actionAppend_Workspace)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionPreliminary_Segmentation)
         self.toolBar.addAction(self.actionRun_Segmentation_Tool)
@@ -372,6 +389,8 @@ class Ui_MainWindow(object):
         self.actionRun_Segmentation_Tool.setText(QtGui.QApplication.translate("MainWindow", "Run Segmentation Tool", None, QtGui.QApplication.UnicodeUTF8))
         self.actionRun_Tracking_Tool.setText(QtGui.QApplication.translate("MainWindow", "Run Tracking Tool", None, QtGui.QApplication.UnicodeUTF8))
         self.actionPreliminary_Segmentation.setText(QtGui.QApplication.translate("MainWindow", "Preliminary Segmentation", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAppend_Workspace.setText(QtGui.QApplication.translate("MainWindow", "Append Workspace", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionAppend_Workspace.setToolTip(QtGui.QApplication.translate("MainWindow", "Append Workspace", None, QtGui.QApplication.UnicodeUTF8))
 
 import app_icons_rc
 import app_resources_rc

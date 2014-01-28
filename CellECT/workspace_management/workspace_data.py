@@ -19,6 +19,29 @@ class WorkSpaceData(object):
 		self.workspace_location = None
 
 
+
+
+	def append_workspace(self,temp_ws):
+
+		if self.metadata.numx == temp_ws.metadata.numx and \
+           self.metadata.numy == temp_ws.metadata.numy and \
+           self.metadata.numz == temp_ws.metadata.numz and \
+           self.metadata.numch == temp_ws.metadata.numch and \
+           self.metadata.memch == temp_ws.metadata.memch and \
+           self.metadata.xres == temp_ws.metadata.xres and \
+           self.metadata.yres == temp_ws.metadata.yres and \
+           self.metadata.zres == temp_ws.metadata.zres and \
+           self.metadata.tres == temp_ws.metadata.tres:
+
+			time_offset = self.metadata.numt
+			self.metadata.numt += temp_ws.metadata.numt
+			for item in temp_ws.available_segs:
+				self.available_segs.add(item + time_offset)
+
+
+		else:
+			raise Exception("ValueError", "The metadata does not match.")
+
 	def set_location(self, filename):
 
 		self.workspace_location = os.path.dirname(filename)

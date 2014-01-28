@@ -195,7 +195,7 @@ class CellTrackerUI:
 					plot_tracklet_recursively(node, ax)		
 
 
-		I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(init_t,init_z))+".tif")
+		I = self.fetch_slice_at(init_t, init_z)
 
 
 		f = pylab.figure(figsize = (10,10))
@@ -228,11 +228,11 @@ class CellTrackerUI:
 		def update_t(val):
 
 			t = int(s_t.val)
-			z = int(s_z.val / 2) *2
+			z = int(s_z.val )
 
 			if (z_old[0] != z) or (t_old[0] !=t):
 
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
 		
 				# to remove old dots from current view
@@ -248,10 +248,10 @@ class CellTrackerUI:
 		def update_z(val):
 
 			t = int(s_t.val)
-			z = int(s_z.val / 2) *2
+			z = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
 
 				ax1.lines = []
@@ -272,10 +272,52 @@ class CellTrackerUI:
 
 
 	def get_membrane_file_number_in_tif_sequence(self,t,z):
-		return t* int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])*2 + z*2 +2
+		memch = int(CellECT.track_tool.globals.PARAMETER_DICT["membrane-channel"])
+		numch = int(CellECT.track_tool.globals.PARAMETER_DICT["number-channels"])
+		numz = int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])
+		file_index = t* numz * numch + (z)*numch + memch +1
+		print "membrane: ", file_index
+		return file_index
+
+
+	def get_nuclei_file_number_in_tif_sequence(self,t,z):
+
+		nucl_chan = 1
+		if int(CellECT.track_tool.globals.PARAMETER_DICT["membrane-channel"]) == 0:
+			nucl_chan = 1
+		else:
+			nucl_chan = 0
+		numch = int(CellECT.track_tool.globals.PARAMETER_DICT["number-channels"])
+		numz = int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])
+		file_index = t* numz * numch + (z)*numch + nucl_chan +1
+		print "nuclei: ", file_index
+		return file_index
 
 
 
+	def fetch_slice_at(self, t,z):
+	
+		membrane_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif"
+		membrane_file = sp.misc.imread(membrane_file_location)
+
+		nuclei_file = None
+		if CellECT.track_tool.globals.PARAMETER_DICT["number-channels"] > 1:
+			nuclei_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_nuclei_file_number_in_tif_sequence(t,z))+".tif"
+			nuclei_file = sp.misc.imread(nuclei_file_location)
+
+		if nuclei_file is None:
+			return membrane_file
+		else:
+			I = np.zeros((membrane_file.shape[0], membrane_file.shape[1], 3))
+			I[:,:,0] = membrane_file / np.max(membrane_file).astype("float") * 255
+			I[:,:,1] = nuclei_file / np.max(nuclei_file).astype("float") * 255
+			return I.astype("uint8")
+
+	def fetch_seg_at(self, t,z):
+		
+		filename = 	CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png"
+		Seg = sp.misc.imread(filename)
+		return Seg
 
 	def plot_color_tracklets_time_sequence(self, init_time, init_z):
 		"""
@@ -313,7 +355,7 @@ class CellTrackerUI:
 		color_idx = np.linspace(0, 1, len(np.unique(cc_dict.values()))+1)
 		np.random.shuffle(color_idx)
 
-		I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+		I = self.fetch_slice_at(t,z)
 
 
 		#draw_points_at_t_z(init_time, init_z)
@@ -347,10 +389,10 @@ class CellTrackerUI:
 		def update_t(val):
 
 			t = int(s_t.val)
-			z = int(s_z.val / 2) *2
+			z = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
 		
 				# to remove old dots from current view
@@ -367,10 +409,10 @@ class CellTrackerUI:
 		def update_z(val):
 
 			t = int(s_t.val)
-			z = int(s_z.val / 2) *2
+			z = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
 
 				# to remove old dots from current view
@@ -414,9 +456,9 @@ class CellTrackerUI:
 		
 		cc_dict = connected_components(self.cell_tracker.graph)
 		
-		I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
+		I1 = self.fetch_slice_at(t1,z1)
 		Seg1 = []
-		Seg1.append(sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png"))
+		Seg1.append(self.fetch_seg_at(t1,z1))
 		
 		Seg2 = []
 
@@ -488,8 +530,8 @@ class CellTrackerUI:
 
 
 
-		I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-		Seg2.append(sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")	)
+		I2 = self.fetch_slice_at(t2,z2)
+		Seg2.append(self.fetch_seg_at(t2,z2))
 		lineage_mask = make_cell_lineage_mask(init_t2, cc_of_interest,Seg2[0])
 		selection_mask = make_cell_lineage_mask(init_t1,cc_of_interest, Seg1[0])
 
@@ -569,6 +611,7 @@ class CellTrackerUI:
 		ax_button1 = pylab.axes([0.3, 0.025, 0.4, 0.05])
 		button1 = Button(ax_button1, "Select similar cells.")
 		button1.on_clicked(select_similar_cells)
+		fig._btn = button1
 
 
 
@@ -589,13 +632,13 @@ class CellTrackerUI:
 
 			t1 = int(s_t1.val)
 			t2 = int(s_t2.val)
-			z1 = int(s_z1.val / 2) *2
+			z1 = int(s_z1.val)
 			z_seg1 = int(s_z1.val)
 
 			if (z_old1[0] != z1) or (t_old1[0] !=t1):
 
-				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
+				I1 = self.fetch_slice_at(t1,z1)
+				Seg1[0] = self.fetch_seg_at(t1,z1)
 
 				selection_mask = make_cell_lineage_mask(t1, cc_of_interest, Seg1[0])
 
@@ -615,13 +658,13 @@ class CellTrackerUI:
 
 			t1 = int(s_t1.val)
 			t2 = int(s_t2.val)
-			z1 = int(s_z1.val / 2) *2
+			z1 = int(s_z1.val)
 			z_seg1 = int(s_z1.val)
 
 			if (z_old1[0] != z1) or (t_old1[0] !=t1):
 
-				I1 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t1,z1))+".tif")
-				Seg1[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t1)+"_z_"+ str(z1) + "_seg.png")
+				I1 = self.fetch_slice_at(t1,z1)
+				Seg1[0] = self.fetch_seg_at(t1,z1)
 
 				selection_mask = make_cell_lineage_mask(t1, cc_of_interest, Seg1[0])
 
@@ -641,13 +684,13 @@ class CellTrackerUI:
 
 			t2 = int(s_t2.val)
 			t1 = int(s_t1.val)
-			z2 = int(s_z2.val / 2) *2
+			z2 = int(s_z2.val )
 			z_seg2 = int(s_z2.val)
 
 			if (z_old2[0] != z2) or (t_old2[0] !=t2):
 
-				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
+				I2 = self.fetch_slice_at(t2,z2)
+				Seg2[0] = self.fetch_seg_at(t2,z2)
 
 				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest, Seg2[0])
 
@@ -667,13 +710,13 @@ class CellTrackerUI:
 
 			t2 = int(s_t2.val)
 			t1 = int(s_t1.val)
-			z2 = int(s_z2.val / 2) *2
+			z2 = int(s_z2.val )
 			z_seg2 = int(s_z2.val)
 
 			if (z_old2[0] != z2) or (t_old2[0] !=t2):
 		
-				I2 = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t2,z2))+".tif")
-				Seg2[0] = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t2)+"_z_"+ str(z2) + "_seg.png")
+				I2 = self.fetch_slice_at(t2,z2)
+				Seg2[0] = self.fetch_seg_at(t2,z2)
 
 				lineage_mask = make_cell_lineage_mask(t2, cc_of_interest, Seg2[0])
 
@@ -757,7 +800,7 @@ class CellTrackerUI:
 
 		from matplotlib.widgets import Slider
 
-		fig = pylab.figure(figsize=(18,10))
+		fig = pylab.figure(figsize=(10,10))
 		fig.canvas.set_window_title("Segmentation color coded by tracklets")
 
 		depth_range = 5
@@ -823,8 +866,8 @@ class CellTrackerUI:
 						Seg[i,j] = label_to_tracklet_dict[label]
 
 
-		I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
-		Seg = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png")
+		I = self.fetch_slice_at(t,z)
+		Seg = self.fetch_seg_at(t,z)
 		#draw_points_at_t_z(init_time, init_z)
 		import time
 		time1 = time.time()
@@ -873,9 +916,9 @@ class CellTrackerUI:
 			z_seg = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
-				Seg = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png")
+				Seg = self.fetch_seg_at(t,z)
 				relabel_to_tracklet(Seg, t)
 				l2.set_data(Seg)
 
@@ -896,14 +939,14 @@ class CellTrackerUI:
 		def update_z(val):
 
 			t = int(s_t.val)
-			z = int(s_z.val / 2) *2
+			z = int(s_z.val )
 			z_seg = int(s_z.val)
 
 			if (z_old[0] != z) or (t_old[0] !=t):
-				I = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif")
+				I = self.fetch_slice_at(t,z)
 				l1.set_data(I)
 				#print "loading ", "seg_all_time_stamps/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png"
-				Seg = sp.misc.imread(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png")
+				Seg = self.fetch_seg_at(t,z)
 				relabel_to_tracklet(Seg, t)
 
 				l2.set_data(Seg)

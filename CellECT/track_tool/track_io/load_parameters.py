@@ -87,6 +87,7 @@ def read_program_parameters(config_file_path):
 		line = f.readline()
 
 	CellECT.track_tool.globals.abs_path_to_workspace_dir = abs_path_to_workspace(config_file_path)
+	
 
 	adjust_abs_path()
 	get_time_stamps_from_input_string(CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"])

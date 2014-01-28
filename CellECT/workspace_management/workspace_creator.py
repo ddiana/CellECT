@@ -268,9 +268,13 @@ class WorkspaceCreator(object):
 
 
 
-	def write_config_files(self):
+	def write_config_files(self, time_range = None):
 
-		for time in xrange(self.metadata.numt):
+
+		if time_range == None:
+			time_range = xrange(self.metadata.numt)
+
+		for time in time_range:
 			config_file_name = "%s/config_files/timestamp_%d.cnf" % (self.ws_location, time)
 			with open(config_file_name, "w") as f:
 				f.write("volume_mat_path = init_watershed_all_time_stamps/vol_t_%d.mat\n" % time)

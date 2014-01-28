@@ -10,6 +10,7 @@ import pdb
 import sys
 from termcolor import colored
 import subprocess
+import tempfile
 
 # Imports from this project
 import CellECT.seg_tool.globals
@@ -40,6 +41,9 @@ def run_watershed(vol, init_pts):
 			print colored(err, "red")
 			sys.exit()
 
+	path_to_temp = tempfile.mkdtemp()
+
+
 	
 	print "\nRunning seeded watershed....\n"
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
@@ -66,6 +70,9 @@ def run_watershed(vol, init_pts):
 	
 	try:
 		ws = spio.loadmat("%s/watershed_result.mat" % path_to_temp)["ws"]
+		os.system("rm %s/watershed_result.mat" % path_to_temp)
+		os.system("rm %s/watershed_input.mat" % path_to_temp)
+		os.system("rmdir %s" % path_to_temp)
 	except IOError as err:
 		err.message = "Could not read watershed result from Matlab. Perhaps Matlab did not run?"
 		print colored("Error: %s" % err.message, "red")

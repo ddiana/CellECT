@@ -50,6 +50,8 @@ class Metadata(object):
 
 	def load_from_etree(self, metadata_field):
 
+		self.memch = 0
+
 		for meta_field in metadata_field.iter("metafield"):
 			if meta_field.get("name") == "xres":
 				self.xres = float(meta_field.get("value"))
@@ -81,7 +83,7 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 
-		self.memch = 0
+
 
 
 
@@ -89,6 +91,9 @@ class Metadata(object):
 	# open xml like text file, and read line by line just like tif metadata
 
 	
+		self.memch = 0
+
+
 		with open(filename, "r") as input_file:
 
 			line = input_file.readline()
@@ -105,7 +110,6 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 
-		self.memch = 0
 
 
 		
@@ -120,6 +124,7 @@ class Metadata(object):
 	                       "image_num_c", "image_num_z", "image_num_t", "image_num_x", "image_num_y" ])
 
 
+		self.memch = 0
 
 		for meta in meta_needed:
 			# match:
@@ -180,7 +185,7 @@ class Metadata(object):
 			self.numch = 1
 
 
-		self.memch = 0
+
 
 
 
@@ -203,6 +208,8 @@ class Metadata(object):
 			
 		line = buf.readline()
 
+		self.memch = 0
+
 		while line:
 			self.get_meta_from_line(line)
 			line = buf.readline()
@@ -216,7 +223,7 @@ class Metadata(object):
 		if self.numch == 0:
 			self.numch = 1
 				
-		self.memch = 0
+
 
 
 
@@ -244,12 +251,12 @@ class Metadata(object):
 
 		# change in this value will also set the list for membrane channel.
 
-#		# TODO: if number of chnnels is not set
-#		if not self.memch == None:
-#			for i in xrange(self.numch):
-#				ui.comboBox_mem_chan.addItem(str(i))
+		# TODO: if number of chnnels is not set
+		if not self.memch == None and self.memch >= 0:
+			for i in xrange(self.numch):
+				ui.comboBox_mem_chan.addItem(str(i))
 
-
+		ui.comboBox_mem_chan.setCurrentIndex(self.memch)
 
 
 

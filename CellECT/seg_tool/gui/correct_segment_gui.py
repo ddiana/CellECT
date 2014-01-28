@@ -291,8 +291,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 				if int(s_y.val) == yval:
 					# don't add it twice in case it was added in the above if-statement
 					# this happens when you click on the intersection of the two planes
-					if seed_coords[-1] != (int(xval), int(yval), int(zval)):
-						seed_coords.append ((int(xval), int(yval), int(zval)))
+					if len(seed_coords)>0:
+						if seed_coords[-1] != (int(xval), int(yval), int(zval)):
+							seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
