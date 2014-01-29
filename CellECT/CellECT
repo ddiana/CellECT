@@ -289,7 +289,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.workspace_data.write_xml()
 		self.update_progress.emit(100, "Finished")
 
-		
 		self.has_open_ws = True
 
 
@@ -298,6 +297,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.progress_window.set_progress(val, text)
 		if val == 100:
 			self.progress_window.close()
+			self.open_cws_file(self.workspace_data.workspace_location + "/workspace_data.cws")
 
 	def append_workspace(self):
 
@@ -309,19 +309,20 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		# Use the stock Qt dialog to look for VTK files.
 		filename, _ = QtGui.QFileDialog.getOpenFileName(self, 'Open file', os.curdir, "*.cws", modal=False)
 
-		try:
-			self.progress_window = display_progress_bar.DisplayProgress(self)
-			self.progress_window.show()
+		if len(filename) >0:
+			try:
+				self.progress_window = display_progress_bar.DisplayProgress(self)
+				self.progress_window.show()
 			
 
-			thr = threading.Thread(target = self.append_workspace_processing, args = [filename])
-			thr.start()
-			self.setup_ui_data()		
-	
+				thr = threading.Thread(target = self.append_workspace_processing, args = [filename])
+				thr.start()
+					
+				
 		
 
-		except Exception as err:
-			QtGui.QMessageBox.information(self, "CellECT Append Workspace", "Could not append workspace. Error: %s" % err)
+			except Exception as err:
+				QtGui.QMessageBox.information(self, "CellECT Append Workspace", "Could not append workspace. Error: %s" % err)
 
 
 
