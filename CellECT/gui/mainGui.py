@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Sun Jan 26 14:04:38 2014
+# Created: Thu Jan 30 18:26:12 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -158,7 +158,10 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_xres.setFont(font)
+        self.doubleSpinBox_xres.setDecimals(5)
+        self.doubleSpinBox_xres.setMinimum(0.0)
         self.doubleSpinBox_xres.setMaximum(10000000.0)
+        self.doubleSpinBox_xres.setProperty("value", 1.0)
         self.doubleSpinBox_xres.setObjectName("doubleSpinBox_xres")
         self.doubleSpinBox_yres = QtGui.QDoubleSpinBox(self.centralwidget)
         self.doubleSpinBox_yres.setEnabled(False)
@@ -168,7 +171,10 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_yres.setFont(font)
+        self.doubleSpinBox_yres.setDecimals(5)
+        self.doubleSpinBox_yres.setMinimum(0.0)
         self.doubleSpinBox_yres.setMaximum(10000000.0)
+        self.doubleSpinBox_yres.setProperty("value", 1.0)
         self.doubleSpinBox_yres.setObjectName("doubleSpinBox_yres")
         self.doubleSpinBox_zres = QtGui.QDoubleSpinBox(self.centralwidget)
         self.doubleSpinBox_zres.setEnabled(False)
@@ -178,7 +184,10 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_zres.setFont(font)
+        self.doubleSpinBox_zres.setDecimals(5)
+        self.doubleSpinBox_zres.setMinimum(0.0)
         self.doubleSpinBox_zres.setMaximum(10000000.0)
+        self.doubleSpinBox_zres.setProperty("value", 1.0)
         self.doubleSpinBox_zres.setObjectName("doubleSpinBox_zres")
         self.doubleSpinBox_tres = QtGui.QDoubleSpinBox(self.centralwidget)
         self.doubleSpinBox_tres.setEnabled(False)
@@ -188,7 +197,11 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_tres.setFont(font)
+        self.doubleSpinBox_tres.setDecimals(5)
+        self.doubleSpinBox_tres.setMinimum(0.0)
         self.doubleSpinBox_tres.setMaximum(10000.0)
+        self.doubleSpinBox_tres.setSingleStep(1.0)
+        self.doubleSpinBox_tres.setProperty("value", 1.0)
         self.doubleSpinBox_tres.setObjectName("doubleSpinBox_tres")
         self.comboBox_mem_chan = QtGui.QComboBox(self.centralwidget)
         self.comboBox_mem_chan.setEnabled(False)

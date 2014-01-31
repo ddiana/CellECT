@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Fri Sep  6 15:53:42 2013
-#      by: pyside-uic 0.2.13 running on PySide 1.1.2
+# Created: Thu Jan 30 18:21:03 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -65,7 +65,10 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_yres.setFont(font)
+        self.doubleSpinBox_yres.setDecimals(5)
+        self.doubleSpinBox_yres.setMinimum(1e-05)
         self.doubleSpinBox_yres.setMaximum(100000.0)
+        self.doubleSpinBox_yres.setProperty("value", 1.0)
         self.doubleSpinBox_yres.setObjectName("doubleSpinBox_yres")
         self.spinBox_numt = QtGui.QSpinBox(Dialog)
         self.spinBox_numt.setGeometry(QtCore.QRect(170, 410, 91, 21))
@@ -84,7 +87,10 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_xres.setFont(font)
+        self.doubleSpinBox_xres.setDecimals(5)
+        self.doubleSpinBox_xres.setMinimum(1e-05)
         self.doubleSpinBox_xres.setMaximum(100000.0)
+        self.doubleSpinBox_xres.setProperty("value", 1.0)
         self.doubleSpinBox_xres.setObjectName("doubleSpinBox_xres")
         self.spinBox_numch = QtGui.QSpinBox(Dialog)
         self.spinBox_numch.setGeometry(QtCore.QRect(170, 440, 91, 21))
@@ -139,7 +145,10 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_zres.setFont(font)
+        self.doubleSpinBox_zres.setDecimals(5)
+        self.doubleSpinBox_zres.setMinimum(1e-05)
         self.doubleSpinBox_zres.setMaximum(100000.0)
+        self.doubleSpinBox_zres.setProperty("value", 1.0)
         self.doubleSpinBox_zres.setObjectName("doubleSpinBox_zres")
         self.doubleSpinBox_tres = QtGui.QDoubleSpinBox(Dialog)
         self.doubleSpinBox_tres.setGeometry(QtCore.QRect(170, 290, 91, 21))
@@ -148,7 +157,10 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setBold(True)
         self.doubleSpinBox_tres.setFont(font)
+        self.doubleSpinBox_tres.setDecimals(5)
+        self.doubleSpinBox_tres.setMinimum(1e-05)
         self.doubleSpinBox_tres.setMaximum(100000.0)
+        self.doubleSpinBox_tres.setProperty("value", 1.0)
         self.doubleSpinBox_tres.setObjectName("doubleSpinBox_tres")
         self.label_3 = QtGui.QLabel(Dialog)
         self.label_3.setGeometry(QtCore.QRect(20, 20, 451, 21))

@@ -217,8 +217,17 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="decimals">
+    <number>5</number>
+   </property>
+   <property name="minimum">
+    <double>0.000010000000000</double>
+   </property>
    <property name="maximum">
     <double>100000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numt">
@@ -260,8 +269,17 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="decimals">
+    <number>5</number>
+   </property>
+   <property name="minimum">
+    <double>0.000010000000000</double>
+   </property>
    <property name="maximum">
     <double>100000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QSpinBox" name="spinBox_numch">
@@ -383,8 +401,17 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="decimals">
+    <number>5</number>
+   </property>
+   <property name="minimum">
+    <double>0.000010000000000</double>
+   </property>
    <property name="maximum">
     <double>100000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_tres">
@@ -403,8 +430,17 @@
      <bold>true</bold>
     </font>
    </property>
+   <property name="decimals">
+    <number>5</number>
+   </property>
+   <property name="minimum">
+    <double>0.000010000000000</double>
+   </property>
    <property name="maximum">
     <double>100000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">

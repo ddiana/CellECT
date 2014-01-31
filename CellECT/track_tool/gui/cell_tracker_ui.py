@@ -987,16 +987,20 @@ class CellTrackerUI:
 			self.plot_size_histograms_at_timestamp()
 
 		def call_plot_tracklets_one_slice(event):
-			self. plot_tracklets_one_slice(1,15)
+			z_val = int(int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])/2)
+			self. plot_tracklets_one_slice(0,z_val)
 
 		def call_plot_color_tracklets_time_sequence(event):
-			self.plot_color_tracklets_time_sequence(1,15)
+			z_val = int(int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])/2)
+			self.plot_color_tracklets_time_sequence(0,z_val)
 
 		def call_cell_lineage_gui(event):
-			self.cell_lineage_gui(1,1, 20, 20)
+			z_val = int(int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])/2)
+			self.cell_lineage_gui(0,1, z_val, z_val)
 	
 		def call_plot_tracklets_in_slice_with_seg(event):
-			self. plot_tracklets_in_slice_with_seg(1,15)
+			z_val = int(int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])/2)
+			self. plot_tracklets_in_slice_with_seg(0,z_val)
 
 
 		def enter_debug(event):

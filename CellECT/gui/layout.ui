@@ -462,8 +462,17 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="decimals">
+     <number>5</number>
+    </property>
+    <property name="minimum">
+     <double>0.000000000000000</double>
+    </property>
     <property name="maximum">
      <double>10000000.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_yres">
@@ -485,8 +494,17 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="decimals">
+     <number>5</number>
+    </property>
+    <property name="minimum">
+     <double>0.000000000000000</double>
+    </property>
     <property name="maximum">
      <double>10000000.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_zres">
@@ -508,8 +526,17 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="decimals">
+     <number>5</number>
+    </property>
+    <property name="minimum">
+     <double>0.000000000000000</double>
+    </property>
     <property name="maximum">
      <double>10000000.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="doubleSpinBox_tres">
@@ -531,8 +558,20 @@
       <bold>true</bold>
      </font>
     </property>
+    <property name="decimals">
+     <number>5</number>
+    </property>
+    <property name="minimum">
+     <double>0.000000000000000</double>
+    </property>
     <property name="maximum">
      <double>10000.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox_mem_chan">

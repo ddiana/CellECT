@@ -29,18 +29,6 @@ def run_watershed(vol, init_pts):
 	TODO: Replace this with C extension of watershed.
 	"""
 
-	path_to_temp = CellECT.seg_tool.globals.path_to_workspace + "/temp/"
-
-	## Make temp folder ########################################################
-	if not os.path.exists(path_to_temp):
-		try:
-			os.makedirs(path_to_temp)
-		except IOError as err:
-			err.message = "Could not create temp directory at %s" % path_to_temp
-			print colored("Error: %" % err.message, "red")
-			print colored(err, "red")
-			sys.exit()
-
 	path_to_temp = tempfile.mkdtemp()
 
 
