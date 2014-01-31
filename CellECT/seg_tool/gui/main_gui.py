@@ -204,35 +204,58 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	def save_current_status_callback(event):
 		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed)
 
+	def add_boundary(im_slice, seg_slice):
+		mask = np.array(seg_slice == 0)
+		in_mask = np.ones_like(mask) - mask
+		for i in xrange(3):
+			im_slice[:,:,i] = im_slice[:,:,i] * in_mask + 255 * mask
 
-	def test(event):
+
+	global show_border_toggle
+	show_border_toggle = False
+
+	def show_border(event):
+
+		global show_border_toggle
+		show_border_toggle = not show_border_toggle
+		update()
+
+	def rerun(event):
 		
 		for subfig in sub_figs:
 			pylab.close(subfig)
 		pylab.close(fig)
 
-	a_load = pylab.axes([0.2, 0.05, 0.2, 0.05])
-	a_save = pylab.axes([0.425, 0.05, 0.2, 0.05])
-	a_rerun = pylab.axes([0.65, 0.05, 0.2, 0.05])
+	a_border = pylab.axes([0.15, 0.05, 0.09, 0.05])
+	a_load = pylab.axes([0.26, 0.05, 0.17, 0.05])
+	a_save = pylab.axes([0.45, 0.05, 0.17, 0.05])
+	a_rerun = pylab.axes([0.64, 0.05, 0.23, 0.05])
+	
 	
 	b_load = Button(a_load, 'Load last save (if any)')
 	b_load.on_clicked(load_last_save_callback)
 	b_save = Button(a_save, "Save current state")
 	b_save.on_clicked(save_current_status_callback)
 	b_rerun = Button(a_rerun, "RERUN with user feedback")
-	b_rerun.on_clicked(test)
+	b_rerun.on_clicked(rerun)
+	b_border = Button(a_border, "Border")
+	b_border.on_clicked(show_border)
+
+	
 
 
-
-
-	def update(val):
+	def update(val = None):
 		z = s_z.val
 
+		slice_to_show = np.zeros((vol.shape[0], vol.shape[1], 3))
 		slice_to_show[:,:,0] = vol[:,:,z]
 		slice_to_show[:,:,0] = slice_to_show[:,:,0].astype("float")/np.max(slice_to_show[:,:,0])*255
 		if not vol_nuclei is None:
 			slice_to_show[:,:,1] = vol_nuclei[:,:,z]
 			slice_to_show[:,:,1] = slice_to_show[:,:,1].astype("float")/np.max(slice_to_show[:,:,1])*255
+
+		if show_border_toggle:
+			add_boundary(slice_to_show, watershed[:,:,z])
 
 		l1.set_data(slice_to_show.astype("uint8"))
 		l2.set_data(uncertainty_map[:,:,z])

@@ -76,6 +76,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	nuclei_coords = []
 	vol_nuclei = None
 	z_default = -1
+	global show_boundary
+	show_boundary = False
 
 	if "z_default" in kwargs.keys():
 		z_default = kwargs["z_default"]
@@ -97,23 +99,37 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	print "--------------------------------------------------------------------------------"
 	print colored("NO BUTTON TASK SELECTED","blue")
 
+	def add_boundary(im_slice, seg_slice):
+		mask = np.array(seg_slice == 0)
+		in_mask = np.ones_like(mask) - mask
+		for i in xrange(3):
+			im_slice[:,:,i] = im_slice[:,:,i] * in_mask + 255 * mask
 
-	def get_slice_to_show_z(vol, vol_nuclei,z):
+
+	def get_slice_to_show_z(vol, vol_nuclei,z, seg ):
+		global show_boundary
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[1],3))
 		slice_to_show[:,:,0] = vol[:,:,z]
 		slice_to_show[:,:,0] = slice_to_show[:,:,0].astype("float")/np.max(slice_to_show[:,:,0])*255
 		if not vol_nuclei is None:
 			slice_to_show[:,:,1] = vol_nuclei[:,:,z]
 			slice_to_show[:,:,1] = slice_to_show[:,:,1].astype("float")/np.max(slice_to_show[:,:,1])*255
+		if show_boundary:
+			add_boundary(slice_to_show, seg[:,:,z])
+
 		return slice_to_show.astype("uint8")
 
-	def get_slice_to_show_y(vol, vol_nuclei,y):
+	def get_slice_to_show_y(vol, vol_nuclei,y, seg ):
+		global show_boundary
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[2],3))
 		slice_to_show[:,:,0] = vol[:,y,:]
 		slice_to_show[:,:,0] = slice_to_show[:,:,0].astype("float")/np.max(slice_to_show[:,:,0])*255
 		if not vol_nuclei is None:
 			slice_to_show[:,:,1] = vol_nuclei[:,y,:]
 			slice_to_show[:,:,1] = slice_to_show[:,:,1].astype("float")/np.max(slice_to_show[:,:,1])*255
+		if show_boundary:
+			add_boundary(slice_to_show, seg[:,y,:])
+		
 		return slice_to_show.astype("uint8")
 	
 	class MouseEvent:
@@ -196,6 +212,12 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			undo_item()
 			update_z()
 			update_y()
+
+		def toggle_boundary(self, event):
+			global show_boundary
+			show_boundary = not show_boundary
+			update_y()
+			update_z()
 			
 		
 
@@ -395,7 +417,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 		z = s_z.val
 		# draw lines
-		l1.set_data(get_slice_to_show_z(vol, vol_nuclei,z))
+		l1.set_data(get_slice_to_show_z(vol, vol_nuclei,z,watershed))
 		l2.set_data(watershed[:,:,z])
 		update_points()
 
@@ -405,7 +427,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		# draw lines
 		# draw image
 		l4.set_data(watershed[:,y,:])
-		l3.set_data(get_slice_to_show_y(vol, vol_nuclei,y))
+		l3.set_data(get_slice_to_show_y(vol, vol_nuclei,y, watershed))
 		update_points()
 		
 
@@ -413,29 +435,32 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 	callback = ButtonCallback()
-	a_seed_old_label = pylab.axes([0.1, 0.05, 0.22, 0.05])
-	a_seed_new_label = pylab.axes([0.34, 0.05, 0.22, 0.05])
-	a_merge_two_labels = pylab.axes([0.58, 0.05, 0.15, 0.05])
-	a_clear_task = pylab.axes( [0.75, 0.05, 0.09, 0.05 ])
-	a_undo = pylab.axes( [0.86, 0.05, 0.06, 0.05 ])
+	a_seed_old_label = pylab.axes([0.07, 0.05, 0.22, 0.05])
+	a_seed_new_label = pylab.axes([0.30, 0.05, 0.22, 0.05])
+	a_merge_two_labels = pylab.axes([0.53, 0.05, 0.13, 0.05])
+	a_clear_task = pylab.axes( [0.67, 0.05, 0.09, 0.05 ])
+	a_undo = pylab.axes( [0.77, 0.05, 0.06, 0.05 ])
+	a_toggle = pylab.axes([0.84, 0.05, 0.09, 0.05])
 	
-	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for an old label')
+	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for old label')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
-	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for a new label")
+	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for new label")
 	b_seed_new_label.on_clicked(callback.seed_new_label)
-	b_merge_two_labels = Button(a_merge_two_labels, 'Merge two labels')
+	b_merge_two_labels = Button(a_merge_two_labels, 'Merge 2 labels')
 	b_merge_two_labels.on_clicked(callback.merge_two_labels)
 	b_clear_task = Button(a_clear_task, "No task")
 	b_clear_task.on_clicked(callback.clear_task)
 	b_undo_task = Button(a_undo, "Undo")
 	b_undo_task.on_clicked(callback.undo_task)
-
+	b_toggle = Button(a_toggle, "Borders")
+	b_toggle.on_clicked(callback.toggle_boundary)
 
 	fig._seed_for_old_label_button = b_seed_old_label
 	fig._seed_for_new_label_button = b_seed_new_label
 	fig._merge_two_labels_button = b_merge_two_labels
 	fig._clear_task_button = b_clear_task
 	fig._undo_button = b_undo_task
+	fig._toggle = b_toggle
 
 
 	if z_default > -1:
@@ -462,7 +487,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_vol = vol.min()
 	max_var_cmap_vol = vol_max
-	l1 =  pylab.imshow(get_slice_to_show_z(vol, vol_nuclei, z0), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	l1 =  pylab.imshow(get_slice_to_show_z(vol, vol_nuclei, z0, watershed), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax1.add_line(line1)  
 	ax1.set_aspect(aspect1)
 	seeds_at_z = get_nuclei_at_z(nuclei_coords, z0)
@@ -495,7 +520,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	ax3 = pylab.subplot(222)
 	ax3.set_aspect(aspect2)
 	pylab.subplots_adjust(bottom=0.25)
-	l3 =  pylab.imshow(get_slice_to_show_y(vol, vol_nuclei,y0), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
+	l3 =  pylab.imshow(get_slice_to_show_y(vol, vol_nuclei,y0, watershed), interpolation="nearest", vmin = min_var_cmap_vol, vmax = max_var_cmap_vol, cmap = "gist_heat", picker = True)  
 	ax3.add_line(line2) 
 	ax3.set_aspect(aspect2)
 	seeds_at_y = get_nuclei_at_y(nuclei_coords, y0)
