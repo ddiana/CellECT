@@ -388,6 +388,8 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 	
 
 		self.setup_ui_data()
+
+		self.horizontalSlider_z.setValue(int(self. workspace_data.metadata.numz /2))	
 		self.has_open_ws = True
 		
 
