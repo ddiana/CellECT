@@ -7,6 +7,8 @@ import numpy as np
 import scipy as sp
 import pdb
 import pylab
+import random
+import matplotlib
 
 # Imports from this project
 import CellECT
@@ -40,7 +42,8 @@ class CellTrackerUI:
 		self.cell_tracker =  cell_tracker
 		self.thumbnail_dir = CellECT.__path__[0] + "/track_tool/resources/gui_thumbnails/"
 
-
+		colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
+		self.color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
 
 	def plot_nuclei_at_timestamp_with_tracklet_coloring(self):
 		"""
@@ -203,7 +206,7 @@ class CellTrackerUI:
 		l1 = pylab.imshow(I, cmap="gray")
 		ax1 = pylab.subplot(111)
 		pylab.subplots_adjust(bottom=0.25)
-		pylab.axis([0, I.shape[1], 0, I.shape[0]])
+		pylab.axis([0,I.shape[1], I.shape[0],0])
 		plot_nuclei_with_tracklets(init_t, init_z,ax1 )
 
 
@@ -368,7 +371,7 @@ class CellTrackerUI:
 		ax1 = pylab.subplot(111)
 		pylab.subplots_adjust(bottom=0.25)
 		l1 =  pylab.imshow(I, cmap = "gray")
-		pylab.axis([0, I.shape[1], 0, I.shape[0]])
+		pylab.axis([0, I.shape[1], I.shape[0],0])
 		draw_points_at_t_z(t,z,ax1)
 
 
@@ -548,38 +551,38 @@ class CellTrackerUI:
 		ax1 = pylab.subplot(161)
 		pylab.subplots_adjust(bottom=0.25)
 		l1 =  pylab.imshow(I1, cmap = "gray")
-		pylab.axis([0, I1.shape[1], 0, I1.shape[0]])
+		pylab.axis([0, I1.shape[1], I1.shape[0], 0])
 
 		# segmentation subplot
 		ax2 = pylab.subplot(162)
 		pylab.subplots_adjust(bottom=0.25)
-		l2 =  pylab.imshow(Seg1[0], cmap = "spectral", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles), picker = True)
-		pylab.axis([0, Seg1[0].shape[1], 0, Seg1[0].shape[0]])
+		l2 =  pylab.imshow(Seg1[0], cmap = self.color_map, vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles), picker = True)
+		pylab.axis([0, Seg1[0].shape[1], Seg1[0].shape[0], 0])
 
 		# user selection mask
 		ax21 = pylab.subplot(163)
 		pylab.subplots_adjust(bottom=0.25)
 		l21 =  pylab.imshow(selection_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles), picker = True)
-		pylab.axis([0, Seg1[0].shape[1], 0, Seg1[0].shape[0]])
+		pylab.axis([0, Seg1[0].shape[1],  Seg1[0].shape[0], 0])
 
 		# image subplot
 		ax3 = pylab.subplot(164)
 		pylab.subplots_adjust(bottom=0.25)
 		l3 =  pylab.imshow(I2, cmap = "gray")
-		pylab.axis([0, I2.shape[1], 0, I2.shape[0]])
+		pylab.axis([0, I2.shape[1], I2.shape[0], 0])
 
 		# segmentation subplot
 		ax31 = pylab.subplot(165)
 		pylab.subplots_adjust(bottom=0.25)
-		l31 =  pylab.imshow(Seg2[0], cmap = "spectral")
-		pylab.axis([0, Seg2[0].shape[1], 0, Seg2[0].shape[0]], vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t2].list_of_cell_profiles))
+		l31 =  pylab.imshow(Seg2[0], cmap = self.color_map,  vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t1].list_of_cell_profiles))
+		pylab.axis() #[0, Seg2[0].shape[1], 0, Seg2[0].shape[0]])
 
 
 		# segmentation subplot
 		ax4 = pylab.subplot(166)
 		pylab.subplots_adjust(bottom=0.25)
 		l4 =  pylab.imshow(lineage_mask, cmap = "gist_heat", vmin = 0, vmax = len( self.cell_tracker.list_of_cell_profiles_per_timestamp[t2].list_of_cell_profiles))
-		pylab.axis([0, Seg2[0].shape[1], 0, Seg2[0].shape[0]])
+		pylab.axis([0, Seg2[0].shape[1], Seg2[0].shape[0], 0])
 
 
 
@@ -711,6 +714,7 @@ class CellTrackerUI:
 
 		# call back for z slider
 		def update_z2(val):
+
 
 			t2 = int(s_t2.val)
 			t1 = int(s_t1.val)
@@ -884,14 +888,14 @@ class CellTrackerUI:
 		ax1 = pylab.subplot(121)
 		pylab.subplots_adjust(bottom=0.25)
 		l1 =  pylab.imshow(I, cmap = "gray")
-		pylab.axis([0, I.shape[1], 0, I.shape[0]])
+		pylab.axis([0, I.shape[1],  I.shape[0], 0])
 		draw_points_at_t_z(t,z,ax1)
 
 		# segmentation subplot
 		ax2 = pylab.subplot(122)
 		pylab.subplots_adjust(bottom=0.25)
-		l2 =  pylab.imshow(Seg, vmin = 0, vmax = len(color_idx), cmap = 'jet')
-		pylab.axis([0, Seg.shape[1], 0, Seg.shape[0]])
+		l2 =  pylab.imshow(Seg, vmin = 0, vmax = len(color_idx), cmap = "spectral")
+		pylab.axis([0, Seg.shape[1], Seg.shape[0], 0])
 
 
 
