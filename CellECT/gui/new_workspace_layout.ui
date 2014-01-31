@@ -654,6 +654,27 @@
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>btn_select_img</tabstop>
+  <tabstop>checkBox_has_bg</tabstop>
+  <tabstop>btn_load_metadata_csv</tabstop>
+  <tabstop>btn_load_metadata_xml</tabstop>
+  <tabstop>doubleSpinBox_xres</tabstop>
+  <tabstop>doubleSpinBox_yres</tabstop>
+  <tabstop>doubleSpinBox_zres</tabstop>
+  <tabstop>doubleSpinBox_tres</tabstop>
+  <tabstop>spinBox_numx</tabstop>
+  <tabstop>spinBox_numy</tabstop>
+  <tabstop>spinBox_numz</tabstop>
+  <tabstop>spinBox_numt</tabstop>
+  <tabstop>spinBox_numch</tabstop>
+  <tabstop>comboBox_mem_chan</tabstop>
+  <tabstop>btn_import_nuclei_csv</tabstop>
+  <tabstop>lineEdit_ws_name</tabstop>
+  <tabstop>btn_choose_location</tabstop>
+  <tabstop>btn_create_ws</tabstop>
+  <tabstop>btn_cancel</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -211,13 +211,14 @@ class CellTrackerUI:
 		axcolor = 'lightgoldenrodyellow'
 		ax_t = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
 		s_t = Slider(ax_t, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_t)
-
+		f._s_t = s_t
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
 		ax_z = pylab.axes([0.2, 0.05, 0.65, 0.03], axisbg=axcolor)
 		s_z = Slider(ax_z, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z)
-		
+		f._s_z = s_z		
+
 		t = init_t
 		z = init_z
 		z_old = [-1]
@@ -296,6 +297,8 @@ class CellTrackerUI:
 
 
 	def fetch_slice_at(self, t,z):
+
+		t += CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"][0]
 	
 		membrane_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif"
 		membrane_file = sp.misc.imread(membrane_file_location)
@@ -314,7 +317,8 @@ class CellTrackerUI:
 			return I.astype("uint8")
 
 	def fetch_seg_at(self, t,z):
-		
+
+		t += CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"][0]
 		filename = 	CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png"
 		Seg = sp.misc.imread(filename)
 		return Seg
@@ -372,13 +376,13 @@ class CellTrackerUI:
 		axcolor = 'lightgoldenrodyellow'
 		ax_t = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
 		s_t = Slider(ax_t, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_time)
-
+		fig._s_t = s_t
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
 		ax_z = pylab.axes([0.2, 0.05, 0.65, 0.03], axisbg=axcolor)
 		s_z = Slider(ax_z, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z)
-
+		fig._s_z = s_z
 
 		t = init_time
 		z = init_z
@@ -585,25 +589,25 @@ class CellTrackerUI:
 		axcolor = 'lightgoldenrodyellow'
 		ax_t1 = pylab.axes([0.2, 0.2, 0.25, 0.03], axisbg=axcolor)
 		s_t1 = Slider(ax_t1, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_t1)
-
+		fig._s_t1 = s_t1
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
 		ax_z1 = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
 		s_z1 = Slider(ax_z1, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z1)
-
+		fig._s_z1 = s_z1
 
 		# slider for time
 		axcolor = 'lightgoldenrodyellow'
 		ax_t2 = pylab.axes([0.6, 0.2, 0.25, 0.03], axisbg=axcolor)
 		s_t2 = Slider(ax_t2, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_t2)
-
+		fig._s_t2 = s_t2
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
 		ax_z2 = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
 		s_z2 = Slider(ax_z2, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z2)
-
+		fig._s_z2 = s_z2
 
 
 
@@ -895,13 +899,13 @@ class CellTrackerUI:
 		axcolor = 'lightgoldenrodyellow'
 		ax_t = pylab.axes([0.2, 0.1, 0.65, 0.03], axisbg=axcolor)
 		s_t = Slider(ax_t, 'time-stamp', 0, len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1, valinit=init_time)
-
+		fig._s_t = s_t
 
 		# slider for z
 		axcolor = 'lightgoldenrodyellow'
 		ax_z = pylab.axes([0.2, 0.05, 0.65, 0.03], axisbg=axcolor)
 		s_z = Slider(ax_z, 'z-slice', 0, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])-1, valinit=init_z)
-
+		fig._s_z = s_z
 
 		t = init_time
 		z = init_z
@@ -1014,6 +1018,7 @@ class CellTrackerUI:
 		ax_button1 = pylab.axes([0.075, 0.85, 0.6, 0.075])
 		button1 = Button(ax_button1, "3-D plot of nuclei color coded by timestamp")
 		button1.on_clicked(call_plot_nuclei_at_timestamp)
+
 
 		ax1 = pylab.axes( [0.725, 0.85, 0.2, 0.075])
 		im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")

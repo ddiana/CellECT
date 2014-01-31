@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Thu Jan 30 18:21:03 2014
+# Created: Thu Jan 30 19:23:30 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -231,6 +231,24 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        Dialog.setTabOrder(self.btn_select_img, self.checkBox_has_bg)
+        Dialog.setTabOrder(self.checkBox_has_bg, self.btn_load_metadata_csv)
+        Dialog.setTabOrder(self.btn_load_metadata_csv, self.btn_load_metadata_xml)
+        Dialog.setTabOrder(self.btn_load_metadata_xml, self.doubleSpinBox_xres)
+        Dialog.setTabOrder(self.doubleSpinBox_xres, self.doubleSpinBox_yres)
+        Dialog.setTabOrder(self.doubleSpinBox_yres, self.doubleSpinBox_zres)
+        Dialog.setTabOrder(self.doubleSpinBox_zres, self.doubleSpinBox_tres)
+        Dialog.setTabOrder(self.doubleSpinBox_tres, self.spinBox_numx)
+        Dialog.setTabOrder(self.spinBox_numx, self.spinBox_numy)
+        Dialog.setTabOrder(self.spinBox_numy, self.spinBox_numz)
+        Dialog.setTabOrder(self.spinBox_numz, self.spinBox_numt)
+        Dialog.setTabOrder(self.spinBox_numt, self.spinBox_numch)
+        Dialog.setTabOrder(self.spinBox_numch, self.comboBox_mem_chan)
+        Dialog.setTabOrder(self.comboBox_mem_chan, self.btn_import_nuclei_csv)
+        Dialog.setTabOrder(self.btn_import_nuclei_csv, self.lineEdit_ws_name)
+        Dialog.setTabOrder(self.lineEdit_ws_name, self.btn_choose_location)
+        Dialog.setTabOrder(self.btn_choose_location, self.btn_create_ws)
+        Dialog.setTabOrder(self.btn_create_ws, self.btn_cancel)
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "New Workspace", None, QtGui.QApplication.UnicodeUTF8))
