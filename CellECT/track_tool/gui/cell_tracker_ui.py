@@ -835,6 +835,9 @@ class CellTrackerUI:
 #			return my_colors
 		
 
+
+
+
 		def draw_points_at_t_z(t,z, ax):
 			# place color coded dots
 			for i in  xrange(len(self. cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles)):
@@ -844,7 +847,9 @@ class CellTrackerUI:
 							
 					node = "t%d_c%d" % (t, i)
 					tracklet = cc_dict[node]
-					color = pylab.cm.jet(color_idx[tracklet])
+					total_tracklets = len(self.cell_tracker.list_of_cell_profiles_per_timestamp)-1
+					index = min ( tracklet, int(tracklet/ float(total_tracklets) * 255))
+					color = pylab.cm.jet(color_idx[index])
 					ax.plot( cp.nucleus.y, cp.nucleus.x, "o", color = color)
 					ax.text(cp.nucleus.y, cp.nucleus.x, tracklet, fontsize=10, color = color )
 
@@ -881,6 +886,13 @@ class CellTrackerUI:
 		time1 = time.time()
 		relabel_to_tracklet(Seg, init_time)
 		print time.time() - time1
+
+		def onpick(event):
+
+			x = int(event.mouseevent.xdata)
+			y = int(event.mouseevent.ydata)
+			z = int()
+			print Seg[y,x]
 		
 #		my_colors = make_colors_for_seg(Seg, init_time)
 
@@ -894,8 +906,9 @@ class CellTrackerUI:
 		# segmentation subplot
 		ax2 = pylab.subplot(122)
 		pylab.subplots_adjust(bottom=0.25)
-		l2 =  pylab.imshow(Seg, vmin = 0, vmax = len(color_idx), cmap = "spectral")
+		l2 =  pylab.imshow(Seg, vmin = 0, vmax = len(color_idx), cmap = "jet", picker = True)
 		pylab.axis([0, Seg.shape[1], Seg.shape[0], 0])
+
 
 
 
@@ -921,7 +934,7 @@ class CellTrackerUI:
 
 			t = int(s_t.val)
 			z = int(s_z.val / 2) *2
-			z_seg = int(s_z.val)
+			z_seg = z
 
 			if (z_old[0] != z) or (t_old[0] !=t):
 				I = self.fetch_slice_at(t,z)
@@ -948,7 +961,7 @@ class CellTrackerUI:
 
 			t = int(s_t.val)
 			z = int(s_z.val )
-			z_seg = int(s_z.val)
+			z_seg = z
 
 			if (z_old[0] != z) or (t_old[0] !=t):
 				I = self.fetch_slice_at(t,z)
@@ -972,6 +985,7 @@ class CellTrackerUI:
 
 		s_t.on_changed(update_t)
 		s_z.on_changed(update_z)
+		fig.canvas.mpl_connect('pick_event', onpick)
 
 
 		pylab.show()

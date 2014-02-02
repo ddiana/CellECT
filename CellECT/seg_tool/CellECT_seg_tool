@@ -117,7 +117,9 @@ def main():
 		print colored("              Loading training data and training cellness metric:", 'red')
 		print colored("================================================================================",'red')
 	
-		classifier = cellness.learn_classifier()
+		cellness_metric = cellness.CellnessMetric()
+		cellness.load_generic_training_data(cellness_metric)
+		cellness_metric.train()
 
 
 	## LOADING DATA FOR CURRENT VOLUME #########################################
@@ -189,25 +191,36 @@ def main():
 
 		## Prepare cellness metric #############################################
 
+
 		print "Preparing data for classifier..."
 
 		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
 		original_init_pts = ws.make_list_of_input_points(nuclei_collection)
 
-
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "watershed", nuclei_collection)
-		test_data = cellness.prepare_test_data(collection_of_ws_segments)
+		#test_data = cellness.prepare_test_data(collection_of_ws_segments)
 
 		## Apply cellness metric ###############################################
 
 		if not 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
 			
-			test_data_svm = call_silent.call_silent_process(VectorDataSet, test_data)
+			#test_data_svm = call_silent.call_silent_process(VectorDataSet, test_data)
+
+			#generic_classifier = cellness.prepare_SVM(generic_training_data, generic_training_labels)
 
 			print "Applying cellness metric to segments..."
-			class_prediction, discriminant_value = cellness.classify_segments(classifier,test_data_svm)
+			class_prediction = []
+			discriminant_value = []
 
+			
+			for segment in collection_of_ws_segments.list_of_segments:
+				prd, disc = cellness_metric.test_segment(segment)
+				class_prediction.append(prd)
+				discriminant_value.append(disc)
+			#class_prediction, discriminant_value = cellness.classify_segments(generic_classifier,test_data) #test_data_svm)
+
+			
 			classified_segments = (set_of_labels, class_prediction, discriminant_value)
 
 		else:
@@ -215,6 +228,7 @@ def main():
 			class_prediction = [0 for i in xrange(len(set_of_labels))]
 			discriminant_value = [1 for i in xrange(len(set_of_labels))]
 			classified_segments = (set_of_labels, class_prediction, discriminant_value)
+			
 
 
 

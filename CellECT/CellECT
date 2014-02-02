@@ -113,6 +113,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 	"""
 
 	update_progress = QtCore.Signal(int, str)
+	throw_message = QtCore.Signal(str, str)
 	update_list_of_segs = QtCore.Signal(int)
 
 	def setup_ui_data(self):
@@ -254,42 +255,56 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				line = f.readline()
 
 
+	def get_exception_across_thread(self, window_title, message):
+		QtGui.QMessageBox.information(self, window_title, message)
+
+		
 
 
 	def append_workspace_processing(self, filename):
 
-		self.update_progress.connect(self.update_progress_window) 
+		try:
 
-		self.update_progress.emit(5, "Retrieving available segmentations.")
 
-		temp_ws_data = wd.WorkSpaceData()
-		temp_ws_data.load_workspace(filename)
-		temp_ws_data.set_location(filename)		
-		temp_ws_data.get_available_segs()
+			self.update_progress.connect(self.update_progress_window) 
 
-		self.update_progress.emit(10, "Updating metadata.")
+			self.update_progress.emit(5, "Retrieving available segmentations.")
 
-		time_offset = self.workspace_data.metadata.numt
+			temp_ws_data = wd.WorkSpaceData()
+			temp_ws_data.load_workspace(filename)
+			temp_ws_data.set_location(filename)		
+			temp_ws_data.get_available_segs()
 
-		self.workspace_data.append_workspace(temp_ws_data)
-		self.update_progress.emit(15, "Copying files.")
+			self.update_progress.emit(10, "Updating metadata.")
+
+			time_offset = self.workspace_data.metadata.numt
+
+			self.workspace_data.append_workspace(temp_ws_data)
+			self.update_progress.emit(15, "Copying files.")
 		
-		self.copy_files_from_appended_ws(temp_ws_data, time_offset)
-		self.update_progress.emit(90, "Preparing configuration files.")
+			self.copy_files_from_appended_ws(temp_ws_data, time_offset)
+			self.update_progress.emit(90, "Preparing configuration files.")
 			
-		# write config files
-		# make temp object to use the config file writing function from that class
-		temp = workspace_creator.WorkspaceCreator()
-		temp.metadata = self.workspace_data.metadata
-		temp.has_bg = self.get_has_bg()
-		temp.ws_location = self.workspace_data.workspace_location
-		temp.write_config_files(xrange(time_offset, self.workspace_data.metadata.numt))
-		self.update_progress.emit(95, "Saving workspace file.")
+			# write config files
+			# make temp object to use the config file writing function from that class
+			temp = workspace_creator.WorkspaceCreator()
+			temp.metadata = self.workspace_data.metadata
+			temp.has_bg = self.get_has_bg()
+			temp.ws_location = self.workspace_data.workspace_location
+			temp.write_config_files(xrange(time_offset, self.workspace_data.metadata.numt))
+			self.update_progress.emit(95, "Saving workspace file.")
 
-		self.workspace_data.write_xml()
-		self.update_progress.emit(100, "Finished")
+			self.workspace_data.write_xml()
+			self.update_progress.emit(100, "Finished")
 
-		self.has_open_ws = True
+			self.has_open_ws = True
+
+		except Exception as err:
+			self.throw_message.connect(self.get_exception_across_thread)
+			self.throw_message.emit("CellECT Append Workspace", "Could not open workspace. Error: %s" % err)
+
+			self.update_progress.emit(-1, "Failed")
+	
 
 
 	def update_progress_window(self, val, text):
@@ -298,6 +313,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		if val == 100:
 			self.progress_window.close()
 			self.open_cws_file(self.workspace_data.workspace_location + "/workspace_data.cws")
+
+		if val == -1:
+			self. progress_window.close()
 
 	def append_workspace(self):
 
@@ -589,6 +607,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode
 		"""
 
+
 		if len(self.listView.selectionModel().selectedIndexes()):
 			segmentation_indexes = [ index.row() for index in self.listView.selectionModel().selectedIndexes()]
 		else:
@@ -636,6 +655,8 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec
 		"""
 
+		sleep_time = 20
+
 		if len(self.listView.selectionModel().selectedIndexes()):
 			if len(self.listView.selectionModel().selectedIndexes()) > 1:
 				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Please select ONLY ONE time point to run the interactive segmentation on.")
@@ -666,7 +687,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep 1"' %  (use_metric, config_file_location)
+		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep %d"' %  (use_metric, config_file_location, sleep_time)
 		print command
 		os.system(command)
 
