@@ -37,13 +37,19 @@ class CellnessMetric(object):
 
 	def __init__(self):
 
-		self.generic_features = ["border_to_interior_intensity_ratio"]
-		self.specific_features = ["size", "shape"]
+		self.generic_features = CellECT.seg_tool.globals.generic_features
+		self.specific_features = CellECT.seg_tool.globals.specific_features
 
 		self.positive_examples_generic = []
 		self.negative_examples_generic = []
 		self.positive_examples_specific = []
 		self.negative_examples_specific = []
+
+		self.mean_per_dim_specific = []
+		self.std_per_dim_specific = []
+		self.mean_per_dim_generic = []
+		self.std_per_dim_generic = []
+
 
 		self.generic_classifier = None
 		self.specific_classifier = None
@@ -88,16 +94,61 @@ class CellnessMetric(object):
 
 	def train(self):
 
-
+		
 
 		self.train_generic()
 		self.train_specific()
 
 
+
+	def normalize_train_data(self, data_vector, clf_type = "generic"):
+		"""
+		Normalize the train vectors with features for SVM.
+		"""
+		assert(clf_type in ["generic", "specific"])
+
+		if clf_type == "generic":
+			self.mean_per_dim_generic = []
+			mean_per_dim = self.mean_per_dim_generic
+			self.std_per_dim_generic = []
+			std_per_dim = self.std_per_dim_generic
+		else:
+			self.mean_per_dim_specific = []
+			mean_per_dim = self.mean_per_dim_specific
+			self.std_per_dim_specific = []
+			std_per_dim = self.std_per_dim_specific
+
+		per_dim = zip(*data_vector)
+
+		for i in xrange(len(per_dim)):
+		
+			m = np.float64(sum (per_dim[i]) / float (len(per_dim[i])))
+			s = np.std(per_dim[i])
+			per_dim[i] -= m
+			if s>0:
+				per_dim[i] /= s
+		
+			mean_per_dim.append(m)
+			std_per_dim.append(s)
+	
+		data_vector = zip(*per_dim)
+		for i in xrange(len(data_vector)):
+			data_vector[i] = list(data_vector[i])
+
+		return data_vector
+		
+		
+
+
 	def train_generic(self):
+
+		if len(self.positive_examples_generic) ==0 or len(self.negative_examples_generic)==0:
+			return
 
 		data = copy.deepcopy(self.positive_examples_generic)
 		data.extend(self.negative_examples_generic)
+		data = self.normalize_train_data(data, "generic")
+
 		labels = ["Correct" for i in xrange(len(self.positive_examples_generic))]
 		labels.extend ( ["Incorrect" for i in xrange(len(self.negative_examples_generic))])
 
@@ -106,9 +157,14 @@ class CellnessMetric(object):
 			self.generic_classifier.fit(data,labels)
 
 	def train_specific(self):
+	
+		if len(self.positive_examples_specific) == 0 or  len(self.negative_examples_specific)==0:
+			return
 
 		data = copy.deepcopy(self.positive_examples_specific)
 		data.extend(self.negative_examples_specific)
+		data = self.normalize_train_data(data, "specific")
+
 		labels = ["Correct" for i in xrange(len(self.positive_examples_specific))]
 		labels.extend( ["Incorrect" for i in xrange(len(self.negative_examples_specific))])
 
@@ -122,9 +178,11 @@ class CellnessMetric(object):
 
 		classifier = None
 		if clf_type == "specific":
-			classifier = self.specific_classifier
+			if len(self.positive_examples_specific) > 0 and  len(self.negative_examples_specific)>0:
+				classifier = self.specific_classifie
 		else:
-			classifier = self.generic_classifier
+			if len(self.positive_examples_generic) > 0 and  len(self.negative_examples_generic)>0:
+				classifier = self.generic_classifier
 
 		prediction = None
 		discriminant_value = None
@@ -136,16 +194,65 @@ class CellnessMetric(object):
 		return prediction, discriminant_value
 
 
+	def normalize_test_vector(self, data_vector, clf_type = "generic"):
+
+		"""
+		Normalize the test vectors with features for SVM.
+		"""
+
+		assert(clf_type in ["generic", "specific"])
+
+		if clf_type == "generic":
+			mean_per_dim = self.mean_per_dim_generic
+			std_per_dim = self.std_per_dim_generic
+		else:
+			mean_per_dim = self.mean_per_dim_specific
+			std_per_dim = self.std_per_dim_specific
+
+
+		for i in xrange(len(mean_per_dim)):
+			data_vector[i] -= mean_per_dim[i]
+			data_vector[i] /= std_per_dim[i]
+		
+	
+		return data_vector
+
+	
+		
+		
 	
 	def test_segment(self, segment):
 
 		generic_feat = self.extract_features_from_segment(segment,"generic" )
 		specific_feat = self.extract_features_from_segment(segment, "specific")	
+		generic_feat = self.normalize_test_vector(generic_feat, "generic")
+		specific_feat = self.normalize_test_vector(specific_feat, "specific")
 
 		pred_generic, disc_generic = self.get_prediction(generic_feat, "generic")
-		#pred_generic, disc_generic = self.get_prediction(specific_feat, "specific")
+		pred_specific, disc_specific = self.get_prediction(specific_feat, "specific")
+
+		if pred_generic is None and pred_specific is None:
+			return "Correct", 0
 	
-		return pred_generic, disc_generic
+		if pred_generic is not None and pred_specific is None:
+			return pred_generic, disc_generic
+	
+		if pred_generic is  None and pred_specific is not None:
+			return pred_specific, disc_specific
+
+		# TODO: merge classifier info
+
+		examples_generic = len(self.positive_examples_generic) + len(self.negative_examples_generic)
+		examples_specific = len(self.positive_examples_specific) + len(self.negative_examples_specific)
+
+		p_generic = examples_generic/float(examples_specific + examples_generic)
+		p_specific = examples_specific/float(examples_specific + examples_generic)
+
+		disc = disc_generic * p_generic + disc_generic * p_specific
+		if disc >0:
+			return "Correct", disc
+		else:
+			return "Incorrect", disc
 
 
 def load_generic_training_data(cellness_metric):
@@ -394,30 +501,6 @@ def load_generic_training_data(cellness_metric):
 #		
 
 
-#def normalize_train_data( training_vectors):
-
-#	"""
-#	Normalize the train vectors with features for SVM.
-#	"""
-
-#	per_dim = zip(*training_vectors)
-
-#	for i in xrange(len(per_dim)):
-#		
-#		m = np.float64(sum (per_dim[i]) / float (len(per_dim[i])))
-#		s = np.std(per_dim[i])
-#		per_dim[i] -= m
-#		per_dim[i] /= s
-#		
-#		CellECT.seg_tool.globals._mean_per_dim.append(m)
-#		CellECT.seg_tool.globals._std_per_dim.append(s)
-#	
-#	training_vectors = zip(*per_dim)
-#	for i in xrange(len(training_vectors)):
-#		training_vectors[i] = list(training_vectors[i])
-
-#	return training_vectors
-#		
 
 def prepare_training_data(collection_of_positive_segments, collection_of_negative_segments):
 

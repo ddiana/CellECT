@@ -59,3 +59,14 @@ def call_silent_process_err(f, *args, **kw_args):
 	os.dup2(oldstderr_fno, 1)
 	devnull.close()
 	return r1
+
+def call_silent_popen(f, *args, **kw_args):
+
+	old_stdout = sys.stdout
+	sys.stdout = open('/dev/null', 'w')
+	r1 = f(*args, **kw_args)
+	sys.stdout.close()
+	sys.stdout = old_stdout
+	return r1
+
+

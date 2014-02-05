@@ -23,6 +23,7 @@ CellECT_packages = ['CellECT',
                     'CellECT/track_tool/cell_tracker_core',
                     'CellECT/track_tool/gui',
                     'CellECT/track_tool/track_io',
+                    'CellECT/track_tool/tissue_selection',
                     'CellECT/track_tool',
                     'CellECT/workspace_management',
                     'CellECT/gui' ]

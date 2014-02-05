@@ -134,12 +134,21 @@ def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, 
 	return segment_label, nucleus_index_for_segment
 
 
-def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection):
+
+def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels):
 
 	"""
 	Given the left and right clicks, the label map and the task wanted,
 	confirm that the user gave all the proper information for the requested task.
 	"""
+
+
+	def get_label_from_click(user_click):
+
+		asc_coords = user_click.asc_coordinates
+		label = label_map[ asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin]
+		return label
+
 
 
 	if task_name == "ADD_SEEDS_TO_NEW_LABEL":
@@ -148,6 +157,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		if len (left_clicks):
 			user_mouse_click = left_clicks[-1]
+			incorrect_labels.add(get_label_from_click(user_mouse_click))
 			nucleus_index = add_new_nucleus_to_collection(user_mouse_click, box,  nuclei_collection, added_by_user=True)
 		else:
 			message = "Ignoring ADD SEED TO NEW LABEL task. No seed given."
@@ -199,6 +209,8 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 			new_seed = make_new_seed(user_mouse_click, box, nucleus_index_for_segment, seed_index )
 			# add the new seed to the collection.
 			seed_collection.add_seed(new_seed)
+			incorrect_labels.add(get_label_from_click(user_mouse_click))
+			incorrect_labels.add(segment_label)
 
 				
 	elif task_name == "MERGE_TWO_LABELS":
@@ -231,12 +243,15 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		nucleus1 = nuclei_collection.nuclei_list[nucleus_index_for_segment1]
 		nucleus2 = nuclei_collection.nuclei_list[nucleus_index_for_segment2]			
 		nuclei_collection.merge_two_nuclei(nucleus1, nucleus2)
+		incorrect_labels.add(get_label_from_click(right_clicks[-2]))
+		incorrect_labels.add(get_label_from_click(right_clicks[-1]))
+
 
 	return True
 
 
 
-def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback):
+def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments):
 
 	"""
 	Given all the user feedback, extract relevant information and make changes accordingly:
@@ -252,6 +267,8 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 
 	box = None
 	made_changes = False
+
+	incorrect_labels = set()
 
 	# for each segment correction window that was open:
 	for segment_gui_feedback in all_user_feedback:
@@ -276,7 +293,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 			if user_mouse_click.task_index != task_index:
 				# Finish business with current task                              
 				if current_task != "NO_TASK_SELECTED" and box:
-					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection) or made_changes 
+					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels) or made_changes 
 				
 
 				# Initialize next task
@@ -294,8 +311,17 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 				task_left_click_buffer.append(user_mouse_click)
 
 	if current_task != "NO_TASK_SELECTED" and box:
-		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection) or made_changes
+		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels) or made_changes
 				
+
+	# take all the incorrect labels and get the segments corresponding
+
+
+
+	for label in incorrect_labels:
+
+		idx = segment_collection.segment_label_to_list_index_dict[label]
+		incorrect_segments.add(segment_collection.list_of_segments[idx])
 
 	return made_changes
 

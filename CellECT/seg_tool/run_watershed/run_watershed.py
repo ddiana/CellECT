@@ -14,7 +14,8 @@ import tempfile
 
 # Imports from this project
 import CellECT.seg_tool.globals
-import CellECT
+from CellECT.seg_tool.seg_utils import call_silent
+
 
 """
 This module prepares input and calls watershed from Matlab.
@@ -33,12 +34,12 @@ def run_watershed(vol, init_pts):
 
 
 	
-	print "\nRunning seeded watershed....\n"
+	print "Running seeded watershed...."
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
 
 	save_mat_file = "%s/watershed_input.mat" % path_to_temp
 	try:
-		spio.savemat(save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
+		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
 	except Exception as err:
 		err.message = "Could not write input file for Matlab at %s" % save_mat_file
 		print colored("Error: %s" % err.message, "red")
@@ -50,14 +51,22 @@ def run_watershed(vol, init_pts):
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 
-	os.system( "matlab -nodesktop -nosplash -r \"cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')\"" % (matlab_file_path, path_to_temp, path_to_temp))
+	with open(os.devnull, "wb") as devnull:
+		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)], stdout=devnull, stderr=subprocess.STDOUT)
+
+#	subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)])
+
+
+#	command = "matlab -nodesktop -nosplash -r \"cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')\"" % (matlab_file_path, path_to_temp, path_to_temp)
+
+#	call_silent.call_silent(os.system, command)
 	os.system("stty echo")
 
 		
 	print ".......", time.time() - t, "sec"
 	
 	try:
-		ws = spio.loadmat("%s/watershed_result.mat" % path_to_temp)["ws"]
+		ws = call_silent.call_silent_err(spio.loadmat,"%s/watershed_result.mat" % path_to_temp)["ws"]
 		os.system("rm %s/watershed_result.mat" % path_to_temp)
 		os.system("rm %s/watershed_input.mat" % path_to_temp)
 		os.system("rmdir %s" % path_to_temp)

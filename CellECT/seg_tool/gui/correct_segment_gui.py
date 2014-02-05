@@ -91,7 +91,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	#print "Nuclei in this cropped section: ", nuclei_coords
 	seed_coords = []
 	
-	fig = pylab.figure(figsize=(10,10))
+	fig = pylab.figure(figsize=(10,10), facecolor='white')
 	fig.canvas.set_window_title("Segment Correction")	
 	
 	#color_map = pylab.cm.to_rgba(watershed.unique())

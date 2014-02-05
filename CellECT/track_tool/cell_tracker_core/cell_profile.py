@@ -7,6 +7,9 @@ import copy
 import pdb
 
 
+from CellECT.track_tool.tissue_selection import select_similar
+import CellECT.seg_tool.globals
+
 """
 CellProfile and CellProfilesPerTimestamp classes.
 Creates a profile for every cell at a given segmentation (time stamp) based on 
@@ -23,11 +26,11 @@ class CellProfile(object):
 	segment collection xml output from CellECT_seg_tool.
 	"""
 
-	def __init__(self, label, nucleus, size):
+	def __init__(self, label, nucleus, size, feature_dict):
 		self.label = label
 		self.nucleus = nucleus
 		self.size = size		
-
+		self.dict_of_features = feature_dict
 
 
 
@@ -82,8 +85,6 @@ class CellProfilesPerTimestamp(object):
 
 		return mean_size, stddev_size
 
-
-
 	def get_similar(self,cell_cp_index):
 
 		target_cells = []
@@ -105,7 +106,7 @@ class CellProfilesPerTimestamp(object):
 
 			# if this is a target cell, skip
 			if index in target_cell_indices_set:
-				continue 
+				continue
 
 			cp = self.list_of_cell_profiles[index]
 
@@ -117,6 +118,63 @@ class CellProfilesPerTimestamp(object):
 
 					if index not in similar_cells_cp_index:
 						similar_cells_cp_index.add(index)
+
+
+
+		return list(similar_cells_cp_index)
+
+
+	def get_similar_new(self,cell_cp_index):
+
+		# TODO: this doesnt work for shit.
+
+
+		target_cells = []
+
+		similar_cells_cp_index = set()
+
+		similar_detector = select_similar.TissueSelector()
+
+
+		features_of_interest = CellECT.seg_tool.globals.specific_features
+
+		training_vect = []
+		test_vect = []
+		target_cell_indices_set = set(cell_cp_index)
+
+		test_index = []
+
+		# get cell profile index and cell profiles for the labels of interest
+		for index in self.seg_label_to_cp_list_index.values():
+
+			features = self.list_of_cell_profiles[index].dict_of_features
+			temp_vect = []
+			for feat in features_of_interest:
+				if features.has_key(feat):
+					if isinstance(features[feat], list):
+						temp_vect.extend(features[feat])
+					else:
+						temp_vect.extend([features[feat]])
+			if index in target_cell_indices_set:
+				training_vect.append(temp_vect)
+			else:
+				test_vect.append(temp_vect)
+				test_index.append(index)
+
+					
+
+		similar_detector.add_training_examples(training_vect)
+		similar_detector.train()
+
+		similar_cells_cp_index = []
+
+		import math
+
+		for vect, index in zip(test_vect, test_index):
+
+			val = similar_detector.test_sample(vect)
+			if val > 0:
+				similar_cells_cp_index.append(index)
 
 
 

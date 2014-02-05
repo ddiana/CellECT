@@ -74,16 +74,16 @@ def main():
 
 	ct = load_tracker.load_cell_tracker()
 
-	print "EDGES: ", len(ct.graph.edges())
+	#print "EDGES: ", len(ct.graph.edges())
 
 	ct_ui = ctui.CellTrackerUI(ct)
 	ct_ui.gui_menu()
 
-	tc.TrackletConnector(ct)
+	#tc.TrackletConnector(ct)
 
-	print "EDGES: ", len(ct.graph.edges())
+	#print "EDGES: ", len(ct.graph.edges())
 
-	ct_ui.gui_menu()
+	#ct_ui.gui_menu()
 
 
 

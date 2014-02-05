@@ -13,6 +13,8 @@ class TrackletConnectorOptProgram(object):
 
 	def __init__(self, f, A,b):
 
+		# TODO: Connect tracklets.
+
 		self.f = f
 		self.A = A
 		self.b = b

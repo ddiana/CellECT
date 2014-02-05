@@ -61,7 +61,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
-def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, **kwargs):
+def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, **kwargs):
 
 	"""
 	Main GUI which shows uncertainty map and allows user to select which segment
@@ -89,7 +89,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	CellECT.seg_tool.globals.task_index = 0
 	
-	fig = pylab.figure(figsize=(15,8))
+	fig = pylab.figure(figsize=(15,8), facecolor='white')
 	fig.canvas.set_window_title("Cell Confidence Map")
 	
 	list_of_all_mouse_events = []
@@ -267,9 +267,89 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	
 	mouse_event = MouseEvent(-2,0,0,0)
 
-	
-	def onpick(event):
+	global zoom_x_range_cur
+	zoom_x_range_cur = watershed.shape[0]
+	global zoom_y_range_cur
+	zoom_y_range_cur = watershed.shape[1]
+	zoom_x_range_max = watershed.shape[0]
+	zoom_y_range_max = watershed.shape[1]
+	zoom_x_range_min = zoom_x_range_max / 10
+	zoom_y_range_min = zoom_y_range_max / 10
+		
+	def scroll_zoom(event):
 
+		return
+
+		base_scale = 1.5
+		global zoom_x_range_cur
+		global zoom_y_range_cur
+
+		cur_xlim = ax1.get_xlim()
+		cur_ylim = ax1.get_ylim()
+#		cur_xrange = (cur_xlim[1] - cur_xlim[0])*.5
+#		cur_yrange = (cur_ylim[0] - cur_ylim[1])*.5
+		xdata = event.xdata # get event x location
+		ydata = event.ydata # get event y location
+		if event.button == 'up':
+			# deal with zoom in
+			scale_factor = 1/base_scale
+		elif event.button == 'down':
+			# deal with zoom out
+			scale_factor = base_scale
+		else:
+			# deal with something that should never happen
+			scale_factor = 1
+			print event.button
+		# set new limits
+
+
+			xrange_temp = zoom_x_range_cur * scale_factor
+			yrange_temp = zoom_y_range_cur * scale_factor
+
+			if xrange_temp < zoom_x_range_max and \
+               xrange_temp > zoom_x_range_min and \
+               yrange_temp < zoom_y_range_max and \
+               yrange_temp > zoom_y_range_min:
+
+				zoom_x_range_cur = xrange_temp
+				zoom_y_range_cur = yrange_temp
+
+			else:
+				return
+
+			image_x = watershed.shape[0]
+			image_y = watershed.shape[1]
+
+			xmin = xdata - zoom_x_range_cur/2
+			xmax = xdata + zoom_x_range_cur/2
+			if xmin <0:
+				xmin = 0
+				xmax = zoom_x_range_cur*2
+
+			if xmax > image_x:
+				xmax = image_x
+				xmin = image_x - zoom_x_range_cur*2
+			
+					
+			ymin = ydata - zoom_y_range_cur/2
+			ymax = ydata + zoom_y_range_cur/2
+			if ymin <0:
+				ymin = 0
+				ymax = zoom_y_range_cur*2
+
+			if ymax > image_y:
+				ymax = image_y
+				ymin = image_y - zoom_y_range_cur*2
+
+
+			for ax in [ax1, ax2, ax3, ax4]:
+
+				ax.set_xlim([xmin, xmax])
+				ax.set_ylim([ymin, ymax])
+
+		pylab.draw() # force re-draw
+
+	def onpick(event):
 
 		xval = event.mouseevent.xdata
 		yval = event.mouseevent.ydata
@@ -282,15 +362,17 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		
 		else:
 
-			if event.mouseevent.button != 1:
-				# right click to mark as correct
-				# print "Correct segment: ", label, "@", int(yval), int(xval), int(zval)
-			
-				# TODO: KEEP CORRECT LABEL INFORMATION
+			if event.mouseevent.button == 3:
 
-				pass
+				# mark correct segments with right click
+
+				message = "Marking segment with Label %d @ (%d, %d, %d) as correct." % (label, int(yval), int(xval), int(zval))
+				print message
+
+				
+				correct_labels.add(label)
 			
-			else:
+			elif event.mouseevent.button ==1:
 				message = "Opening GUI for segment: Label %d @ (%d, %d, %d)" % (label, int(yval), int(xval), int(zval))
 				print message
 			
@@ -321,6 +403,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			
 	
 	fig.canvas.mpl_connect('pick_event', onpick)
+	fig.canvas.mpl_connect('scroll_event', scroll_zoom)
 
 	pylab.show()
 	if matplotlib.get_backend().lower() != "GTK3Agg".lower():

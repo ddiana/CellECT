@@ -11,6 +11,7 @@ from CellECT.track_tool.cell_tracker_core import cell_profile as cp
 from CellECT.track_tool.cell_tracker_core import cell_tracker as ct
 
 import CellECT.track_tool.globals
+import CellECT.seg_tool.globals
 
 
 """
@@ -51,11 +52,34 @@ def parse_file_at_timestamp(file_name, timestamp):
 		seg_nucleus = Nucleus( x,y,z,index )
 		seg_label = int(segment.attrib["label"])
 
+
+		features_of_interest = CellECT.seg_tool.globals.specific_features
+		segment_feature = {}
 		feat_dict = segment.find("feature_dictionary").findall("feature")
+		for feat in features_of_interest:
+			res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
+			if res:
+
+				try:
+					# is this a float..
+					segment_feature[feat] = float(res[0].text)
+				except:
+					# is this a list...
+	
+					temp = []
+					for item in res[0].text.strip('[').strip(']').split():
+						try:	
+							temp.append( float( item)) 
+						except:
+							pass
+
+					if len(temp):
+						segment_feature[feat] = temp
+
 		res = filter(lambda x: x.attrib["name"] == "size", feat_dict)
 		seg_size = int(res[0].text)
 
-		cell_profile = cp.CellProfile(seg_label, seg_nucleus, seg_size)
+		cell_profile = cp.CellProfile(seg_label, seg_nucleus, seg_size, segment_feature)
 		
 		list_of_cell_profiles.append(cell_profile)
 

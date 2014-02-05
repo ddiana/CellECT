@@ -54,7 +54,7 @@ class CellTrackerUI:
 
 		from mpl_toolkits.mplot3d import Axes3D
 
-		fig = pylab.figure(figsize=(10,3))
+		fig = pylab.figure(figsize=(10,3), facecolor='white')
 		fig.canvas.set_window_title("3-D plot of nuclei color coded by tracklet")
 	
 		ax = fig.add_subplot(111, projection='3d')
@@ -92,7 +92,7 @@ class CellTrackerUI:
 		plot of histogram of cell sizes, color coded from green to blue based on timestamp
 		"""
 
-		fig = pylab.figure(figsize=(10,7))
+		fig = pylab.figure(figsize=(10,7), facecolor='white')
 		fig.canvas.set_window_title("Cell size histograms color coded by timestamp.")
 
 		color_idx = np.linspace(0, 1, len(self.cell_tracker.list_of_cell_profiles_per_timestamp))
@@ -122,7 +122,7 @@ class CellTrackerUI:
 
 		from mpl_toolkits.mplot3d import Axes3D
 
-		fig = pylab.figure(figsize=(10,3))
+		fig = pylab.figure(figsize=(10,3), facecolor='white')
 		fig.canvas.set_window_title("3-D plot of nuclei color coded by timestamp")
 	
 		ax = fig.add_subplot(111, projection='3d')
@@ -201,7 +201,7 @@ class CellTrackerUI:
 		I = self.fetch_slice_at(init_t, init_z)
 
 
-		f = pylab.figure(figsize = (10,10))
+		f = pylab.figure(figsize = (10,10), facecolor='white')
 		f.canvas.set_window_title("Tracklet projections at one slice")
 		l1 = pylab.imshow(I, cmap="gray")
 		ax1 = pylab.subplot(111)
@@ -280,7 +280,7 @@ class CellTrackerUI:
 		numch = int(CellECT.track_tool.globals.PARAMETER_DICT["number-channels"])
 		numz = int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])
 		file_index = t* numz * numch + (z)*numch + memch +1
-		print "membrane: ", file_index
+		#print "membrane: ", file_index
 		return file_index
 
 
@@ -294,7 +294,7 @@ class CellTrackerUI:
 		numch = int(CellECT.track_tool.globals.PARAMETER_DICT["number-channels"])
 		numz = int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])
 		file_index = t* numz * numch + (z)*numch + nucl_chan +1
-		print "nuclei: ", file_index
+		#print "nuclei: ", file_index
 		return file_index
 
 
@@ -334,7 +334,7 @@ class CellTrackerUI:
 
 		from matplotlib.widgets import Slider
 
-		fig = pylab.figure(figsize =(10,10))
+		fig = pylab.figure(figsize =(10,10), facecolor='white')
 		fig.canvas.set_window_title("Plot tracklets as color coded nuclei at slice")
 
 
@@ -447,7 +447,7 @@ class CellTrackerUI:
 		Slider bars to navigate time and z.
 		"""
 
-		fig = pylab.figure(figsize=(19,8))
+		fig = pylab.figure(figsize=(19,8), facecolor='white')
 		fig.canvas.set_window_title("Cell lineage visualization")
 
 		from matplotlib.widgets import Slider
@@ -808,7 +808,7 @@ class CellTrackerUI:
 
 		from matplotlib.widgets import Slider
 
-		fig = pylab.figure(figsize=(10,10))
+		fig = pylab.figure(figsize=(10,10), facecolor='white')
 		fig.canvas.set_window_title("Segmentation color coded by tracklets")
 
 		depth_range = 5
@@ -1030,7 +1030,7 @@ class CellTrackerUI:
 		
 
 
-		fig = pylab.figure(figsize=(10,7))
+		fig = pylab.figure(figsize=(10,7), facecolor='white')
 		fig.canvas.set_window_title("Cell tracker visualization menu")
 
 		ax_button1 = pylab.axes([0.075, 0.85, 0.6, 0.075])

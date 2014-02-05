@@ -16,6 +16,9 @@ task_index = 0
 
 path_to_workspace = ""
 
+generic_features = ["border_to_interior_intensity_ratio"]
+specific_features =  ["size", "shape", "border_to_nucleus_distance_mean", "border_to_nucleus_distance_hist"]
+
 expected_workspace_directories = set(["config_files", "init_watershed_all_time_stamps", "input_slices", "segs_all_time_stamps", "tracker_config", "training_data"])
 
 default_parameter_dictionary_keys_bq_only =  ("bq_token",\

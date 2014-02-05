@@ -18,6 +18,7 @@ import time
 import logging
 import datetime
 from optparse import OptionParser
+import matplotlib
 
 ## memory inspection tool
 #from memory_profiler import profile
@@ -35,7 +36,6 @@ from CellECT.seg_tool.seg_utils import call_silent
 from CellECT.seg_tool.seg_io import save_all
 from CellECT.seg_tool.seg_utils import labelmap_tools as lm_tools
 from CellECT.seg_tool.run_watershed import run_watershed as ws
-
 
 
 
@@ -110,14 +110,14 @@ def main():
 
 	## LOADING TRAINING DATA AND TRAINING CLASSIFIER ###########################
 
-
+	cellness_metric = cellness.CellnessMetric()
 	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
 		print colored("================================================================================",'red')
 		print colored("              Loading training data and training cellness metric:", 'red')
 		print colored("================================================================================",'red')
 	
-		cellness_metric = cellness.CellnessMetric()
+		
 		cellness.load_generic_training_data(cellness_metric)
 		cellness_metric.train()
 
@@ -158,7 +158,7 @@ def main():
 		# make first seg
 		watershed = ws.run_watershed(vol, init_pts)
 		# save it so that it does not need to be computed again
-		spio.savemat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
+		call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
 	last_length_of_seeds_list = 0 
 
@@ -236,6 +236,8 @@ def main():
 
 		print "Prompting user for feedback..."	
 
+		correct_labels = set()
+		correct_segments = set()
 
 		if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 			# TODO: bisque UI
@@ -267,10 +269,15 @@ def main():
 				from CellECT.seg_tool.seg_utils import display_tools
 				logging.info("DESKTOP CLIENT ")
 
-				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, vol_nuclei=vol_nuclei)
+				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels,  vol_nuclei=vol_nuclei)
 	
+				for label in correct_labels:
 
+					idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
+					correct_segments.add(collection_of_ws_segments.list_of_segments[idx])
 
+				cellness_metric.add_training_examples(correct_segments, ["Correct" for label in correct_labels], False)
+				cellness_metric.train()
 
 		## USE FEEDBACK ########################################################
 
@@ -279,7 +286,10 @@ def main():
 			print "Processing user feedback..."
 			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			old_number_of_seeds = len(seed_collection.list_of_seeds)
+	
+			incorrect_segments = set()
 
+			
 
 			if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
 				# Get feedback #####################################################
@@ -290,7 +300,7 @@ def main():
 					made_changes = False
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
-					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback)	
+					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments)	
 			else:
 				made_changes = False
 		
@@ -305,6 +315,10 @@ def main():
 				#call_silent_err( show_new_user_points,original_init_pts, init_pts)
 
 				watershed_old = watershed
+
+				cellness_metric.add_training_examples(list(incorrect_segments), ["Incorrect" for i in xrange(len(incorrect_segments))], True )
+
+				cellness_metric.train()
 
 				## Rerun Watershed if necessary ################################
 				if old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds:
@@ -359,7 +373,6 @@ def main():
 
 
 if __name__ == "__main__":
-
 
 
 
