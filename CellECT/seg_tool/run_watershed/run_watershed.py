@@ -49,7 +49,6 @@ def run_watershed(vol, init_pts):
 
 	t = time.time()
 	
-	pdb.set_trace()
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 

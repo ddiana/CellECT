@@ -270,7 +270,7 @@ def main():
 				logging.info("DESKTOP CLIENT ")
 
 				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels,  vol_nuclei=vol_nuclei)
-	
+			
 				for label in correct_labels:
 
 					idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
@@ -310,6 +310,8 @@ def main():
 			## Apply Feedback ##################################################
 	
 			if made_changes:
+
+				
 
 				init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
 				#call_silent_err( show_new_user_points,original_init_pts, init_pts)

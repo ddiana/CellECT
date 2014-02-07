@@ -320,8 +320,9 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 
 	for label in incorrect_labels:
 
-		idx = segment_collection.segment_label_to_list_index_dict[label]
-		incorrect_segments.add(segment_collection.list_of_segments[idx])
+		if label >1:
+			idx = segment_collection.segment_label_to_list_index_dict[label]
+			incorrect_segments.add(segment_collection.list_of_segments[idx])
 
 	return made_changes
 
