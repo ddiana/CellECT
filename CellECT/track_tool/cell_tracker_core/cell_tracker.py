@@ -216,7 +216,7 @@ class CellTracker(object):
 								if cell_profiles_this_timestamp[cp1].size < cell_profiles_next_timestamp[closest].size * threshold_cell_size_growth:
 									# if we found it:
 									correct = True
-									used_cells[correct] = 1
+									used_cells[closest] = 1
 									node_name_closest = "t" + str(i+1) + "_c" + str(closest)
 									self.graph.add_edge((node_name, node_name_closest))
 							except:

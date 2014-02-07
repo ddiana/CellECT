@@ -742,8 +742,8 @@ class CellTrackerUI:
 
 		def onpick(event):
 
-			xval = event.mouseevent.xdata
-			yval = event.mouseevent.ydata
+			xval = int(event.mouseevent.xdata)
+			yval = int(event.mouseevent.ydata)
 			tval = int(s_t1.val)
 			label = Seg1[0][yval, xval]
 

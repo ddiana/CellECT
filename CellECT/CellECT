@@ -655,7 +655,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec
 		"""
 
-		sleep_time = 5
+		sleep_time = 2
 
 		if len(self.listView.selectionModel().selectedIndexes()):
 			if len(self.listView.selectionModel().selectedIndexes()) > 1:
