@@ -15,8 +15,9 @@ def write_bisque_segments_xml(nuclei_collection, seed_collection, segment_collec
 
 	"Save nuclei collection in xml file."
 	
+	pdb.set_trace()
 
-	MAX_SEGMENTS = 200
+	MAX_SEGMENTS = 100
 
 	segment_collection.make_contours_for_all_segments(label_map)
 	time_stamp = CellECT.seg_tool.globals.DEFAULT_PARAMETER["bq_t"]

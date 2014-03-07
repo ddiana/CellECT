@@ -24,6 +24,9 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 	logging.info("Saving current status.")
 	
 	try:
+
+		segment_collection.make_contours_for_all_segments(label_map)
+
 		print colored("Saving XML for nuclei...", "cyan")
 		save_xml.save_xml_file_nuclei(nuclei_collection)
 	

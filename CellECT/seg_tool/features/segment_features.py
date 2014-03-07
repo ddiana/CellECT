@@ -7,6 +7,9 @@ import pdb
 from scipy import ndimage
 import time
 import logging
+from numpy import histogram
+import cv
+
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import misc
@@ -83,6 +86,36 @@ def avg_intensity(vol, mask):
 
 
 
+def histogram_in_mask(vol, mask):
+
+	new_vol = vol * mask - (1 - mask)	
+	bins = [-1]
+	num_bins = 20
+	bins.extend(255./num_bins * x for x in xrange(num_bins))
+	hist = histogram(new_vol, bins = bins)[0]
+	hist = hist[1:]
+	hist = hist / np.float(hist.sum())
+	return hist
+
+
+
+def hist_dif(h1, h2):
+
+
+	sig1 = zip(h1, range(len(h1)))
+	a64 = cv.fromarray(np.array(sig1))
+	a32 = cv.CreateMat(a64.rows, a64.cols, cv.CV_32FC1)
+	cv.Convert(a64, a32)
+
+	sig2 = zip(h2, range(len(h2)))
+	b64 = cv.fromarray(np.array(sig2))
+	b32 = cv.CreateMat(b64.rows, b64.cols, cv.CV_32FC1)
+	cv.Convert(b64, b32)
+
+	return cv.CalcEMD2(a32,b32,cv.CV_DIST_L2)
+
+	
+
 
 def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
 
@@ -128,7 +161,7 @@ def segment_border_to_interior_intensity(vol, segment, label_map):
 
 	box_bounds = segment.bounding_box
 
-	box_bounds.extend_by (5, vol.shape)
+
 	
 	cropped_vol = vol[box_bounds.xmin:box_bounds.xmax, box_bounds.ymin:box_bounds.ymax, box_bounds.zmin:box_bounds.zmax]
 	
@@ -152,7 +185,7 @@ def segment_border_to_interior_intensity(vol, segment, label_map):
 	interior_intensity = avg_intensity(cropped_vol,cropped_mask_eroded)	
 	border_intensity = avg_intensity(cropped_vol,cropped_mask_border)
 	
-	if interior_intensity < 0.000001:
+	if interior_intensity < 0.001:
 		interior_intensity = 0.001
 
 
@@ -198,9 +231,16 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	for segment in segment_collection.list_of_segments:
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			segment.add_feature("size", len(segment.list_of_voxel_tuples))
-		
+	
+		box_bounds = segment.bounding_box
+				
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
+
 			segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
+			segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
+			segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
+			segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
+
 
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			dist_vector = segment_border_to_nucleus(segment)
@@ -224,6 +264,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	t2 = time.time()
 	print "....... %.3f sec                           " % (t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
+
 
 	return segment_collection
 

@@ -14,7 +14,7 @@ import CellECT.seg_tool.globals
 def write_bisque_segments_xml(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, label_map):
 
 	"Save nuclei collection in xml file."
-	
+
 
 	MAX_SEGMENTS = 100
 

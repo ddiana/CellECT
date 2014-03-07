@@ -7,6 +7,8 @@ import pdb
 import time
 import cv
 import cv2
+from scipy.ndimage.morphology import binary_dilation
+
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import bounding_box as bbx
@@ -56,7 +58,7 @@ class SegmentCollection(object):
 			it.iternext()		
 		
 		for label in set_of_labels:
-			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent))	
+			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent, label_map.shape))	
 
 		
 	def add_segment_using_mask(self, label_map, label, name_of_parent):
@@ -67,7 +69,7 @@ class SegmentCollection(object):
 		voxels = zip(*dld_nonzero3d(mask))
 		
 		
-		self.list_of_segments.append(Segment(label, voxels, name_of_parent))
+		self.list_of_segments.append(Segment(label, voxels, name_of_parent, label_map.shape))
 		
 
 	def update_index_dict(self):
@@ -88,7 +90,7 @@ class Segment(object):
 
 	"Segment class, includes segment features, nucleus, bounding box, etc."
 
-	def __init__ (self, label, voxel_location_tuples, name_of_parent):
+	def __init__ (self, label, voxel_location_tuples, name_of_parent, max_shape):
 
 		self.label = label
 		self.list_of_voxel_tuples = voxel_location_tuples
@@ -96,7 +98,26 @@ class Segment(object):
 		self.feature_dict = {}
 		self.nucleus_list = []
 		self.bounding_box = self.get_boundaries()
+		self.bounding_box.extend_by (5, max_shape)
 		self.contour_polygons_list = []
+		
+		self.mask = None
+		self.set_mask()
+		self.border_mask = None
+		self.set_border_mask()
+
+
+	def set_mask(self, ):
+
+		self.mask = np.zeros((self.bounding_box.xmax - self.bounding_box.xmin+1, self.bounding_box.ymax - self.bounding_box.ymin+1, self.bounding_box.zmax - self.bounding_box.zmin+1))
+		for i,j,k in self.list_of_voxel_tuples:
+			self.mask[i-self.bounding_box.xmin, j - self.bounding_box.ymin, k - self.bounding_box.zmin] = 1
+
+	def set_border_mask(self):
+
+		self.border_mask = binary_dilation(self.mask) - self.mask
+
+	
 		
 	
 
@@ -104,7 +125,7 @@ class Segment(object):
 
 		"Add the polygon contours for every segment as a list of points"
 
-		cropped_mask = label_map[self.bounding_box.xmin : self.bounding_box.xmax, self.bounding_box.ymin : self.bounding_box.ymax, self.bounding_box.zmin:self.bounding_box.zmax] == self.label
+		cropped_mask = self.mask #label_map[self.bounding_box.xmin : self.bounding_box.xmax, self.bounding_box.ymin : self.bounding_box.ymax, self.bounding_box.zmin:self.bounding_box.zmax] == self.label
 
 		for z in xrange(cropped_mask.shape[2]):
 			contour_output = cv2.findContours(cropped_mask[:,:,z].astype('uint8'),cv.CV_RETR_LIST, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
@@ -135,6 +156,7 @@ class Segment(object):
 
 
 		box_bounds = bbx.BoundingBox( xmin, xmax, ymin, ymax, zmin, zmax)
+
 
 		return box_bounds	
 

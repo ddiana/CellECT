@@ -364,6 +364,8 @@ def main():
 
 	if should_save.lower() == "y":
 		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+		CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+
 	else:
 		print "Not saving."
 	
