@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<module name="CellECT_SegTool" type="runtime" >
+ 
+
+	<!---   -->
+    <tag name="inputs">
+        <tag name="mex_url"      type="system-input" />
+        <tag name="bisque_token" type="system-input" />
+       
+       <tag name="input_mex" type="mex">
+            <template>
+                <tag name="label" value="Select an existing execution of Nuclear Detector" />
+                <tag name="query" value="&amp;name=NuclearDetector3D" />
+                <tag name="query_selected_resource" value="resource_url" />
+                <tag name="description" value="You need to run Nuclear Detector before segmenting the volume." />
+            </template>
+       </tag>        
+
+
+		<!--- Does the volume contain a background -->
+        <tag name="cellness_metric" value="Ascidian" type="combo">
+            <template>
+                <tag name="label" value="Cellness metric type" />
+                <tag name="editable" value="false" type="boolean" />
+                <tag name="select" value="Ascidian" />
+                <tag name="select" value="Arabidopsis" />
+				<tag name="description" value="Please cellect the type of cellness metric." />
+            </template>
+        </tag> 
+       
+        <tag name="has_backgound" value="Yes" type="combo">
+            <template>
+                <tag name="label" value="Has background" />
+                <tag name="editable" value="false" type="boolean" />
+                <tag name="select" value="Yes" />
+                <tag name="select" value="No" />
+				<tag name="description" value="Does this 3D image have a background region?" />
+            </template>
+        </tag> 
+
+		<tag name="membrane_channel" value="1" type="image_channel">
+	        <template>
+	            <tag name="label" value="Membrane channel" />
+	            <tag name="reference" value="resource_url" />
+	            <tag name="fail_message" value="You need to select image channel" />
+	            <tag name="allowNone" value="false" type="boolean" />
+	            <tag name="description" value="Select an image channel representing membrane." />
+	        </template>
+		    </tag>
+
+        <tag name="time_stamp" value="0" type="number" >
+            <template>
+                <tag name="label" value="Time stamp (starting at 0)" />
+				<tag name="minValue" value="0" type="number" />
+                <tag name="step" value="1" type="number" />
+                <tag name="description" value="Please select what time stamp to run on." />
+				
+            </template>             
+        </tag> 
+
+    </tag>
+ 
+   
+    <tag name="outputs">
+       
+		<tag name="Segmented_Image" type="image">
+			<template>
+				<tag name="label" type="Output image with segmented cells."/>
+			</template>
+		</tag>      
+     
+    </tag>   
+   
+   
+    <tag name="execute_options">
+        <tag name="argument_style" value="position" />
+        <tag name="iterable" value="resource_url" type="dataset" />
+    </tag>
+    <tag name="module_options" >
+        <tag name="version" value="1" />
+    </tag>   
+       
+    <tag name="display_options" >
+        <tag name="group" value="Segmentation" />
+    </tag>
+    <tag name="interface">       
+        <tag name="javascript" type="file" value="webapp.js" />
+        <tag name="css" type="file" value="webapp.css" />
+    </tag>   
+    <tag name="title" value="CellECT Segmentation Tool" />
+    <tag name="authors" value="Diana Delibaltov" />   
+    <tag name="help"      type="file" value="public/help.html" />
+    <tag name="thumbnail" type="file" value="public/thumbnail.png" />   
+    <tag name="description" type="string" value="This application can be used to interactive 3D segmentation of confocal volumes." />     
+   
+</module>
