@@ -17,7 +17,7 @@ task_index = 0
 path_to_workspace = ""
 
 generic_features = ["border_to_interior_intensity_ratio"]
-specific_features =  ["size", "shape", "border_to_nucleus_distance_mean", "border_to_nucleus_distance_hist"]
+specific_features =  ["size", "shape", "border_to_nucleus_distance_mean", "border_to_nucleus_distance_hist", "distance_from_margin"]
 
 expected_workspace_directories = set(["config_files", "init_watershed_all_time_stamps", "input_slices", "segs_all_time_stamps", "tracker_config", "training_data"])
 
@@ -50,5 +50,9 @@ default_parameter_dictionary_keys = ("volume_mat_path",
    "has_bg", \
    "use_size", \
    "use_border_intensity", \
-   "use_border_distance")
+   "use_border_distance", \
+   "use_dist_from_margin", \
+   "x_res", \
+   "y_res", \
+   "z_res")
 

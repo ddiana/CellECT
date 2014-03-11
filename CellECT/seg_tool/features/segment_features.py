@@ -29,6 +29,32 @@ Functions for different segment properties extraction:
 """
 
 
+class DistanceFromMargin(object):
+
+	def __init__(self,ws, x_res, y_res, z_res):
+
+		self.x_res = x_res
+		self.y_res = y_res
+		self.z_res = z_res
+		self.min_res = float(max(x_res, y_res, z_res))
+		self.x_scale = x_res / self.min_res
+		self.y_scale = y_res / self.min_res
+		self.z_scale = z_res / self.min_res
+		self.x_step =  self.min_res / x_res
+		self.y_step =  self.min_res / y_res
+		self.z_step =  self.min_res / z_res
+		self.dist = ndimage.distance_transform_edt(ws[::self.x_step, ::self.y_step, ::self.z_step] == 1)
+
+
+	def get_min_dist_for_segment(self, segment):
+
+		return min((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
+
+	def rescale_coords(self, coords):
+		return (coords[0]*self.x_scale, coords[1]*self.y_scale, coords[2]*self.z_scale)
+
+
+
 def segment_border_to_nucleus(segment):
 
 	"""
@@ -192,6 +218,15 @@ def segment_border_to_interior_intensity(vol, segment, label_map):
 	return border_intensity / interior_intensity	
 
 
+def should_compute_feature(name_of_parent, feature_name):
+
+
+	if name_of_parent != "test_volume" and feature_name in CellECT.seg_tool.globals.specific_features:
+		return False
+
+	return True
+
+
 
 
 def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
@@ -223,6 +258,16 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	message = "Getting properties for %d segments from %s ..." % (len(set_of_labels), name_of_parent)
 	print message
 	logging.info(message)
+
+	dist_metric = None
+	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
+	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
+	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
+
+
+
+	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+		dist_metric = DistanceFromMargin(label_map, x_res, y_res, z_res)
 	
 	t1 = time.time()
 
@@ -230,21 +275,34 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 	for segment in segment_collection.list_of_segments:
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
-			segment.add_feature("size", len(segment.list_of_voxel_tuples))
+			if should_compute_feature(segment.name_of_parent, "size"):
+				segment.add_feature("size", len(segment.list_of_voxel_tuples))
 	
 		box_bounds = segment.bounding_box
 				
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 
-			segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
-#			segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
-#			segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
-#			segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
+			if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_ratio"):
+				segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
+			if should_compute_feature(segment.name_of_parent, "interior_intensity_hist"):
+				segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
+			if should_compute_feature(segment.name_of_parent, "border_intensity_hist"):
+				segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
+			if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_hist_dif"):
+				segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
 
+
+		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+
+			if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
+				segment.add_feature("distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+			
+			
 
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
 			dist_vector = segment_border_to_nucleus(segment)
-			segment.add_feature("border_to_nucleus_distance",dist_vector)
+			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
+				segment.add_feature("border_to_nucleus_distance",dist_vector)
 		
 			dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
 			# if the segment is tiny:
@@ -253,9 +311,12 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 				dist_hist[0] = 1.0
 			else:
 				dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
-			segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
-			segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
-			segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
+			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
+				segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
+			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
+				segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
+			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
+				segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
 		
 		counter += 1
 		misc.print_progress(counter, total)

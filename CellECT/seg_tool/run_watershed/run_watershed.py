@@ -38,6 +38,8 @@ def run_watershed(vol, init_pts):
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
 
 	save_mat_file = "%s/watershed_input.mat" % path_to_temp
+
+
 	try:
 		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg})
 	except Exception as err:
