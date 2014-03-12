@@ -43,7 +43,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 	for i in xrange(len(classified_segments[0])):
 	
 		for voxel in collection_of_segments.list_of_segments[i].list_of_voxel_tuples:
-			uncertainty_map[voxel] = classified_segments[2][i]
+			uncertainty_map[voxel] = collection_of_segments.list_of_segments[i].feature_dict["max_distance_from_margin"] #classified_segments[2][i]
 
 
 	minval = uncertainty_map.min()

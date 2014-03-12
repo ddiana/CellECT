@@ -43,12 +43,19 @@ class DistanceFromMargin(object):
 		self.x_step =  self.min_res / x_res
 		self.y_step =  self.min_res / y_res
 		self.z_step =  self.min_res / z_res
-		self.dist = ndimage.distance_transform_edt(ws[::self.x_step, ::self.y_step, ::self.z_step] == 1)
+		self.dist = ndimage.distance_transform_edt(ws[::self.x_step, ::self.y_step, ::self.z_step] != 1)
 
 
 	def get_min_dist_for_segment(self, segment):
 
 		return min((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
+
+	def get_mean_dist_for_segment(self, segment):
+		return sum((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples)) / len(segment.list_of_voxel_tuples)
+
+	def get_max_dist_for_segment(self, segment):
+
+		return max((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
 
 	def rescale_coords(self, coords):
 		return (coords[0]*self.x_scale, coords[1]*self.y_scale, coords[2]*self.z_scale)
@@ -221,7 +228,7 @@ def segment_border_to_interior_intensity(vol, segment, label_map):
 def should_compute_feature(name_of_parent, feature_name):
 
 
-	if name_of_parent != "test_volume" and feature_name in CellECT.seg_tool.globals.specific_features:
+	if name_of_parent != "test_volume" and not feature_name in CellECT.seg_tool.globals.generic_features:
 		return False
 
 	return True
@@ -266,7 +273,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 
 
-	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and segment_collection.list_of_segments[0].name_of_parent == "test_volume":
 		dist_metric = DistanceFromMargin(label_map, x_res, y_res, z_res)
 	
 	t1 = time.time()
@@ -295,7 +302,10 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
 
 			if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
-				segment.add_feature("distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+				segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+				segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
+				segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
+
 			
 			
 
