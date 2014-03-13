@@ -15,9 +15,11 @@ import logging
 import random
 import matplotlib
 
+
 # Imports from this project
 from CellECT.seg_tool.gui import correct_segment_gui as seg_gui
 from CellECT.seg_tool.seg_io import save_all
+from CellECT.seg_tool.cellness_metric import merge_predictor
 
 import CellECT.seg_tool.globals
 
@@ -62,6 +64,11 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
+		
+
+
+
+
 def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, **kwargs):
 
 	"""
@@ -73,6 +80,9 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	z_default = -1
 	vol_nuclei = None
 	
+	global merge_pred
+	merge_pred = merge_predictor.MergePredictor(segment_collection)
+
 	if "z_default" in kwargs.keys():
 		z_default = kwargs["z_default"]
 
@@ -214,7 +224,11 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	def predict_correction(event):
 
-		print "predict!!!"
+
+		global merge_pred
+
+		print merge_pred.next_merge()
+
 
 
 
@@ -237,7 +251,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	a_load = pylab.axes([0.20, 0.05, 0.16, 0.05])
 	a_save = pylab.axes([0.38, 0.05, 0.16, 0.05])
 	a_rerun = pylab.axes([0.56, 0.05, 0.22, 0.05])
-	a_predict = pylab.axes([0.80, 0.05, 0.10, 0.05])
+	a_predict = pylab.axes([0.80, 0.05, 0.15, 0.05])
 	
 	
 	b_load = Button(a_load, 'Load last save (if any)')
@@ -248,7 +262,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	b_rerun.on_clicked(rerun)
 	b_border = Button(a_border, "Border")
 	b_border.on_clicked(show_border)
-	b_predict = Button(a_predict, "Predict!")
+	b_predict = Button(a_predict, "Suggest me!")
 	b_predict.on_clicked(predict_correction)
 
 

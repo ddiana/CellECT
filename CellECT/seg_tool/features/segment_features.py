@@ -244,6 +244,10 @@ def add_neighbor_border_properties( segment1, segment2, vol):
 		if not segment.feature_dict.has_key("size_border_with_neighbor"):
 			segment.feature_dict["size_border_with_neighbor"] = []
 
+		if not segment.feature_dict.has_key("weighted_merge_score"):
+			segment.feature_dict["weighted_merge_score"] = []
+
+
 	s1 = mask1.sum()
 	s2 = mask2.sum()
 	s = mask.sum()
@@ -253,7 +257,10 @@ def add_neighbor_border_properties( segment1, segment2, vol):
 	segment2.feature_dict["size_border_with_neighbor"].append((segment2.label, s))
 	segment1.feature_dict["mean_intensity_border_with_neighbor"].append((segment2.label, np.sum(mask*vol_crop)/float(s)))
 	segment2.feature_dict["mean_intensity_border_with_neighbor"].append((segment1.label, segment1.feature_dict["mean_intensity_border_with_neighbor"][-1][1]))
-
+	
+	score1 = segment1.feature_dict["mean_intensity_border_with_neighbor"][-1][1] * ( 1 - segment1.feature_dict["percent_border_with_neighbor"][-1][1])
+	segment1.feature_dict["weighted_merge_score"].append((segment2.label, score1))
+	segment2.feature_dict["weighted_merge_score"].append((segment1.label, score1))
 
 #	import pylab
 
