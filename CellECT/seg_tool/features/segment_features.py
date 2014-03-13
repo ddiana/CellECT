@@ -9,6 +9,8 @@ import time
 import logging
 from numpy import histogram
 import cv
+from collections import namedtuple
+from scipy.ndimage.morphology import binary_dilation
 
 
 # Imports from this project
@@ -183,6 +185,109 @@ def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
 			segment.add_nucleus(nucleus)
 			
 
+def get_bounding_box_union_two_segments(segment1, segment2):
+
+	CollectiveBoundingBox = namedtuple("CollectiveBoundingBox",["xmin", "xmax", "ymin", "ymax", "zmin", "zmax"])
+
+	x_min = min(segment1.bounding_box.xmin, segment2.bounding_box.xmin)
+	y_min = min(segment1.bounding_box.ymin, segment2.bounding_box.ymin)
+	z_min = min(segment1.bounding_box.zmin, segment2.bounding_box.zmin)
+	x_max = max(segment1.bounding_box.xmax, segment2.bounding_box.xmax)
+	y_max = max(segment1.bounding_box.ymax, segment2.bounding_box.ymax)
+	z_max = max(segment1.bounding_box.zmax, segment2.bounding_box.zmax)
+
+	return CollectiveBoundingBox(x_min, x_max, y_min, y_max, z_min, z_max)
+
+	
+def get_bounding_box_intersection_two_segments(segment1, segment2):
+
+	CollectiveBoundingBox = namedtuple("CollectiveBoundingBox",["xmin", "xmax", "ymin", "ymax", "zmin", "zmax"])
+
+	x_min = max(segment1.bounding_box.xmin, segment2.bounding_box.xmin)
+	y_min = max(segment1.bounding_box.ymin, segment2.bounding_box.ymin)
+	z_min = max(segment1.bounding_box.zmin, segment2.bounding_box.zmin)
+	x_max = min(segment1.bounding_box.xmax, segment2.bounding_box.xmax)
+	y_max = min(segment1.bounding_box.ymax, segment2.bounding_box.ymax)
+	z_max = min(segment1.bounding_box.zmax, segment2.bounding_box.zmax)
+
+	return CollectiveBoundingBox(x_min, x_max, y_min, y_max, z_min, z_max)
+
+
+def add_neighbor_border_properties( segment1, segment2, vol):
+
+	if segment1.label < segment2.label:
+	# only process them once
+		return
+
+	bbx = get_bounding_box_intersection_two_segments(segment1, segment2)
+
+	vol_crop = vol[bbx.xmin:bbx.xmax, bbx.ymin:bbx.ymax, bbx.zmin:bbx.zmax]
+
+	CollectiveBoundingBox = namedtuple("CollectiveBoundingBox",["xmin", "xmax", "ymin", "ymax", "zmin", "zmax"])
+
+	bbx1 = segment1.bounding_box
+	bbx2 = segment2.bounding_box
+	
+	mask1 = binary_dilation(segment1.border_mask[bbx.xmin-bbx1.xmin : bbx.xmax-bbx1.xmin, bbx.ymin-bbx1.ymin : bbx.ymax-bbx1.ymin, bbx.zmin-bbx1.zmin : bbx.zmax-bbx1.zmin] ,structure=np.ones((3,3,1)))
+	mask2 = binary_dilation(segment2.border_mask[bbx.xmin-bbx2.xmin : bbx.xmax-bbx2.xmin, bbx.ymin-bbx2.ymin : bbx.ymax-bbx2.ymin, bbx.zmin-bbx2.zmin : bbx.zmax-bbx2.zmin] ,structure=np.ones((3,3,1)))
+
+	mask = mask1*mask2
+
+	for segment in (segment1, segment2):
+
+		if not segment.feature_dict.has_key("percent_border_with_neighbor"):
+			segment.feature_dict["percent_border_with_neighbor"] = []
+
+		if not segment.feature_dict.has_key("mean_intensity_border_with_neighbor"):
+			segment.feature_dict["mean_intensity_border_with_neighbor"] = []
+
+		if not segment.feature_dict.has_key("size_border_with_neighbor"):
+			segment.feature_dict["size_border_with_neighbor"] = []
+
+	s1 = mask1.sum()
+	s2 = mask2.sum()
+	s = mask.sum()
+	segment1.feature_dict["percent_border_with_neighbor"].append((segment2.label, s/float(s1) ))
+	segment2.feature_dict["percent_border_with_neighbor"].append((segment1.label, s/float(s2) ))
+	segment1.feature_dict["size_border_with_neighbor"].append((segment1.label, s))
+	segment2.feature_dict["size_border_with_neighbor"].append((segment2.label, s))
+	segment1.feature_dict["mean_intensity_border_with_neighbor"].append((segment2.label, np.sum(mask*vol_crop)/float(s)))
+	segment2.feature_dict["mean_intensity_border_with_neighbor"].append((segment1.label, segment1.feature_dict["mean_intensity_border_with_neighbor"][-1][1]))
+
+
+#	import pylab
+
+#	pylab.subplot(221)
+#	pylab.imshow(vol_crop[:,:,vol_crop.shape[2]/2])
+#	pylab.subplot(222)
+#	pylab.imshow(mask[:,:,vol_crop.shape[2]/2]*255)
+#	pylab.subplot(223)
+#	pylab.imshow(mask1[:,:,vol_crop.shape[2]/2]*255)
+#	pylab.subplot(224)
+#	pylab.imshow(mask2[:,:,vol_crop.shape[2]/2]*255)
+
+#	pylab.show()
+
+
+#	import pylab
+
+#	pylab.subplot(231)
+#	pylab.imshow(mask1[:,:,mask1.shape[2]/2])
+#	pylab.subplot(232)
+#	pylab.imshow(mask2[:,:,mask2.shape[2]/2])
+#	pylab.subplot(233)
+#	pylab.imshow(mask[:,:,mask.shape[2]/2])
+
+#	pylab.subplot(234)
+#	pylab.imshow(segment1.border_mask[:,:,segment1.border_mask.shape[2]/2])
+#	pylab.subplot(235)
+#	pylab.imshow(segment2.border_mask[:,:,segment2.border_mask.shape[2]/2])
+
+#	print mask.sum()
+
+#	if mask.sum() ==0:
+#		pdb.set_trace()
+
 
 
 def segment_border_to_interior_intensity(vol, segment, label_map):
@@ -284,7 +389,14 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 			if should_compute_feature(segment.name_of_parent, "size"):
 				segment.add_feature("size", len(segment.list_of_voxel_tuples))
-	
+
+		if segment.name_of_parent == "test_volume":		
+			for neighbor_label in segment.neighbor_labels:
+				seg_idx = segment_collection.segment_label_to_list_index_dict[neighbor_label]
+
+				segment2 = segment_collection.list_of_segments[seg_idx]
+				add_neighbor_border_properties(segment,segment2, vol )	
+
 		box_bounds = segment.bounding_box
 				
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):

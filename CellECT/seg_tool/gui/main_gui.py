@@ -61,6 +61,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
+
 def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, **kwargs):
 
 	"""
@@ -211,6 +212,12 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			im_slice[:,:,i] = im_slice[:,:,i] * in_mask + 255 * mask
 
 
+	def predict_correction(event):
+
+		print "predict!!!"
+
+
+
 	global show_border_toggle
 	show_border_toggle = False
 
@@ -226,10 +233,11 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			pylab.close(subfig)
 		pylab.close(fig)
 
-	a_border = pylab.axes([0.15, 0.05, 0.09, 0.05])
-	a_load = pylab.axes([0.26, 0.05, 0.17, 0.05])
-	a_save = pylab.axes([0.45, 0.05, 0.17, 0.05])
-	a_rerun = pylab.axes([0.64, 0.05, 0.23, 0.05])
+	a_border = pylab.axes([0.10, 0.05, 0.08, 0.05])
+	a_load = pylab.axes([0.20, 0.05, 0.16, 0.05])
+	a_save = pylab.axes([0.38, 0.05, 0.16, 0.05])
+	a_rerun = pylab.axes([0.56, 0.05, 0.22, 0.05])
+	a_predict = pylab.axes([0.80, 0.05, 0.10, 0.05])
 	
 	
 	b_load = Button(a_load, 'Load last save (if any)')
@@ -240,6 +248,11 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	b_rerun.on_clicked(rerun)
 	b_border = Button(a_border, "Border")
 	b_border.on_clicked(show_border)
+	b_predict = Button(a_predict, "Predict!")
+	b_predict.on_clicked(predict_correction)
+
+
+
 
 	
 

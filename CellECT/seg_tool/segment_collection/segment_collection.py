@@ -8,6 +8,7 @@ import time
 import cv
 import cv2
 from scipy.ndimage.morphology import binary_dilation
+from scipy.ndimage.morphology import binary_erosion
 
 
 # Imports from this project
@@ -58,7 +59,7 @@ class SegmentCollection(object):
 			it.iternext()		
 		
 		for label in set_of_labels:
-			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent, label_map.shape))	
+			self.list_of_segments.append(Segment(int(label), reverse_index[label], name_of_parent, label_map.shape, label_map))	
 
 		
 	def add_segment_using_mask(self, label_map, label, name_of_parent):
@@ -69,7 +70,7 @@ class SegmentCollection(object):
 		voxels = zip(*dld_nonzero3d(mask))
 		
 		
-		self.list_of_segments.append(Segment(label, voxels, name_of_parent, label_map.shape))
+		self.list_of_segments.append(Segment(label, voxels, name_of_parent, label_map.shape, label_map))
 		
 
 	def update_index_dict(self):
@@ -90,7 +91,7 @@ class Segment(object):
 
 	"Segment class, includes segment features, nucleus, bounding box, etc."
 
-	def __init__ (self, label, voxel_location_tuples, name_of_parent, max_shape):
+	def __init__ (self, label, voxel_location_tuples, name_of_parent, max_shape, label_map):
 
 		self.label = label
 		self.list_of_voxel_tuples = voxel_location_tuples
@@ -105,6 +106,8 @@ class Segment(object):
 		self.set_mask()
 		self.border_mask = None
 		self.set_border_mask()
+		self.neighbor_labels = set()
+		self.get_neighbors(label_map)
 
 
 	def set_mask(self, ):
@@ -115,9 +118,25 @@ class Segment(object):
 
 	def set_border_mask(self):
 
-		self.border_mask = binary_dilation(self.mask) - self.mask
+		self.border_mask = binary_dilation(self.mask, structure=np.ones((3,3,1))) - self.mask
 
-	
+#		import pylab
+
+#		pylab.subplot(211)
+#		z = self.mask.shape[2] /2
+#		pylab.imshow(self.mask[:,:,z])
+#		pylab.subplot(212)
+#		pylab.imshow(self.border_mask[:,:,z])
+#		pylab.show()
+
+	def get_neighbors(self, label_map):
+
+		cropped_map = label_map[self.bounding_box.xmin : self.bounding_box.xmax+1, self.bounding_box.ymin : self.bounding_box.ymax +1, self.bounding_box.zmin:self.bounding_box.zmax +1]
+		neighbors = np.unique( binary_dilation(self.border_mask).astype("int")* cropped_map)
+		for x in neighbors:
+			if not x in set((0,1,self.label)):
+				self.neighbor_labels.add(x)
+
 		
 	
 
