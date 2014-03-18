@@ -3,7 +3,8 @@ import numpy as np
 import pygraph.algorithms.accessibility as algos
 import pdb
 import re
-
+import heapq
+import math
 
 from CellECT.track_tool import cell_tracker_core
 import CellECT.track_tool.globals
@@ -94,7 +95,9 @@ class TrackletConnector(object):
 		"""
 		
 		self.ct = ct
+		self.connection_weights = []
 		self.get_tracklet_LP_variables()
+		
 
 
 
@@ -111,12 +114,14 @@ class TrackletConnector(object):
 		self.prep_tracklet_connections()
 
 		#self.make_coexistence_matrix()
-		self.make_weights()
-		self.make_constraints_matrix()
+		#self.make_weights()
+		#self.make_constraints_matrix()
 
-		self.opt_result = TrackletConnectorOptProgram(self.costs, self.constraints_matrix, self.constraints_vector).r.xf
+		#self.opt_result = TrackletConnectorOptProgram(self.costs, self.constraints_matrix, self.constraints_vector).r.xf
 
-		self.add_links_to_graph()
+		pdb.set_trace()
+		self.link_tracklets()
+		#self.add_links_to_graph()
 
 
 	def test_number_incoming_connections_equals_number_outgoing_connections(self):
@@ -207,6 +212,59 @@ class TrackletConnector(object):
 
 		
 
+
+	def link_tracklets(self):
+
+		heapq.heapify(self.connection_weights)
+		self.connected_backward = set()
+		self.connected_forward = set()
+
+		while len(self.connection_weights):
+
+			conn = heapq.heappop(self.connection_weights)
+			# if the tracklet hasnt already been connected, then connect it 
+
+			if len(conn) == 4:
+
+				t1_idx = conn[1]
+				t2_idx = conn[2]
+
+				if not t1_idx in self.connected_forward and not t2_idx in self.connected_backward:
+					self.connected_forward.add(t1_idx)
+					self.connected_backward.add(t2_idx)
+				
+					tracklet1 = self.tracklets[t1_idx]
+					tracklet2 = self.tracklets[t2_idx]
+				
+					if not self.ct.graph.has_edge((tracklet1.last_node, tracklet2.first_node)):
+						self.ct.graph.add_edge((tracklet1.last_node, tracklet2.first_node))
+
+						print "Adding edge (%s, %s)" % (tracklet1.last_node, tracklet2.first_node)
+
+			if len(conn) == 5:
+
+				t1_idx = conn[1]
+				t2_idx = conn[2]
+				t3_idx = conn[3]
+
+				if not t1_idx in self.connected_forward and not t2_idx in self.connected_backward and not t3_idx in self.connected_backward:
+					self.connected_forward.add(t1_idx)
+					self.connected_backward.add(t2_idx)
+					self.connected_backward.add(t3_idx)
+
+					tracklet1 = self.tracklets[t1_idx]
+					tracklet2 = self.tracklets[t2_idx]
+					tracklet3 = self.tracklets[t3_idx]
+				
+					if not self.ct.graph.has_edge((tracklet1.last_node, tracklet2.first_node)) and not self.ct.graph.has_edge((tracklet1.last_node, tracklet3.first_node)):
+						self.ct.graph.add_edge((tracklet1.last_node, tracklet2.first_node))
+						self.ct.graph.add_edge((tracklet1.last_node, tracklet3.first_node))
+
+						print "Adding edge (%s, %s) and (%s, %s))" % (tracklet1.last_node, tracklet2.first_node, tracklet1.last_node, tracklet3.first_node)
+
+
+
+
 	def prep_tracklet_connections(self): 
 
 		"""
@@ -216,8 +274,8 @@ class TrackletConnector(object):
 
 		self.tracklet_connections = {}
 
-		maximum_delta_t = 2
-		minimum_tracklet_length = 1
+		maximum_delta_t = 3
+		minimum_tracklet_length = 2
 		maximum_spacial_distance = 200
 
 		self.links_out_of_tracklet = {}
@@ -228,9 +286,11 @@ class TrackletConnector(object):
 
 		def add_tracklet_connection(tracklet1, tracklet2, index):
 			weight = self.get_tracklet_connection_weight(tracklet1.index, tracklet2.index)
-			if weight < maximum_spacial_distance:
+
+			if weight > 0.1: # if some probability to be connected
 
 				if not self.tracklet_connections.has_key((tracklet1.index, tracklet2.index)):
+
 					self.tracklet_connections[(tracklet1.index, tracklet2.index)] = (index[0], weight)
 
 					self.tracklet_connection_reverse_index[index[0]] = (tracklet1.index, tracklet2.index)
@@ -245,36 +305,56 @@ class TrackletConnector(object):
 						self.links_out_of_tracklet[tracklet1.index] = set()
 					self.links_out_of_tracklet[tracklet1.index].add(tracklet2.index)
 
+					# add to heap:
+
+					self.connection_weights.append((-weight,tracklet1.index, tracklet2.index, index[0]))
+
 					index[0] += 1
 
-		def add_source_sink_links(tracklet, index):
-				
-				
+		def add_tracklet_connection_division(tracklet1, tracklet2, tracklet3, index):
+			weight = self.get_tracklet_connection_weight_division(tracklet1.index, tracklet2.index, tracklet3.index)
+			if weight > 0.01: # if some probability to be connected
 
-				if tracklet.split_node_name(tracklet.first_node)[0] == 0:
+				if not self.tracklet_connections.has_key((tracklet1.index, tracklet2.index)) and not self.tracklet_connections.has_key((tracklet1.index, tracklet3.index)):
 
-	
-					self.links_out_of_source.add(index[0])
-					self.tracklet_connections_from_source[tracklet.index] = (index[0], 0)
+					# links into/out of tracklets already added from prev step
+
+					# add to heap:
+
+					self.connection_weights.append((-weight,tracklet1.index, tracklet2.index, tracklet3.index, index[0]))
+
 					index[0] += 1
 
 
-				if tracklet.split_node_name(tracklet.last_node)[0] == self.ct.max_time:
-			
-					self.links_into_sink.add(index[0])
-					self.tracklet_connections_to_sink[tracklet.index] = (index[0], 0)
-					index[0] += 1
 
-				
+#		def add_source_sink_links(tracklet, index):
+#				
+#				
+
+#				if tracklet.split_node_name(tracklet.first_node)[0] == 0:
+
+#	
+#					self.links_out_of_source.add(index[0])
+#					self.tracklet_connections_from_source[tracklet.index] = (index[0], 0)
+#					index[0] += 1
+
+
+#				if tracklet.split_node_name(tracklet.last_node)[0] == self.ct.max_time:
+#			
+#					self.links_into_sink.add(index[0])
+#					self.tracklet_connections_to_sink[tracklet.index] = (index[0], 0)
+#					index[0] += 1
+
+#				
 
 
 		tracklet_keys = self.tracklets.keys()
 		
-		self.tracklet_connections_from_source = {}
-		self.tracklet_connections_to_sink = {}
-		self.links_out_of_source = set()
-		self.links_into_sink = set()
-	
+#		self.tracklet_connections_from_source = {}
+#		self.tracklet_connections_to_sink = {}
+#		self.links_out_of_source = set()
+#		self.links_into_sink = set()
+#	
 
 
 		index = [0]
@@ -284,7 +364,6 @@ class TrackletConnector(object):
 				tracklet1 = self.tracklets[tracklet_keys[i]]
 				tracklet2 = self.tracklets[tracklet_keys[j]]
 				
-
 				if len(tracklet1.nodes) > minimum_tracklet_length and len(tracklet2.nodes) > minimum_tracklet_length:
 
 					if (tracklet2.first_time_point - tracklet1.last_time_point < maximum_delta_t) and (tracklet1.last_time_point < tracklet2.first_time_point):
@@ -293,10 +372,31 @@ class TrackletConnector(object):
 					if (tracklet1.first_time_point - tracklet2.last_time_point < maximum_delta_t) and (tracklet2.last_time_point < tracklet1.first_time_point):
 						add_tracklet_connection(tracklet2, tracklet1, index)
 
+	
 
-		for tracklet in self.tracklets.values():
+		for idx1 in xrange(len(tracklet_keys)-1):
+			tracklet1 = self.tracklets[tracklet_keys[idx1]]
+	
+			if self.links_out_of_tracklet.has_key(idx1):
+				
+				for idx2 in self.links_out_of_tracklet[idx1]:
+					for idx3 in self.links_out_of_tracklet[idx1]:
+						if idx2 != idx3:
 
-			add_source_sink_links(tracklet, index)
+							tracklet2 = self.tracklets[idx2]
+							tracklet3 = self.tracklets[idx3]
+
+							if (tracklet2.first_time_point - tracklet1.last_time_point < maximum_delta_t) and (tracklet1.last_time_point < tracklet2.first_time_point) and (tracklet3.first_time_point - tracklet1.last_time_point < maximum_delta_t) and (tracklet1.last_time_point < tracklet3.first_time_point):
+								add_tracklet_connection_division(tracklet1, tracklet2, tracklet3, index)
+
+
+									
+
+
+
+#		for tracklet in self.tracklets.values():
+
+#			add_source_sink_links(tracklet, index)
 
 
 
@@ -515,7 +615,57 @@ class TrackletConnector(object):
 #				self.coexistence_matrix[tc_index, current_tc_index] = 100000000000
 
 
-	
+
+
+	def get_tracklet_connection_weight_division(self,t1, t2, t3):
+
+		"""
+		Given two tracklets, get the connection weight for them.
+		Meaning how likely is it that these two should be connected.
+		"""
+
+		# check how for last node from t1 is from first node from t2
+		t1_last_node = self.tracklets[t1].last_node
+		t2_first_node = self.tracklets[t2].first_node
+		t3_first_node = self.tracklets[t3].first_node
+
+		t1_last_time = 	self.tracklets[t1].last_time_point
+		t2_first_time = self.tracklets[t2].first_time_point
+		t3_first_time = self.tracklets[t3].first_time_point
+
+		t1_last_cell = 	self.tracklets[t1].last_cell
+		t2_first_cell = self.tracklets[t2].first_cell
+		t3_first_cell = self.tracklets[t3].first_cell
+
+		
+		t1_last_cell_profile = self.ct.list_of_cell_profiles_per_timestamp[t1_last_time].list_of_cell_profiles[t1_last_cell]
+		t2_first_cell_profile = self.ct.list_of_cell_profiles_per_timestamp[t2_first_time].list_of_cell_profiles[t2_first_cell]
+		t3_first_cell_profile = self.ct.list_of_cell_profiles_per_timestamp[t3_first_time].list_of_cell_profiles[t3_first_cell]
+
+		
+		cp1 = t1_last_cell_profile
+		cp2 = t2_first_cell_profile
+		cp3 = t3_first_cell_profile
+
+		t1_last_cell_size = cp1.size
+		t2_first_cell_size = cp2.size
+		t3_first_cell_size = cp3.size
+
+		sx = 250
+		sy = 250
+		sz = 10	
+		dist_weight2 = math.exp( -((cp1.nucleus.x - cp2.nucleus.x)**2 / (2*sx**2) + (cp1.nucleus.y - cp2.nucleus.y)**2 / (2*sy**2) + (cp1.nucleus.z - cp2.nucleus.z)**2 / (2*sz**2)))
+		dist_weight3 = math.exp( -((cp1.nucleus.x - cp3.nucleus.x)**2 / (2*sx**2) + (cp1.nucleus.y - cp3.nucleus.y)**2 / (2*sy**2) + (cp1.nucleus.z - cp3.nucleus.z)**2 / (2*sz**2)))
+
+		size_weight = min(cp1.size, cp2.size + cp3.size)/ float( max(cp1.size, cp2.size + cp3.size))
+
+		weight = (dist_weight2 + dist_weight3)/2. *size_weight
+
+		if weight < 0.0001:
+			 weight = 0.0001
+
+		return weight
+		
 
 
 	def get_tracklet_connection_weight(self,t1, t2):
@@ -541,18 +691,35 @@ class TrackletConnector(object):
 		
 		cp1 = t1_last_cell_profile
 		cp2 = t2_first_cell_profile
-		
-		dist = np.sqrt((cp1.nucleus.x - cp2.nucleus.x ) **2 + (cp1.nucleus.y - cp2.nucleus.y ) **2 +( float(CellECT.track_tool.globals.PARAMETER_DICT["z-scale"])* cp1.nucleus.z - float(CellECT.track_tool.globals.PARAMETER_DICT["z-scale"])* cp2.nucleus.z ) **2 )
-		prob = 1 - np.double(dist)/float(CellECT.track_tool.globals.PARAMETER_DICT["cell-association-distance-threshold"])
 
-		if prob == 0:
-			prob = 0.01
+		t1_last_cell_size = cp1.size
+		t2_first_cell_size = cp2.size
 
-		weight = np.log(prob / (1-prob))
+		sx = 250
+		sy = 250
+		sz = 10	
+		dist_weight = math.exp( -((cp1.nucleus.x - cp2.nucleus.x)**2 / (2*sx**2) + (cp1.nucleus.y - cp2.nucleus.y)**2 / (2*sy**2) + (cp1.nucleus.z - cp2.nucleus.z)**2 / (2*sz**2)))
 
+		size_weight = min(cp1.size, cp2.size)/ float( max(cp1.size, cp2.size))
 
+		weight = dist_weight*size_weight
+
+		if weight < 0.0001:
+			 weight = 0.0001
 
 		return weight
+		
+#		dist = np.sqrt((cp1.nucleus.x - cp2.nucleus.x ) **2 + (cp1.nucleus.y - cp2.nucleus.y ) **2 +( float(CellECT.track_tool.globals.PARAMETER_DICT["z-scale"])* cp1.nucleus.z - float(CellECT.track_tool.globals.PARAMETER_DICT["z-scale"])* cp2.nucleus.z ) **2 )
+#		prob = 1 - np.double(dist)/float(CellECT.track_tool.globals.PARAMETER_DICT["cell-association-distance-threshold"])
+
+#		if prob < 0.1:
+#			prob = 0.01
+
+		#weight = np.log(prob / (1-prob))
+
+
+
+#		return weight
 
 
 

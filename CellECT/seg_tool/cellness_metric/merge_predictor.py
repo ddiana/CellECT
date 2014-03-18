@@ -1,4 +1,5 @@
 import heapq
+import pdb
 
 
 from CellECT.seg_tool.features.segment_features import get_bounding_box_union_two_segments
@@ -7,14 +8,19 @@ from CellECT.seg_tool.gui.predict_merge_gui import MergePredictorUI
 
 class MergePredictor(object):
 
-	def __init__(self, seg_collection, vol, label_map):
+	def __init__(self, seg_collection, vol, vol_nuclei, label_map, color_map=None):
 
-		self.build_heap(seg_collection)
+
 		self.seg_collection = seg_collection
+		self.vol = vol
+		self.vol_nuclei = vol_nuclei
+		self.build_heap()
 		self.label_map = label_map
 		self.ui = None
-		self.user_feedback = None
-		self.color_map = None
+		self.list_to_merge = []
+		self.color_map = color_map
+		self.all_answers = []
+
 
 
 	def build_heap(self):
@@ -46,19 +52,19 @@ class MergePredictor(object):
 		idx2 = self.seg_collection.segment_label_to_list_index_dict[merge_tuple[2]]
 		
 		seg1 = self.seg_collection.list_of_segments[idx1]
-		seg2 = self.seg_collection.list_of_segments[ids2]
+		seg2 = self.seg_collection.list_of_segments[idx2]
 
-		bbx = get_bounding_box_union_two_segments(seg1.bounding_box, seg2.bounding_box)
+		bbx = get_bounding_box_union_two_segments(seg1, seg2)
 
 		vol = self.vol[bbx.xmin:bbx.xmax,  bbx.ymin:bbx.ymax,  bbx.zmin:bbx.zmax]
-		label_map = self.vol[bbx.xmin:bbx.xmax,  bbx.ymin:bbx.ymax,  bbx.zmin:bbx.zmax]
-		highlight_map = (label_map == 0) + 100*(label_map == seg1.label) + 200*(label_map == seg.label2)
+		vol_nuclei = self.vol_nuclei[bbx.xmin:bbx.xmax,  bbx.ymin:bbx.ymax,  bbx.zmin:bbx.zmax]
+		label_map = self.label_map[bbx.xmin:bbx.xmax,  bbx.ymin:bbx.ymax,  bbx.zmin:bbx.zmax]
+		highlight_map = (label_map == 0) + 100*(label_map == seg1.label) + 200*(label_map == seg2.label)
 
 		self.ui = MergePredictorUI()
-		self.ui.set_data(vol, label_map, highlight_map)
+		self.ui.set_data(vol, vol_nuclei, label_map, highlight_map, self.color_map, seg1.label, seg2.label, self.list_to_merge, self.all_answers, merge_tuple[0])
 		self.ui.display()
-		self.user_feedback = self.ui.user_feedback
-		
+
 		
 
 

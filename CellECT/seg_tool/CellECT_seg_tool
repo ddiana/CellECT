@@ -36,6 +36,7 @@ from CellECT.seg_tool.seg_utils import call_silent
 from CellECT.seg_tool.seg_io import save_all
 from CellECT.seg_tool.seg_utils import labelmap_tools as lm_tools
 from CellECT.seg_tool.run_watershed import run_watershed as ws
+from CellECT.seg_tool.cellness_metric import split_predictor as split_pred
 
 
 
@@ -171,7 +172,8 @@ def main():
 	CellECT.seg_tool.globals.should_load_last_save
 	CellECT.seg_tool.globals.should_load_last_save = False
 
-	
+	split_predicted = None	
+
 	## MAIN LOOP ###############################################################
 	sum_new = None
 
@@ -269,8 +271,10 @@ def main():
 				from CellECT.seg_tool.seg_utils import display_tools
 				logging.info("DESKTOP CLIENT ")
 
-				all_user_feedback = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels,  vol_nuclei=vol_nuclei)
-			
+				# split predict too slow, not using this anymore.
+				#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
+				all_user_feedback, to_merge_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels,  vol_nuclei=vol_nuclei)
+
 				for label in correct_labels:
 
 					idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
@@ -301,6 +305,11 @@ def main():
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
 					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments)	
+
+					if len(to_merge_predicted):
+						made_changes = True
+						gui_parse.parse_to_merge_predictions(to_merge_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+				
 			else:
 				made_changes = False
 		
@@ -308,6 +317,7 @@ def main():
 			new_number_of_seeds = len(seed_collection.list_of_seeds)
 
 			## Apply Feedback ##################################################
+	
 	
 			if made_changes:
 

@@ -45,7 +45,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 	for i in xrange(len(classified_segments[0])):
 	
 		for voxel in collection_of_segments.list_of_segments[i].list_of_voxel_tuples:
-			uncertainty_map[voxel] = collection_of_segments.list_of_segments[i].feature_dict["max_distance_from_margin"] #classified_segments[2][i]
+			uncertainty_map[voxel] = classified_segments[2][i]
 
 
 	minval = uncertainty_map.min()
@@ -80,8 +80,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	z_default = -1
 	vol_nuclei = None
 	
-	global merge_pred
-	merge_pred = merge_predictor.MergePredictor(segment_collection)
+
 
 	if "z_default" in kwargs.keys():
 		z_default = kwargs["z_default"]
@@ -134,6 +133,10 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
 	color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
+
+	global merge_pred
+	merge_pred = merge_predictor.MergePredictor(segment_collection, vol, vol_nuclei, watershed, color_map)
+
 	watershed_max = watershed.max()
 
 	ax1 = pylab.subplot(141)
@@ -224,12 +227,8 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	def predict_correction(event):
 
-
 		global merge_pred
-
-		print merge_pred.next_merge()
-
-
+		merge_pred.next_merge()
 
 
 	global show_border_toggle
@@ -440,7 +439,9 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	print colored("=============================== END USER FEEDBACK ==============================","yellow")
 	logging.info("ENDING USER FEEDBACK")
 
-	return list_of_all_mouse_events
+
+
+	return list_of_all_mouse_events, merge_pred.list_to_merge
 
 
 

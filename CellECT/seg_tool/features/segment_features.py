@@ -11,6 +11,7 @@ from numpy import histogram
 import cv
 from collections import namedtuple
 from scipy.ndimage.morphology import binary_dilation
+import math
 
 
 # Imports from this project
@@ -346,6 +347,14 @@ def should_compute_feature(name_of_parent, feature_name):
 	return True
 
 
+def weighted_mean_from_hist(histogram):
+
+	weights = [x/float(len(histogram)) for x in xrange(len(histogram))]
+
+	mean = sum(p*q for p,q in zip(weights, histogram))
+
+	return mean
+
 
 
 def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
@@ -412,6 +421,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 				segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
 			if should_compute_feature(segment.name_of_parent, "interior_intensity_hist"):
 				segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
+			if should_compute_feature(segment.name_of_parent, "interior_weighted_intensity_mean"):
+				segment.add_feature("interior_weighted_intensity_mean", weighted_mean_from_hist(segment.feature_dict["interior_intensity_hist"]))
 			if should_compute_feature(segment.name_of_parent, "border_intensity_hist"):
 				segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
 			if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_hist_dif"):

@@ -103,6 +103,29 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection):
 
 
 
+def parse_to_merge_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
+
+	for pair in to_merge_predicted:
+		label1 = pair[0]
+		label2 = pair[1]
+		
+		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection)
+		nucleus_idx2 = get_nucleus_index_of_intended_label(label2, segment_collection)
+	
+		nucleus1 = nuclei_collection.nuclei_list[nucleus_idx1]
+		nucleus2 = nuclei_collection.nuclei_list[nucleus_idx2]			
+		nuclei_collection.merge_two_nuclei(nucleus1, nucleus2)
+
+		idx1 = segment_collection.segment_label_to_list_index_dict[label1]
+		seg1 = segment_collection.list_of_segments[idx1]
+
+		idx2 = segment_collection.segment_label_to_list_index_dict[label2]
+		seg2 = segment_collection.list_of_segments[idx2]
+
+		incorrect_segments.add(seg1)
+		incorrect_segments.add(seg2)
+
+
 def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, label_map, segment_collection):
 
 	"""
