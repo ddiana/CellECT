@@ -51,7 +51,7 @@ def load_nuclei_from_xml():
 	parents_string = union_find_field[0][0].text
 	parents_string = re.findall("(\d+)", parents_string)
 	parents = [int(val) for val in parents_string]
-	set_size_string = union_find_field[0][0].text
+	set_size_string = union_find_field[0][1].text
 	set_size_string = re.findall("(\d+)", set_size_string)
 	set_size = [int(val) for val in set_size_string]
 

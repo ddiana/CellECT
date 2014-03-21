@@ -234,20 +234,6 @@ def add_neighbor_border_properties( segment1, segment2, vol):
 
 	mask = mask1*mask2
 
-	for segment in (segment1, segment2):
-
-		if not segment.feature_dict.has_key("percent_border_with_neighbor"):
-			segment.feature_dict["percent_border_with_neighbor"] = []
-
-		if not segment.feature_dict.has_key("mean_intensity_border_with_neighbor"):
-			segment.feature_dict["mean_intensity_border_with_neighbor"] = []
-
-		if not segment.feature_dict.has_key("size_border_with_neighbor"):
-			segment.feature_dict["size_border_with_neighbor"] = []
-
-		if not segment.feature_dict.has_key("weighted_merge_score"):
-			segment.feature_dict["weighted_merge_score"] = []
-
 
 	s1 = mask1.sum()
 	s2 = mask2.sum()
@@ -357,6 +343,22 @@ def weighted_mean_from_hist(histogram):
 
 
 
+def init_neighbor_props_for_segment(segment):
+
+	if not segment.feature_dict.has_key("percent_border_with_neighbor"):
+		segment.feature_dict["percent_border_with_neighbor"] = []
+
+	if not segment.feature_dict.has_key("mean_intensity_border_with_neighbor"):
+		segment.feature_dict["mean_intensity_border_with_neighbor"] = []
+
+	if not segment.feature_dict.has_key("size_border_with_neighbor"):
+		segment.feature_dict["size_border_with_neighbor"] = []
+
+	if not segment.feature_dict.has_key("weighted_merge_score"):
+		segment.feature_dict["weighted_merge_score"] = []
+
+
+
 def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
 
 	"""
@@ -406,11 +408,16 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 			if should_compute_feature(segment.name_of_parent, "size"):
 				segment.add_feature("size", len(segment.list_of_voxel_tuples))
 
+
 		if segment.name_of_parent == "test_volume":		
+
+
+			init_neighbor_props_for_segment(segment)
+
 			for neighbor_label in segment.neighbor_labels:
 				seg_idx = segment_collection.segment_label_to_list_index_dict[neighbor_label]
-
 				segment2 = segment_collection.list_of_segments[seg_idx]
+				init_neighbor_props_for_segment(segment2)
 				add_neighbor_border_properties(segment,segment2, vol )	
 
 		box_bounds = segment.bounding_box

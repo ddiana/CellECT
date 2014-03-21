@@ -132,6 +132,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 
 	colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
+
 	color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
 
 	global merge_pred

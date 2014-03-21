@@ -35,6 +35,7 @@ from CellECT.gui import new_workspace
 from CellECT.gui import meta_manager
 from CellECT.workspace_management import workspace_creator
 from CellECT.gui import display_progress_bar
+from CellECT.workspace_management import propagate
 
 
 
@@ -667,7 +668,17 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			return
 
 
-		config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+		if self.checkBox_propagate.isChecked():
+			config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+
+			try:
+				propagate.PreparePropagateInput(self.workspace_data, segmentation_index )
+			except Exception as err:
+				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
+				return
+
+		else:
+			config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
 
 
 		use_metric = ""		

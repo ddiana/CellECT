@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Wed Feb  5 04:36:19 2014
+# Created: Thu Mar 20 20:59:36 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1170, 760)
+        MainWindow.resize(1170, 792)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -361,6 +361,11 @@ class Ui_MainWindow(object):
         self.checkBox_use_metric.setChecked(True)
         self.checkBox_use_metric.setObjectName("checkBox_use_metric")
         self.verticalLayout_3.addWidget(self.checkBox_use_metric)
+        self.checkBox_propagate = QtGui.QCheckBox(self.centralwidget)
+        self.checkBox_propagate.setEnabled(True)
+        self.checkBox_propagate.setChecked(False)
+        self.checkBox_propagate.setObjectName("checkBox_propagate")
+        self.verticalLayout_3.addWidget(self.checkBox_propagate)
         self.horizontalLayout_5.addLayout(self.verticalLayout_3)
         spacerItem1 = QtGui.QSpacerItem(8, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem1)
@@ -582,6 +587,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(QtGui.QApplication.translate("MainWindow", "Segmentation checklist:", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_select_all.setText(QtGui.QApplication.translate("MainWindow", "Select All", None, QtGui.QApplication.UnicodeUTF8))
         self.checkBox_use_metric.setText(QtGui.QApplication.translate("MainWindow", "use cellness metric", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkBox_propagate.setText(QtGui.QApplication.translate("MainWindow", "propagate corrections", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("MainWindow", "Original image preview:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("MainWindow", "Segmentation preview (if available):", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("MainWindow", "Navigate time:", None, QtGui.QApplication.UnicodeUTF8))

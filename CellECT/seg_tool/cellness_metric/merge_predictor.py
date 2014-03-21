@@ -38,9 +38,13 @@ class MergePredictor(object):
 
 		scores = []
 
-		for (label, score) in segment.feature_dict["weighted_merge_score"]:
-			if label > segment.label:
-				scores.append((score, label, segment.label))
+		try:
+			for (label, score) in segment.feature_dict["weighted_merge_score"]:
+				if label > segment.label:
+					scores.append((score, label, segment.label))
+		except:
+			pdb.set_trace()
+
 
 		return scores
 

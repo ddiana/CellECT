@@ -89,7 +89,7 @@ class MergePredictorUI(object):
 		pylab.subplots_adjust(bottom=0.25)
 		min_var_cmap_hl = 0
 		max_var_cmap_hl = 255
-		l3 =  pylab.imshow(self.highlight_map[:,:,z0], interpolation="nearest", cmap = "hot", vmin= min_var_cmap_seg, vmax = max_var_cmap_seg)   #cax = l2
+		l3 =  pylab.imshow(self.highlight_map[:,:,z0], interpolation="nearest", cmap = "hot", vmin= min_var_cmap_hl, vmax = max_var_cmap_hl)   #cax = l2
 		pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
 		ax3.set_title("Should merge?")	
 		

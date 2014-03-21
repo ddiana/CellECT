@@ -13,7 +13,7 @@ class UnionFind(object):
 
 	def __init__ (self, number_lements):
 		self.parents = range(number_lements)
-		self.set_size = [0] * number_lements
+		self.set_size = [1] * number_lements
 
 
 
@@ -22,7 +22,7 @@ class UnionFind(object):
 		"Add an item to the existing union."
 
 		self.parents.append(len(self.parents))
-		self.set_size.append(0)
+		self.set_size.append(1)
 
 
 	
@@ -45,16 +45,17 @@ class UnionFind(object):
 		root_element2 = self.find(element2)
 
 		if root_element1 != root_element2:
-			if self.set_size[root_element1] < self.set_size[root_element2]:
-				self.parents[root_element1] = root_element2
-			elif self.set_size[root_element1] > self.set_size[root_element2]:
+#			if self.set_size[root_element1] < self.set_size[root_element2]:
+#				self.parents[root_element1] = root_element2
+#			elif self.set_size[root_element1] > self.set_size[root_element2]:
+#				self.parents[root_element2] = root_element1
+#			else:
+#				self.parents[root_element2] = root_element1
+#				self.set_size[root_element1] = self.set_size[root_element1] +1
+
+			if self.set_size[root_element1] > self.set_size[root_element2]:
+ 				self.set_size[root_element1] += self.set_size[root_element2]
 				self.parents[root_element2] = root_element1
 			else:
-				self.parents[root_element2] = root_element1
-				self.set_size[root_element1] = self.set_size[root_element1] +1
-
-# 				self.set_size[root_element1] += self.set_size[root_element2]
-#				self.perents[root_element2] = root_element1
-#			else:
-#				self.set_size[root_element1] += self.set_size[root_element2]
-#				self.parents[root_element2] = root_element1
+				self.set_size[root_element2] += self.set_size[root_element1]
+				self.parents[root_element1] = root_element2
