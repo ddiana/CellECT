@@ -618,11 +618,16 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		valid_indexes = []
 		invalid_indexes = []
 
-		for index in segmentation_indexes:
-			if re.search("[.]*has segmentation",self.model.contents[index]):
-				invalid_indexes.append(index)
-			else:
-				valid_indexes.append(index)
+		if self.checkBox_propagate.isChecked():
+			valid_indexes = segmentation_indexes
+
+		else:
+
+			for index in segmentation_indexes:
+				if re.search("[.]*has segmentation",self.model.contents[index]):
+					invalid_indexes.append(index)
+				else:
+					valid_indexes.append(index)
 
 		if len(valid_indexes):
 			if len(invalid_indexes):
@@ -638,7 +643,22 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 		for index in valid_indexes:
-			config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+
+			if self.checkBox_propagate.isChecked():
+				config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, index)
+
+				try:
+					propagate.PreparePropagateInput(self.workspace_data, index )
+				except Exception as err:
+					QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
+					return
+
+			else:
+				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+
+
+
+			#config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
 		
 			p = threading.Thread(target = self.call_cellect_seg_tool_preliminary, args=(config_file_location, index))
 			p.start()

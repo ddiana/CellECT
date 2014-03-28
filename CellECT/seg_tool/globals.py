@@ -17,7 +17,7 @@ task_index = 0
 path_to_workspace = ""
 
 generic_features = ["border_to_interior_intensity_ratio"]
-specific_features =  ["size", "shape", "border_to_nucleus_distance_mean", "border_to_nucleus_distance_hist", "distance_from_margin"]
+specific_features =  ["inner_point", "size", "shape", "border_to_nucleus_distance_mean", "border_to_nucleus_distance_hist", "distance_from_margin"]
 
 expected_workspace_directories = set(["config_files", "init_watershed_all_time_stamps", "input_slices", "segs_all_time_stamps", "tracker_config", "training_data"])
 

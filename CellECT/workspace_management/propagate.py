@@ -22,13 +22,13 @@ class PreparePropagateInput(object):
 
 		# load only the head nuclei from the time point ahead, if there is such saved output
 
-		file_name = "%s/segs_all_time_stamps/timestamp_%d_nuclei.xml" % (self.ws_data.workspace_location ,self.time_point+1)
+		file_name = "%s/segs_all_time_stamps/timestamp_%d_segment_props.xml" % (self.ws_data.workspace_location ,self.time_point+1)
 
 		if not path.isfile(file_name):
 			raise Exception("No saved data to propagate.")
 		
 		try:
-			nuclei_pts, union_find = self.load_nuclei_from_xml(file_name)
+			nuclei_pts = self.load_inner_pts_from_xml(file_name)
 		except Exception as err:
 			raise err
 
@@ -36,7 +36,7 @@ class PreparePropagateInput(object):
 			raise Exception("No information in saved data.")
 
 
-		nuclei_pts = self.prune_nuclei(nuclei_pts, union_find)
+		#nuclei_pts = self.prune_nuclei(nuclei_pts, union_find)
 
 		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_nuclei_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
 
@@ -69,7 +69,7 @@ class PreparePropagateInput(object):
 
 
 
-	def load_nuclei_from_xml(self, file_name):
+	def load_inner_pts_from_xml(self, file_name):
 
 		"Load nuclei collection from xml file."
 	
@@ -84,29 +84,40 @@ class PreparePropagateInput(object):
 
 		nuclei_list = []
 
-		for child in root:
-			if child.tag == "nucleus":
-				x = int(child.attrib["x"])
-				y = int(child.attrib["y"])
-				z = int(child.attrib["z"])
-				index = int(child.attrib["index"])
-				nuclei_list.append((x,y,z))
-
-		union_find_field = tree.findall("union_find")
-		parents_string = union_find_field[0][0].text
-		parents_string = re.findall("(\d+)", parents_string)
-		parents = [int(val) for val in parents_string]
-
-		set_size_string = union_find_field[0][1].text
-		set_size_string = re.findall("(\d+)", set_size_string)
-		set_size = [int(val) for val in set_size_string]
-
-		union_find = UnionFind(0)
-		union_find.parents = parents
-		union_find.set_size = set_size
 
 
-		return nuclei_list, union_find
+		seg_list_root = root.find('list_of_segments')
+
+		for segment in seg_list_root:
+			feats = segment.find('feature_dictionary')
+			for feature in feats:
+				if feature.attrib['name'] == "inner_point":
+					coords = eval(feature.text)
+					nuclei_list.append(coords)
+
+#		for child in root:
+#			if child.tag == "nucleus":
+#				x = int(child.attrib["x"])
+#				y = int(child.attrib["y"])
+#				z = int(child.attrib["z"])
+#				index = int(child.attrib["index"])
+#				nuclei_list.append((x,y,z))
+
+#		union_find_field = tree.findall("union_find")
+#		parents_string = union_find_field[0][0].text
+#		parents_string = re.findall("(\d+)", parents_string)
+#		parents = [int(val) for val in parents_string]
+
+#		set_size_string = union_find_field[0][1].text
+#		set_size_string = re.findall("(\d+)", set_size_string)
+#		set_size = [int(val) for val in set_size_string]
+
+#		union_find = UnionFind(0)
+#		union_find.parents = parents
+#		union_find.set_size = set_size
+
+
+		return nuclei_list  #, union_find
 
 
 

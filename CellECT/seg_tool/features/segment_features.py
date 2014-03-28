@@ -64,6 +64,21 @@ class DistanceFromMargin(object):
 		return (coords[0]*self.x_scale, coords[1]*self.y_scale, coords[2]*self.z_scale)
 
 
+def segment_inner_point(segment):
+
+
+	box_bounds = segment.bounding_box
+	cropped_mask = segment.mask
+
+	dist = ndimage.distance_transform_edt(cropped_mask)
+	max_loc = np.argmax(dist)
+	max_loc = np.unravel_index(max_loc, cropped_mask.shape)
+
+	max_loc = (max_loc[0] + box_bounds.xmin, max_loc[1] + box_bounds.ymin, max_loc[2] + box_bounds.zmin)
+
+	return max_loc
+
+
 
 def segment_border_to_nucleus(segment):
 
@@ -443,7 +458,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 				segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
 				segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
 
-			
+		if should_compute_feature(segment.name_of_parent, "inner_point"):
+				segment.add_feature("inner_point", segment_inner_point(segment))
 			
 
 		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):

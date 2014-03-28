@@ -139,6 +139,7 @@ class PrepImage(object):
 		z_counter_mem = 0
 		z_counter_nuc = 0
 
+
 		mat = np.zeros((self.metadata.numx, self.metadata.numy, self.metadata.numz))
 		time_counter = 0
 
@@ -303,8 +304,8 @@ class WorkspaceCreator(object):
 					f.write("has_bg = %d\n" % int(self.has_bg))
 					f.write("use_size = 1\n")
 					f.write("use_border_intensity = 1\n")
-					f.write("use_border_distance = 0\n")
-					f.write("use_dist_from_margin = 0\n")				
+					f.write("use_border_distance = 1\n")
+					f.write("use_dist_from_margin = 1\n")				
 					f.write("x_res = %f\n" % self.metadata.xres)
 					f.write("y_res = %f\n" % self.metadata.yres)
 					f.write("z_res = %f\n" % self.metadata.zres)
