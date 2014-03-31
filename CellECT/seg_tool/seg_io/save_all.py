@@ -17,7 +17,7 @@ import CellECT.seg_tool.globals
 Functions to save the current status.
 """
 
-def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map):
+def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map, bg_seeds):
 	
 	"Save XML and MAT files."
 
@@ -38,6 +38,9 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 	
 		print colored("Saving XML for seed-segment properties...", "cyan")	
 		save_xml.save_xml_file_seed_segment_props(seed_segment_collection)
+
+		print colored("Saving XML for background seeds...", "cyan")	
+		save_xml.save_xml_file_bg_seeds(bg_seeds)
 	
 		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 

@@ -81,8 +81,10 @@ def add_new_nucleus_to_collection(user_mouse_click,box, nuclei_collection, added
 	"""
 
 	asc_coords = user_mouse_click.asc_coordinates
-	
-	nucleus_index = nuclei_collection.nuclei_list[-1].index +1
+	if len (nuclei_collection.nuclei_list):
+		nucleus_index = nuclei_collection.nuclei_list[-1].index +1
+	else:
+		nucleus_index = 0
 	new_nucleus = nc.Nucleus( asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin,  nucleus_index, added_by_user)
 	
 	nuclei_collection.add_nucleus (new_nucleus)
@@ -158,7 +160,7 @@ def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, 
 
 
 
-def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels):
+def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds):
 
 	"""
 	Given the left and right clicks, the label map and the task wanted,
@@ -269,12 +271,22 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		incorrect_labels.add(get_label_from_click(right_clicks[-2]))
 		incorrect_labels.add(get_label_from_click(right_clicks[-1]))
 
+	elif task_name == "ADD_BG_SEED":
+
+		for user_mouse_click in left_clicks:
+
+			coords = user_mouse_click.asc_coordinates
+			bg_seed = [coords.xval+box.xmin, coords.yval+box.ymin, coords.zval+box.zmin]
+
+			bg_seeds.append(bg_seed)
+
+
 
 	return True
 
 
 
-def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments):
+def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments, bg_seeds):
 
 	"""
 	Given all the user feedback, extract relevant information and make changes accordingly:
@@ -316,7 +328,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 			if user_mouse_click.task_index != task_index:
 				# Finish business with current task                              
 				if current_task != "NO_TASK_SELECTED" and box:
-					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels) or made_changes 
+					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds) or made_changes 
 				
 
 				# Initialize next task
@@ -334,7 +346,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 				task_left_click_buffer.append(user_mouse_click)
 
 	if current_task != "NO_TASK_SELECTED" and box:
-		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels) or made_changes
+		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels, bg_seeds) or made_changes
 				
 
 	# take all the incorrect labels and get the segments corresponding

@@ -29,7 +29,8 @@ class SegmentCollection(object):
 
 		self.list_of_segments = []
 		
-		self.add_segments_to_collection(label_map, set_of_labels, name_of_parent)
+		if len(set_of_labels)>0:
+			self.add_segments_to_collection(label_map, set_of_labels, name_of_parent)
 
 
 

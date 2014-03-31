@@ -131,6 +131,7 @@ def main():
 	
 	print "Loading test volume..."
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
+	bg_seeds = []
 
 	# load nuclei channel volume, if available
 	vol_nuclei = None
@@ -154,12 +155,16 @@ def main():
 		watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
 	except:
 		print "No initial segmentation found... Making initial segmentation."
-		# input pts
-		init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
-		# make first seg
-		watershed = ws.run_watershed(vol, init_pts)
-		# save it so that it does not need to be computed again
-		call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
+
+		if len(nuclei_collection.nuclei_list) == 0:
+			watershed = np.ones(vol.shape, "uint16")
+		else:
+			# input pts
+			init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
+			# make first seg
+			watershed = ws.run_watershed(vol, init_pts, bg_seeds)
+			# save it so that it does not need to be computed again
+			call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
 	last_length_of_seeds_list = 0 
 
@@ -184,7 +189,7 @@ def main():
 
 		## Load last save, or continue with current setup ######################
 		if CellECT.seg_tool.globals.should_load_last_save:
-			nuclei_collection, seed_collection, watershed = load_all.load_last_save()
+			nuclei_collection, seed_collection, watershed, bg_seeds = load_all.load_last_save()
 			seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 			#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 	
@@ -273,7 +278,7 @@ def main():
 
 				# split predict too slow, not using this anymore.
 				#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
-				all_user_feedback, to_merge_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels,  vol_nuclei=vol_nuclei)
+				all_user_feedback, to_merge_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, vol_nuclei=vol_nuclei)
 
 				for label in correct_labels:
 
@@ -304,11 +309,15 @@ def main():
 					made_changes = False
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
-					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments)	
+					old_len_bg_seeds = len(bg_seeds)
+					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments, bg_seeds)	
 
 					if len(to_merge_predicted):
 						made_changes = True
 						gui_parse.parse_to_merge_predictions(to_merge_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+
+					if old_len_bg_seeds != len(bg_seeds):
+						made_changes = True
 				
 			else:
 				made_changes = False
@@ -333,9 +342,9 @@ def main():
 				cellness_metric.train()
 
 				## Rerun Watershed if necessary ################################
-				if old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds:
+				if old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
 				
-					watershed = ws.run_watershed(vol, init_pts)
+					watershed = ws.run_watershed(vol, init_pts, bg_seeds)
 					seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 
 
@@ -373,7 +382,7 @@ def main():
 	## Save ####################################################################
 
 	if should_save.lower() == "y":
-		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed, bg_seed)
 		CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
 
 	else:

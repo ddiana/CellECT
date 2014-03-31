@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'new_workspace_layout.ui'
 #
-# Created: Thu Jan 30 19:23:30 2014
+# Created: Sun Mar 30 22:20:37 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -225,14 +225,10 @@ class Ui_Dialog(object):
         self.label_4 = QtGui.QLabel(Dialog)
         self.label_4.setGeometry(QtCore.QRect(210, 150, 21, 21))
         self.label_4.setObjectName("label_4")
-        self.checkBox_has_bg = QtGui.QCheckBox(Dialog)
-        self.checkBox_has_bg.setGeometry(QtCore.QRect(220, 60, 281, 22))
-        self.checkBox_has_bg.setObjectName("checkBox_has_bg")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        Dialog.setTabOrder(self.btn_select_img, self.checkBox_has_bg)
-        Dialog.setTabOrder(self.checkBox_has_bg, self.btn_load_metadata_csv)
+        Dialog.setTabOrder(self.btn_select_img, self.btn_load_metadata_csv)
         Dialog.setTabOrder(self.btn_load_metadata_csv, self.btn_load_metadata_xml)
         Dialog.setTabOrder(self.btn_load_metadata_xml, self.doubleSpinBox_xres)
         Dialog.setTabOrder(self.doubleSpinBox_xres, self.doubleSpinBox_yres)
@@ -275,5 +271,4 @@ class Ui_Dialog(object):
         self.label_19.setText(QtGui.QApplication.translate("Dialog", "Workspace name:", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_load_metadata_xml.setText(QtGui.QApplication.translate("Dialog", "Load metadata XML file", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("Dialog", "or", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox_has_bg.setText(QtGui.QApplication.translate("Dialog", "Dataset has background region.", None, QtGui.QApplication.UnicodeUTF8))
 

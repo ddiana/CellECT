@@ -17,6 +17,23 @@ from CellECT.seg_tool.seed_collection import seed_collection as sc
 Functions to load saved data from xml files.
 """
 
+def load_bg_seeds_xml():
+
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "bg_seeds.xml"
+	
+	print colored("Loading background seeds from "+ file_name, "cyan")
+	
+	try:
+		tree = ET.parse(file_name)
+	except IOError as err:
+		err.message = "Could not open nuclei xml file at %s" % file_name
+		raise err
+
+	root = tree.getroot()
+	bg_seeds = eval(tree.findall("list_of_seeds")[0].text)
+
+	return bg_seeds
+
 def load_nuclei_from_xml():
 
 	"Load nuclei collection from xml file."

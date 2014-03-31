@@ -27,6 +27,7 @@ def load_last_save():
 		nuclei_collection = load_xml.load_nuclei_from_xml()
 		seed_collection = load_xml.load_seeds_from_xml()
 		watershed = io.loadmat(file_name)["ws"]
+		bg_seeds = load_xml.load_bg_seeds_xml()
 	except Exception as err:
 		print colored("Error: %s" % err.message, "red")
 		print colored(err, "red")
@@ -34,7 +35,7 @@ def load_last_save():
 		logging.exception(err.message)
 		sys.exit()
 
-	return nuclei_collection, seed_collection, watershed
+	return nuclei_collection, seed_collection, watershed, bg_seeds
 
 
 

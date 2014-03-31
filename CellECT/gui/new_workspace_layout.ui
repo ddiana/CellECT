@@ -640,23 +640,9 @@
     <string>or</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_has_bg">
-   <property name="geometry">
-    <rect>
-     <x>220</x>
-     <y>60</y>
-     <width>281</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Dataset has background region.</string>
-   </property>
-  </widget>
  </widget>
  <tabstops>
   <tabstop>btn_select_img</tabstop>
-  <tabstop>checkBox_has_bg</tabstop>
   <tabstop>btn_load_metadata_csv</tabstop>
   <tabstop>btn_load_metadata_xml</tabstop>
   <tabstop>doubleSpinBox_xres</tabstop>

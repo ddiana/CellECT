@@ -164,7 +164,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			
 	list_of_mouse_events_in_ascidian = []
 
-	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL"])
+	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL", "ADD_BG_SEED"])
 
 
 	CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
@@ -196,6 +196,15 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			print colored("MERGE TWO LABELS: Right click for first label, Right click for second label.","blue")
 			print colored("(Only latest two right clicks count)", "grey")
 			logging.info(CellECT.seg_tool.globals.current_button_task)
+
+		def add_bg_seed(self, event):			
+			CellECT.seg_tool.globals.task_index += 1
+			CellECT.seg_tool.globals.current_button_task = "ADD_BG_SEED"
+			print "--------------------------------------------------------------------------------"
+			print colored("ADD BACKGROUND SEED: Left click to place background seed.","blue")
+			print colored("(One click per seed", "grey")
+			logging.info(CellECT.seg_tool.globals.current_button_task)
+
 						
 		def clear_task(self, event):
 			CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
@@ -212,6 +221,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			undo_item()
 			update_z()
 			update_y()
+			
 
 		def toggle_boundary(self, event):
 			global show_boundary
@@ -255,8 +265,9 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		
 			print "Removed latest task: %d clicks for %s." % (counter, item.button_task)
 		else:
-			print "No task to undo."
+			print "No task to undo"
 		print "No task selected."
+
 
 	def onpick(event):
 
@@ -309,6 +320,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 					seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax2.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					ax1.plot([yval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
+					
 					pylab.draw()
 				if int(s_y.val) == yval:
 					# don't add it twice in case it was added in the above if-statement
@@ -409,6 +421,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			ax2.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
 			ax1.plot(user_seeds_at_z[1], user_seeds_at_z[0], 'w*', markersize = 10., markeredgecolor = "k", markeredgewidth = 2.)
 
+
 		pylab.draw()
 
 
@@ -441,6 +454,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	a_clear_task = pylab.axes( [0.67, 0.05, 0.09, 0.05 ])
 	a_undo = pylab.axes( [0.77, 0.05, 0.06, 0.05 ])
 	a_toggle = pylab.axes([0.84, 0.05, 0.09, 0.05])
+	a_bg_seed = pylab.axes([0.95, 0.05, 0.05, 0.05])
 	
 	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for old label')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
@@ -454,6 +468,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	b_undo_task.on_clicked(callback.undo_task)
 	b_toggle = Button(a_toggle, "Borders")
 	b_toggle.on_clicked(callback.toggle_boundary)
+	b_bg_seed = Button(a_bg_seed, "Borders")
+	b_bg_seed.on_clicked(callback.add_bg_seed)
 
 	fig._seed_for_old_label_button = b_seed_old_label
 	fig._seed_for_new_label_button = b_seed_new_label
@@ -461,6 +477,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	fig._clear_task_button = b_clear_task
 	fig._undo_button = b_undo_task
 	fig._toggle = b_toggle
+	fig._bg_seed = b_bg_seed
 
 
 	if z_default > -1:

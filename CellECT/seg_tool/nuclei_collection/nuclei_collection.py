@@ -127,6 +127,7 @@ class NucleusCollection(object):
 		nucleus_list_pos1 = self.nucleus_index_to_list_pos[nucleus1.index]
 		nucleus_list_pos2 = self.nucleus_index_to_list_pos[nucleus2.index]
 		
+		
 		self.union_find.union(nucleus_list_pos1, nucleus_list_pos2)
 		
 

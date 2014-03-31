@@ -20,6 +20,7 @@ import matplotlib
 from CellECT.seg_tool.gui import correct_segment_gui as seg_gui
 from CellECT.seg_tool.seg_io import save_all
 from CellECT.seg_tool.cellness_metric import merge_predictor
+from CellECT.seg_tool.seg_utils import bounding_box as bbx_module
 
 import CellECT.seg_tool.globals
 
@@ -69,7 +70,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
-def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, **kwargs):
+def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds , **kwargs):
 
 	"""
 	Main GUI which shows uncertainty map and allows user to select which segment
@@ -130,15 +131,16 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		z0 = int(np.floor(watershed.shape[2]/2))
 
 
+	watershed_max = watershed.max()
 
-	colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
+	colors = [(0,0,0)] + [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(watershed_max)]
 
-	color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
+	color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=watershed_max)
 
 	global merge_pred
 	merge_pred = merge_predictor.MergePredictor(segment_collection, vol, vol_nuclei, watershed, color_map)
 
-	watershed_max = watershed.max()
+	
 
 	ax1 = pylab.subplot(141)
 	pylab.subplots_adjust(bottom=0.25)
@@ -173,17 +175,15 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 	ax3 = pylab.subplot(143)
 	pylab.subplots_adjust(bottom=0.25)
-	min_var_cmap_uncert = watershed.min()
-	max_var_cmap_uncert = watershed.max()
-	l3 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
+	min_var_cmap_ws = 0
+	max_var_cmap_ws = watershed.max()
+	l3 =  pylab.imshow(watershed[:,:,z0], interpolation="nearest", cmap = color_map, vmin= min_var_cmap_ws, vmax = max_var_cmap_ws, picker = True)   #cax = l2
 	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
 	ax3.set_title("Segmentation Label Map")
 
 	dif_watershed = (watershed==0).astype("int32") - (watershed_old==0).astype("int32")
 	ax4 = pylab.subplot(144)
 	pylab.subplots_adjust(bottom=0.25)
-	min_var_cmap_uncert = dif_watershed .min()
-	max_var_cmap_uncert = dif_watershed .max()
 	l4 =  pylab.imshow(dif_watershed [:,:,z0], interpolation="nearest", cmap = "RdYlGn", vmin= -1, vmax = 1)   #cax = l2
 	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
 	ax4.set_title("Difference From Previous")
@@ -217,7 +217,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		pylab.close()
 
 	def save_current_status_callback(event):
-		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed)
+		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed, bg_seeds)
 
 	def add_boundary(im_slice, seg_slice):
 		mask = np.array(seg_slice == 0)
@@ -384,12 +384,15 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 		label = watershed[int(yval), int(xval), int(zval)]
 
-		if label < 2:
-			print "Border/Backdround selected. Try again."
-		
+		if label < 1:
+			print "Border selected. Try again."
+	
 		else:
 
-			if event.mouseevent.button == 3:
+			if label ==1:
+				print "Background selected. Showing whole volume."
+	
+			if event.mouseevent.button == 3 and label>1:
 
 				# mark correct segments with right click
 
@@ -404,12 +407,15 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				print message
 			
 				logging.info(message)
+
+				bounding_box = bbx_module.BoundingBox(0, vol.shape[0], 0, vol.shape[1], 0, vol.shape[2])
 			
+				if label > 1: # not background
+
+					segment_index = segment_collection.segment_label_to_list_index_dict[label]
 			
-				segment_index = segment_collection.segment_label_to_list_index_dict[label]
-			
-				bounding_box = segment_collection.list_of_segments[segment_index].bounding_box
-				bounding_box.extend_by(10,vol.shape)
+					bounding_box = segment_collection.list_of_segments[segment_index].bounding_box
+					bounding_box.extend_by(10,vol.shape)
 			
 				cropped_nuclei_coords = filter(lambda nucl: nucl[0] > bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] > bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] > bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
 				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]			
@@ -422,7 +428,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 					cropped_vol_nuclei = vol_nuclei[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
 				#print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
-				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max, z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
+				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max,  z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
 				sub_figs.append(temp_fig)
 
 				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))

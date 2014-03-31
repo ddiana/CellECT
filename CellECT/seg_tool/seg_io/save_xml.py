@@ -12,6 +12,30 @@ import CellECT.seg_tool.globals
 Functions to save xml info: nuclei, segments, seeds, seed_segments.
 """
 
+def save_xml_file_bg_seeds(bg_seeds):
+
+	"""
+	Save bg_seeds in xml.
+	"""
+
+	root = ET.Element("background_seeds")
+
+	list_of_seeds = ET.SubElement(root,"list_of_seeds")
+	list_of_seeds.text = str(bg_seeds)
+
+	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "bg_seeds.xml"
+
+	tree = ET.ElementTree(root)
+	try:
+		tree.write(file_name)
+	except IOError as err:
+		err.message = "Error saving xml tree at %s" % file_name
+		raise err
+
+	print "....... Background seeds XML file at:", file_name
+
+
+
 def save_xml_file_nuclei(nuclei_collection):
 
 	"Save nuclei collection in xml file."

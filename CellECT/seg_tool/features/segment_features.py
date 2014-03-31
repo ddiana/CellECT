@@ -392,6 +392,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	print message
 	logging.info(message)
 
+
 	t1 = time.time()
 	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)
 	t2 = time.time()
@@ -411,7 +412,9 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 
 
-	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and segment_collection.list_of_segments[0].name_of_parent == "test_volume":
+	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and \
+       len(segment_collection.list_of_segments) and \
+       segment_collection.list_of_segments[0].name_of_parent == "test_volume":
 		dist_metric = DistanceFromMargin(label_map, x_res, y_res, z_res)
 	
 	t1 = time.time()

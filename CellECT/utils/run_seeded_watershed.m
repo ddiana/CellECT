@@ -1,6 +1,14 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
-load (input_mat_file, 'vol', 'seeds','has_bg');
+load (input_mat_file, 'vol', 'seeds');
+
+background_seeds = [];
+
+try
+    load(input_mat_file, 'background_seeds');
+catch
+end
+        
 
 start_pts_mask = zeros(size(vol));
 
@@ -26,12 +34,12 @@ end
 
 % if it has background, assume that this background surrounds the object of interest.
 % Note: change this is not accurate
-if has_bg
-	start_pts_mask(:,1,:) = 1;
-	start_pts_mask(:,end-1,:) = 1;
-	start_pts_mask(1,:,:) = 1;
-	start_pts_mask(end-1,:,:) = 1;
-end
+% if has_bg
+% 	start_pts_mask(:,1,:) = 1;
+% 	start_pts_mask(:,end-1,:) = 1;
+% 	start_pts_mask(1,:,:) = 1;
+% 	start_pts_mask(end-1,:,:) = 1;
+% end
 
 % if there are no nuclei (just dummy) and no background, then just return one big box
 
@@ -53,8 +61,16 @@ else
 	ws = watershed(vol);
 end
 
+% make label 1 for everything that is background
+for i = 1:size(background_seeds,1)
+    label = ws(background_seeds(i,1), background_seeds(i,2), background_seeds(i,3));
+    mask = cast(ws == label, class(ws));
+    ws = mask + (1-mask).*ws;
+end
 
-if ~has_bg
+has_bg = (size(background_seeds,1)>0);
+
+if ~has_bg 
 % if it doesnt have a bg, skip label 1 since this is reserved for background
 	try
 		ws = ws + uint16(ws>0);
