@@ -92,7 +92,9 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	logging.info ("STARTING USER FEEDBACK")
 	print colored("============================== START USER FEEDBACK =============================", "yellow")
 
-	nuclei_coords = [ (nucleus.x, nucleus.y, nucleus.z) for nucleus in nuclei_collection.nuclei_list ]
+	head_nuclei =  filter(lambda nucleus: nucleus == nuclei_collection.get_head_nucleus_in_its_set(nucleus), nuclei_collection.nuclei_list )
+
+	nuclei_coords = [ (nucleus.x, nucleus.y, nucleus.z) for nucleus in head_nuclei ]
 
 	uncertainty_map = get_segment_uncertainty_map(watershed, segment_collection, classified_segments)
 	
@@ -419,6 +421,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 			
 				cropped_nuclei_coords = filter(lambda nucl: nucl[0] > bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] > bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] > bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
 				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]			
+
 
 				cropped_vol = vol[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 				cropped_watershed = watershed[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
