@@ -75,12 +75,13 @@ class PrepNuclei(object):
 		number_z = metadata.numz
 
 		for time in xrange(number_time_points):
-			nuclei_mat = np.zeros((1,3))
-			x = float(round(number_x / 2))
-			y = float(round(number_y / 2))
-			z = float(round(number_z / 2))
-			nuclei_mat[0,:] = np.array([x,y,z])
-			self.nuclei_dict[time] = nuclei_mat
+#			nuclei_mat = np.zeros((1,3))
+#			x = float(round(number_x / 2))
+#			y = float(round(number_y / 2))
+#			z = float(round(number_z / 2))
+#			nuclei_mat[0,:] = np.array([x,y,z])
+			self.nuclei_dict[time] = []
+		pdb.set_trace()
 
 		self.write_mat_files()
 

@@ -54,6 +54,7 @@ def run_watershed(vol, init_pts, bg_seeds):
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 
+
 	with open(os.devnull, "wb") as devnull:
 		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)], stdout=devnull, stderr=subprocess.STDOUT)
 

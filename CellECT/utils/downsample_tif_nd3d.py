@@ -22,6 +22,6 @@ def downsample_tif(filename_in, filename_out):
 
 if __name__ == "__main__":
 
-	filename_in = "twenty_10.tif"
-	filename_out = "twenty_10_half.tif"
+	filename_in = "/home/diana/RESEARCH/DATASETS/ascidian/twenty_7.tif"
+	filename_out = "/home/diana/RESEARCH/DATASETS/ascidian//spim_half_size/twenty_7_half.tif"
 	downsample_tif(filename_in, filename_out )

@@ -43,22 +43,29 @@ end
 
 % if there are no nuclei (just dummy) and no background, then just return one big box
 
-if (size(seeds,2) == 1) & (~has_bg)
+% if (size(seeds,2) == 1) & (~has_bg)
+% 
+% 	ws = ones(size(vol));
+% 
+% 	ws(:,:,1) = zeros(size(vol,1), size(vol,2));
+% 	ws(:,:,end) = zeros(size(vol,1), size(vol,2));
+% 	ws(:,1,:) = zeros(size(vol,1),size(vol,3));
+% 	ws(:,end,:) = zeros(size(vol,1),size(vol,3));
+% 	ws(1,:,:) =  zeros(size(vol,2),size(vol,3));
+% 	ws(end,:,:) =  zeros(size(vol,2),size(vol,3));
+% 
+% else
+% 	% actually run watershed
+% 	vol = imimposemin (vol, start_pts_mask);
+% 
+% 	ws = watershed(vol);
+% end
 
-	ws = ones(size(vol));
-
-	ws(:,:,1) = zeros(size(vol,1), size(vol,2));
-	ws(:,:,end) = zeros(size(vol,1), size(vol,2));
-	ws(:,1,:) = zeros(size(vol,1),size(vol,3));
-	ws(:,end,:) = zeros(size(vol,1),size(vol,3));
-	ws(1,:,:) =  zeros(size(vol,2),size(vol,3));
-	ws(end,:,:) =  zeros(size(vol,2),size(vol,3));
-
+if (size(seeds,2) <= 1)
+    ws = ones(size(vol));
 else
-	% actually run watershed
-	vol = imimposemin (vol, start_pts_mask);
-
-	ws = watershed(vol);
+    vol = imimposemin (vol, start_pts_mask);
+    ws = watershed(vol);
 end
 
 % make label 1 for everything that is background
@@ -70,7 +77,7 @@ end
 
 has_bg = (size(background_seeds,1)>0);
 
-if ~has_bg 
+if (~has_bg) && (size(seeds,2)>0)
 % if it doesnt have a bg, skip label 1 since this is reserved for background
 	try
 		ws = ws + uint16(ws>0);
