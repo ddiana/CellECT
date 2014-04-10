@@ -20,7 +20,7 @@ class ManageMetadataInUI(object):
 		self.ui.doubleSpinBox_zres.valueChanged.connect(self.update_metadata_zres)
 		self.ui.doubleSpinBox_tres.valueChanged.connect(self.update_metadata_tres)
 		self.ui.spinBox_numch.valueChanged.connect(self.make_list_of_channels_in_combobox)
-		#self.ui.comboBox_mem_chan.currentIndexChanged.connect(self.update_membrane_channel)
+		self.ui.comboBox_mem_chan.currentIndexChanged.connect(self.update_membrane_channel)
 
 	def update_metadata_xres(self):
 

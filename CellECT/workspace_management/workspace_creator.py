@@ -80,7 +80,7 @@ class PrepNuclei(object):
 #			y = float(round(number_y / 2))
 #			z = float(round(number_z / 2))
 #			nuclei_mat[0,:] = np.array([x,y,z])
-			self.nuclei_dict[time] = []
+			self.nuclei_dict[time] = [] #nuclei_mat
 		pdb.set_trace()
 
 		self.write_mat_files()
@@ -126,6 +126,7 @@ class PrepImage(object):
 
 
 	def set_info(self, img_location, metadata):
+
 		self.metadata = metadata
 		self.img_location = img_location
 

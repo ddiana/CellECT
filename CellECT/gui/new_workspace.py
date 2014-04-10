@@ -55,7 +55,6 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 		self.btn_import_nuclei_csv.clicked.connect(self.import_nuclei_csv)
 
-
 		self.meta_manager = meta_manager.ManageMetadataInUI(self, self.metadata)
 
 
@@ -153,6 +152,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 		self.ws_location = self.ws_dir + "/" + self.lineEdit_ws_name.text()
 		self.new_ws = workspace_creator.WorkspaceCreator()
+
 		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, False, action)
 
 	
