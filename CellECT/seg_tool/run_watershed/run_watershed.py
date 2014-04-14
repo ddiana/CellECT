@@ -39,9 +39,11 @@ def run_watershed(vol, init_pts, bg_seeds):
 
 	save_mat_file = "%s/watershed_input.mat" % path_to_temp
 
+	bg_seeds_temp = [ list (x) for x in bg_seeds ]
+
 
 	try:
-		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds})
+		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds_temp})
 	except Exception as err:
 		err.message = "Could not write input file for Matlab at %s" % save_mat_file
 		print colored("Error: %s" % err.message, "red")

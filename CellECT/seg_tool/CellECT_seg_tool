@@ -131,7 +131,7 @@ def main():
 	
 	print "Loading test volume..."
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
-	bg_seeds = []
+	bg_seeds = set()
 
 	# load nuclei channel volume, if available
 	vol_nuclei = None
@@ -196,7 +196,6 @@ def main():
 			#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 	
 			CellECT.seg_tool.globals.should_load_last_save = False
-
 
 		## Prepare cellness metric #############################################
 

@@ -306,7 +306,7 @@ class WorkspaceCreator(object):
 					f.write("has_bg = %d\n" % int(self.has_bg))
 					f.write("use_size = 1\n")
 					f.write("use_border_intensity = 1\n")
-					f.write("use_border_distance = 1\n")
+					f.write("use_border_distance = 0\n")
 					f.write("use_dist_from_margin = 1\n")				
 					f.write("x_res = %f\n" % self.metadata.xres)
 					f.write("y_res = %f\n" % self.metadata.yres)

@@ -448,19 +448,19 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 	callback = ButtonCallback()
-	a_seed_old_label = pylab.axes([0.07, 0.05, 0.22, 0.05])
-	a_seed_new_label = pylab.axes([0.30, 0.05, 0.22, 0.05])
-	a_merge_two_labels = pylab.axes([0.53, 0.05, 0.13, 0.05])
-	a_clear_task = pylab.axes( [0.67, 0.05, 0.09, 0.05 ])
-	a_undo = pylab.axes( [0.77, 0.05, 0.06, 0.05 ])
-	a_toggle = pylab.axes([0.84, 0.05, 0.09, 0.05])
-	a_bg_seed = pylab.axes([0.95, 0.05, 0.05, 0.05])
+	a_seed_old_label = pylab.axes([0.07, 0.05, 0.16, 0.05])
+	a_seed_new_label = pylab.axes([0.24, 0.05, 0.13, 0.05])
+	a_merge_two_labels = pylab.axes([0.38, 0.05, 0.17, 0.05])
+	a_clear_task = pylab.axes( [0.56, 0.05, 0.09, 0.05 ])
+	a_undo = pylab.axes( [0.66, 0.05, 0.06, 0.05 ])
+	a_toggle = pylab.axes([0.73, 0.05, 0.08, 0.05])
+	a_bg_seed = pylab.axes([0.82, 0.05, 0.11, 0.05])
 	
-	b_seed_old_label = Button(a_seed_old_label, 'Add seeds for old label')
+	b_seed_old_label = Button(a_seed_old_label, 'Modify segment')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
-	b_seed_new_label = Button(a_seed_new_label, "Add 1 seed for new label")
+	b_seed_new_label = Button(a_seed_new_label, "New segment")
 	b_seed_new_label.on_clicked(callback.seed_new_label)
-	b_merge_two_labels = Button(a_merge_two_labels, 'Merge 2 labels')
+	b_merge_two_labels = Button(a_merge_two_labels, 'Merge 2 segments')
 	b_merge_two_labels.on_clicked(callback.merge_two_labels)
 	b_clear_task = Button(a_clear_task, "No task")
 	b_clear_task.on_clicked(callback.clear_task)
@@ -468,7 +468,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	b_undo_task.on_clicked(callback.undo_task)
 	b_toggle = Button(a_toggle, "Borders")
 	b_toggle.on_clicked(callback.toggle_boundary)
-	b_bg_seed = Button(a_bg_seed, "Borders")
+	b_bg_seed = Button(a_bg_seed, "Background")
 	b_bg_seed.on_clicked(callback.add_bg_seed)
 
 	fig._seed_for_old_label_button = b_seed_old_label

@@ -29,8 +29,29 @@ for i = 1:size(seeds,2)
 			    start_pts_mask(xloc, yloc,zloc) = 1;
 			end
 		end
+    end
+end
+
+
+for i = 1:size(background_seeds,2)
+	for x = -0:1
+		for y = -0:1
+			for z = -0:1
+				xloc = max( round(background_seeds(1,i)+1) + x, 1);
+				xloc = min( xloc, size(vol,1));
+
+				yloc = max( round(background_seeds(2,i)+1) + y, 1);
+				yloc = min( yloc, size(vol,2));
+
+				zloc = max( round(background_seeds(3,i)+1) + z, 1);
+				zloc = min( zloc, size(vol,3));
+				
+			    start_pts_mask(xloc, yloc,zloc) = 1;
+			end
+		end
 	end
 end
+
 
 % if it has background, assume that this background surrounds the object of interest.
 % Note: change this is not accurate
@@ -71,8 +92,10 @@ end
 % make label 1 for everything that is background
 for i = 1:size(background_seeds,1)
     label = ws(background_seeds(i,1), background_seeds(i,2), background_seeds(i,3));
-    mask = cast(ws == label, class(ws));
-    ws = mask + (1-mask).*ws;
+    if label ~=0
+        mask = cast(ws == label, class(ws));
+        ws = mask + (1-mask).*ws;
+    end
 end
 
 has_bg = (size(background_seeds,1)>0);

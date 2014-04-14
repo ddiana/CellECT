@@ -276,9 +276,9 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		for user_mouse_click in left_clicks:
 
 			coords = user_mouse_click.asc_coordinates
-			bg_seed = [coords.xval+box.xmin, coords.yval+box.ymin, coords.zval+box.zmin]
+			bg_seed = (coords.xval+box.xmin, coords.yval+box.ymin, coords.zval+box.zmin)
 
-			bg_seeds.append(bg_seed)
+			bg_seeds.add(bg_seed)
 
 
 
