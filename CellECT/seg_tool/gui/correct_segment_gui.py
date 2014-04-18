@@ -257,7 +257,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			# model the exact same click. 
 			
 			if not	list_of_mouse_events_in_ascidian[-1].right_click:
-				if len(seed_coods):
+				if len(seed_coords):
 					del seed_coords[-1]
 			if len(list_of_mouse_events_in_ascidian):
 				del list_of_mouse_events_in_ascidian[-1]
