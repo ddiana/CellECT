@@ -87,6 +87,8 @@ def recolor_label_map_correctly( label_map, nuclei_collection, seed_collection, 
 
 	# check if already colored correctly (in case user said just merge 2 nuclei, and watershed was not rerun)
 
+	boxes = set()
+
 	# color all the seed segment by their head nucleus:
 	for seed in seed_collection.list_of_seeds:
 	
@@ -119,7 +121,9 @@ def recolor_label_map_correctly( label_map, nuclei_collection, seed_collection, 
 					pdb.set_trace()
 				seed_segment = seed_segment_collection.list_of_seed_segments[seed_segment_list_index]
 				bb = seed_segment.bounding_box
-				remove_boundary(label_map[bb.xmin:bb.xmax, bb.ymin:bb.ymax, bb.zmin:bb.zmax])
+
+				boxes.add(bb)
+				#remove_boundary(label_map[bb.xmin:bb.xmax, bb.ymin:bb.ymax, bb.zmin:bb.zmax])
 
 			
 
@@ -145,16 +149,26 @@ def recolor_label_map_correctly( label_map, nuclei_collection, seed_collection, 
 					segment_index_1 = segment_collection.segment_label_to_list_index_dict[current_label]
 					segment1 = segment_collection.list_of_segments[segment_index_1]
 					bb1 = segment1.bounding_box
-					remove_boundary(label_map[bb1.xmin:bb1.xmax, bb1.ymin:bb1.ymax, bb1.zmin:bb1.zmax])
+					boxes.add(bb1)
+					#remove_boundary(label_map[bb1.xmin:bb1.xmax, bb1.ymin:bb1.ymax, bb1.zmin:bb1.zmax])
 				except:
 					try:
 						segment_index_2 = segment_collection.segment_label_to_list_index_dict[new_label]
 						segment2 = segment_collection.list_of_segments[segment_index_2]			
 						bb2 = segment2.bounding_box
-						remove_boundary(label_map[bb2.xmin:bb2.xmax, bb2.ymin:bb2.ymax, bb2.zmin:bb2.zmax])
+						boxes.add(bb2)
+						#remove_boundary(label_map[bb2.xmin:bb2.xmax, bb2.ymin:bb2.ymax, bb2.zmin:bb2.zmax])
 					except:
 						pass
 			
+
+	# remove boundary after everything was recolored.
+
+
+	for bb in boxes:
+
+		remove_boundary(label_map[bb.xmin:bb.xmax, bb.ymin:bb.ymax, bb.zmin:bb.zmax])
+
 	return label_map
 
 

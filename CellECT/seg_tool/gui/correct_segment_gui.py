@@ -76,11 +76,15 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	nuclei_coords = []
 	vol_nuclei = None
 	z_default = -1
+	y_default = -1
 	global show_boundary
 	show_boundary = False
 
 	if "z_default" in kwargs.keys():
 		z_default = kwargs["z_default"]
+
+	if "y_default" in kwargs.keys():
+		y_default = kwargs["y_default"]
 	
 	if "nuclei_coords" in kwargs.keys():
 		nuclei_coords = kwargs["nuclei_coords"]
@@ -253,20 +257,24 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			# model the exact same click. 
 			
 			if not	list_of_mouse_events_in_ascidian[-1].right_click:
-				del seed_coords[-1]
-			del list_of_mouse_events_in_ascidian[-1]
+				if len(seed_coods):
+					del seed_coords[-1]
+			if len(list_of_mouse_events_in_ascidian):
+				del list_of_mouse_events_in_ascidian[-1]
 			task_index = item.task_index
 
 			while len(list_of_mouse_events_in_ascidian) and list_of_mouse_events_in_ascidian[-1].task_index == task_index:
-				if not	list_of_mouse_events_in_ascidian[-1].right_click:
-					del seed_coords[-1]
-				del list_of_mouse_events_in_ascidian[-1]
+				if len(list_of_mouse_events_in_ascidian):
+					if not	list_of_mouse_events_in_ascidian[-1].right_click:
+						del seed_coords[-1]
+					del list_of_mouse_events_in_ascidian[-1]
 				counter += 1
 		
 			print "Removed latest task: %d clicks for %s." % (counter, item.button_task)
 		else:
 			print "No task to undo"
 		print "No task selected."
+
 
 
 	def onpick(event):
@@ -436,6 +444,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 		
 	def update_y(val= None):
+
 		y = s_y.val
 		# draw lines
 		# draw image
@@ -443,6 +452,48 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		l3.set_data(get_slice_to_show_y(vol, vol_nuclei,y, watershed))
 		update_points()
 		
+
+
+
+	def next_z_click(event):
+
+		z = int(s_z.val)
+		z += 1
+
+		if z<vol.shape[2]:
+			s_z.set_val(z)
+			update_z()	
+
+
+	def prev_z_click(event):
+
+		z = int(s_z.val)
+		z -= 1
+
+		if z>=0:
+			s_z.set_val( z)
+			update_z()	
+
+
+	def next_y_click(event):
+
+		y = int(s_y.val)
+		y += 1
+
+		if y<vol.shape[1]:
+			s_y.set_val( y)
+			update_y()		
+
+
+	def prev_y_click(event):
+
+		y = int(s_y.val)
+		y -= 1
+
+		if y>=0:
+			s_y.set_val(y)
+			update_y()
+
 
 
 
@@ -455,6 +506,11 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	a_undo = pylab.axes( [0.66, 0.05, 0.06, 0.05 ])
 	a_toggle = pylab.axes([0.73, 0.05, 0.08, 0.05])
 	a_bg_seed = pylab.axes([0.82, 0.05, 0.11, 0.05])
+
+	a_next_z = pylab.axes([0.34, 0.11, 0.03, 0.03])
+	a_prev_z = pylab.axes([0.30, 0.11, 0.03, 0.03])
+	a_next_y = pylab.axes([0.74, 0.11, 0.03, 0.03])
+	a_prev_y = pylab.axes([0.70, 0.11, 0.03, 0.03])
 	
 	b_seed_old_label = Button(a_seed_old_label, 'Modify segment')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
@@ -471,6 +527,15 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	b_bg_seed = Button(a_bg_seed, "Background")
 	b_bg_seed.on_clicked(callback.add_bg_seed)
 
+	b_next_z = Button(a_next_z, ">")
+	b_next_z.on_clicked(next_z_click)
+	b_prev_z = Button(a_prev_z, "<")
+	b_prev_z.on_clicked(prev_z_click)
+	b_next_y = Button(a_next_y, ">")
+	b_next_y.on_clicked(next_y_click)
+	b_prev_y = Button(a_prev_y, "<")
+	b_prev_y.on_clicked(prev_y_click)
+
 	fig._seed_for_old_label_button = b_seed_old_label
 	fig._seed_for_new_label_button = b_seed_new_label
 	fig._merge_two_labels_button = b_merge_two_labels
@@ -478,14 +543,23 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	fig._undo_button = b_undo_task
 	fig._toggle = b_toggle
 	fig._bg_seed = b_bg_seed
+	fig._b_next_z = b_next_z
+	fig._b_prev_z = b_prev_z
+	fig._b_next_y = b_next_y
+	fig._b_prev_y = b_prev_y
 
 
 	if z_default > -1:
 		z0 = z_default
 	else:		
 		z0 = int(np.floor(watershed.shape[2]/2))
+
+	if y_default > -1:
+		y0 = y_default
+	else:		
+		y0 = int(np.floor(watershed.shape[2]/2))
 		
-	y0 = int(watershed.shape[1]/2)
+	#y0 = int(watershed.shape[1]/2)
 	
 	aspect1 = abs(watershed.shape[1]/float(watershed.shape[0]))
 	aspect2 = abs(watershed.shape[2]/float(watershed.shape[0]))
