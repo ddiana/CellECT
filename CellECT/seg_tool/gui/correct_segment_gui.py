@@ -253,7 +253,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			counter = 1
 			item = list_of_mouse_events_in_ascidian[-1]
 			# these should really be deques, but since i'm deleting -1 it is still O(1)
-			# also, TODO: make sure seed_coods[-1] and list_of_mouse_events_in_ascidian[-1]
+			# also, TODO: make sure seed_coords[-1] and list_of_mouse_events_in_ascidian[-1]
 			# model the exact same click. 
 			
 			if not	list_of_mouse_events_in_ascidian[-1].right_click:
@@ -266,7 +266,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			while len(list_of_mouse_events_in_ascidian) and list_of_mouse_events_in_ascidian[-1].task_index == task_index:
 				if len(list_of_mouse_events_in_ascidian):
 					if not	list_of_mouse_events_in_ascidian[-1].right_click:
-						del seed_coords[-1]
+						if len(seed_coords):
+							del seed_coords[-1]
 					del list_of_mouse_events_in_ascidian[-1]
 				counter += 1
 		
@@ -336,6 +337,8 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 					if len(seed_coords)>0:
 						if seed_coords[-1] != (int(xval), int(yval), int(zval)):
 							seed_coords.append ((int(xval), int(yval), int(zval)))
+					else: 
+						seed_coords.append ((int(xval), int(yval), int(zval)))
 					ax4.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					ax3.plot([zval], [xval], 'w*', markersize = 10, markeredgecolor = "k", markeredgewidth = 2.)
 					pylab.draw()
