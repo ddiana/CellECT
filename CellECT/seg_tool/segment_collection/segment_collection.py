@@ -139,6 +139,7 @@ class Segment(object):
 				self.neighbor_labels.add(x)
 
 		
+
 	
 
 	def make_segment_contours(self, label_map):
@@ -182,6 +183,8 @@ class Segment(object):
 
 	def add_nucleus(self, nucleus):
 		self.nucleus_list.append(nucleus)
+
+	
 
 
 

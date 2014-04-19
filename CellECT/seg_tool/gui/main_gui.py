@@ -411,13 +411,22 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 				logging.info(message)
 
 				bounding_box = bbx_module.BoundingBox(0, vol.shape[0], 0, vol.shape[1], 0, vol.shape[2])
+
+				focus_z = zval - bounding_box.zmin
+				focus_y = bounding_box.ymin + (bounding_box.ymax - bounding_box.ymin)/2
 			
 				if label > 1: # not background
 
 					segment_index = segment_collection.segment_label_to_list_index_dict[label]
 			
+					
+					
 					bounding_box = segment_collection.list_of_segments[segment_index].bounding_box
 					bounding_box.extend_by(10,vol.shape)
+
+					focus_y = segment_collection.list_of_segments[segment_index].nucleus_list[0].y - bounding_box.ymin
+					focus_z = segment_collection.list_of_segments[segment_index].nucleus_list[0].z - bounding_box.zmin
+
 			
 				cropped_nuclei_coords = filter(lambda nucl: nucl[0] > bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] > bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] > bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
 				cropped_nuclei_coords = [ (item[0] - bounding_box.xmin, item[1] - bounding_box.ymin, item[2] - bounding_box.zmin ) for item in cropped_nuclei_coords]			
@@ -431,7 +440,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 					cropped_vol_nuclei = vol_nuclei[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
 				#print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
-				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max,  z_default = zval - bounding_box.zmin,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
+				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max,  z_default = focus_z, y_default = focus_y,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
 				sub_figs.append(temp_fig)
 
 				list_of_all_mouse_events.append( MouseEventsFromSegmentGUI(bounding_box, list_of_mouse_events_in_cropped_ascidian ))
