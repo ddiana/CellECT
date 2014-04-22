@@ -42,6 +42,27 @@ class PreparePropagateInput(object):
 
 		self.write_mat_file(file_name, nuclei_pts)
 
+		self.write_vol_file()
+
+
+
+	def write_vol_file(self,):
+
+
+		next_seg = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location, self.time_point +1))["ws"]
+		current_vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_%d.mat"% (self.ws_data.workspace_location, self.time_point))["vol"]
+
+		from scipy.ndimage.morphology import distance_transform_edt
+
+		dt = distance_transform_edt(next_seg>1)
+		dt = 1 - dt / float(dt.max())
+		dt = dt / 2. + 0.5
+		current_vol = current_vol * dt
+
+		io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d_propagate.mat"% (self.ws_data.workspace_location, self.time_point), {"vol":current_vol})
+
+
+
 
 	def write_mat_file(self, file_name, nuclei_pts):
 

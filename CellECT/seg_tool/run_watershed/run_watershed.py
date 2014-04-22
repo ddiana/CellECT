@@ -85,7 +85,6 @@ def run_watershed(vol, init_pts, bg_seeds):
 
 
 
-
 	
 def make_list_of_input_points(nuclei_collection, seed_collection = None):
 
