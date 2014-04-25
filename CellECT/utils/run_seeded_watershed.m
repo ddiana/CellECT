@@ -13,23 +13,43 @@ end
 start_pts_mask = zeros(size(vol));
 
 
-for i = 1:size(seeds,2)
-	for x = -0:1
-		for y = -0:1
-			for z = -0:1
-				xloc = max( round(seeds(1,i)+1) + x, 1);
-				xloc = min( xloc, size(vol,1));
-
-				yloc = max( round(seeds(2,i)+1) + y, 1);
-				yloc = min( yloc, size(vol,2));
-
-				zloc = max( round(seeds(3,i)+1) + z, 1);
-				zloc = min( zloc, size(vol,3));
-				
-			    start_pts_mask(xloc, yloc,zloc) = 1;
-			end
-		end
+for i = 1:size(seeds,1)
+    seeds{i} = floor(seeds{i} + 1);
+    seeds{i} = seeds{i};
+    if size(seeds{i},1) >1
+        min_box = min(seeds{i},[],1);
+        max_box = max(seeds{i},[],1);
+        min_box = max(min_box - 10, 1);
+        max_box = min(max_box + 10, cast(size(vol), class(max_box)));
+        one =  seeds{i}(:,1) - min_box(1)+1;
+        two =  seeds{i}(:,2) - min_box(2)+1;
+        three = seeds{i}(:,3) - min_box(3) +1;
+        input = [ one, two, three ];
+        input = double(input);
+        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input);
+        start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)) = output;
+    else
+        start_pts_mask(seeds{i}(1), seeds{i}(2), seeds{i}(3)) = 1;        
     end
+          
+        
+        
+% 	for x = -0:1
+% 		for y = -0:1
+% 			for z = -0:1
+% 				xloc = max( round(seeds(1,i)+1) + x, 1);
+% 				xloc = min( xloc, size(vol,1));
+% 
+% 				yloc = max( round(seeds(2,i)+1) + y, 1);
+% 				yloc = min( yloc, size(vol,2));
+% 
+% 				zloc = max( round(seeds(3,i)+1) + z, 1);
+% 				zloc = min( zloc, size(vol,3));
+% 				
+% 			    start_pts_mask(xloc, yloc,zloc) = 1;
+% 			end
+% 		end
+%     end
 end
 
 
@@ -82,7 +102,7 @@ end
 % 	ws = watershed(vol);
 % end
 
-if (size(seeds,2) <= 1)
+if (size(seeds,1) <= 1)
     ws = ones(size(vol));
 else
     vol = imimposemin (vol, start_pts_mask);

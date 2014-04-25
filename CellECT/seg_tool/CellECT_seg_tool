@@ -204,7 +204,7 @@ def main():
 
 		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
 
-		original_init_pts = ws.make_list_of_input_points(nuclei_collection)
+		original_init_pts = ws.make_list_of_seed_groups(nuclei_collection)
 
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
 		#test_data = cellness.prepare_test_data(collection_of_ws_segments)
@@ -334,7 +334,7 @@ def main():
 
 				
 
-				init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
+				init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
 				#call_silent_err( show_new_user_points,original_init_pts, init_pts)
 
 				watershed_old = watershed
@@ -350,7 +350,7 @@ def main():
 					seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 
 
-				watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+				#watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 
 			else:
 				ask_feedback = False

@@ -42,6 +42,7 @@ def run_watershed(vol, init_pts, bg_seeds):
 	bg_seeds_temp = [ list (x) for x in bg_seeds ]
 
 
+
 	try:
 		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds_temp})
 	except Exception as err:
@@ -83,6 +84,34 @@ def run_watershed(vol, init_pts, bg_seeds):
 		sys.exit()
 	return ws
 
+
+
+def make_list_of_seed_groups(nuclei_collection, seed_collection = None):
+
+	dict_of_grouped_seeds = {}
+
+	
+	for nucleus in nuclei_collection.nuclei_list:
+		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)
+		if dict_of_grouped_seeds.has_key(head_nucleus.index):
+			dict_of_grouped_seeds[head_nucleus.index].append([nucleus.x, nucleus.y, nucleus.z])
+		else:
+			dict_of_grouped_seeds[head_nucleus.index] = [[nucleus.x, nucleus.y, nucleus.z]]
+
+
+	if seed_collection is not None:
+		for seed in seed_collection.list_of_seeds:
+			index_of_parent_nucleus = seed.nucleus_index
+			# get the nucleus object
+			parent_nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[index_of_parent_nucleus]
+			parent_nucleus = nuclei_collection.nuclei_list[parent_nucleus_list_pos]
+			# get the head nucleus of the set this nucleus is (in case it was merged with soemthing else)
+			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)		
+			dict_of_grouped_seeds[head_nucleus.index].append([seed.x, seed.y, seed.z])
+
+
+
+	return dict_of_grouped_seeds.values()
 
 
 	
