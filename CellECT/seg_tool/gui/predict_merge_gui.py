@@ -20,9 +20,10 @@ class MergePredictorUI(object):
 		self.label1 = None
 		self.label2 = None
 		self.list_to_merge = []
+		self.list_to_delete = []
 
 
-	def set_data(self, vol, vol_nuclei, label_map, highlight_map, color_map, label1, label2, list_to_merge, all_answers, score):
+	def set_data(self, vol, vol_nuclei, label_map, highlight_map, color_map, label1, label2, list_to_merge, list_to_delete, all_answers, score):
 
 		self.vol = vol
 		self.vol_nuclei = vol_nuclei
@@ -32,6 +33,7 @@ class MergePredictorUI(object):
 		self.label1 = label1
 		self.label2 = label2
 		self.list_to_merge = list_to_merge
+		self.list_to_delete = list_to_delete
 		self.all_answers = all_answers
 		self.score = score
 
@@ -40,6 +42,20 @@ class MergePredictorUI(object):
 		self.answer = True
 		print "Yes, merge!"
 		self.list_to_merge.append((self.label1, self.label2))
+		self.all_answers. append((self.score,True))
+		pylab.close(self.fig)
+
+	def delete_red_callback(self,event):
+		self.answer = True
+		print "Delete red!"
+		self.list_to_delete.append((self.label2))
+		self.all_answers. append((self.score,True))
+		pylab.close(self.fig)
+
+	def delete_yellow_callback(self,event):
+		self.answer = True
+		print "Delete yellow!"
+		self.list_to_delete.append((self.label1))
 		self.all_answers. append((self.score,True))
 		pylab.close(self.fig)
 
@@ -113,13 +129,25 @@ class MergePredictorUI(object):
 
 
 
-		a_dont_merge= pylab.axes([0.55, 0.10, 0.3, 0.05])
+
+		a_merge = pylab.axes([0.1, 0.07, 0.12, 0.07])
+		self.b_merge = Button(a_merge, "Merge")
+		self.b_merge.on_clicked(self.merge_callback)
+
+		a_delete_red = pylab.axes([0.23, 0.07, 0.16, 0.07])
+		self.b_delete_red = Button(a_delete_red, "Delete red")
+		self.b_delete_red.on_clicked(self.delete_red_callback)
+
+		a_delete_yellow = pylab.axes([0.40, 0.07, 0.22, 0.07])
+		self.b_delete_yellow = Button(a_delete_yellow, "Delete yellow")
+		self.b_delete_yellow.on_clicked(self.delete_yellow_callback)
+
+
+		a_dont_merge= pylab.axes([0.63, 0.07, 0.3, 0.07])
 		self.b_dont_merge = Button(a_dont_merge, "Don't merge / Don't know")
 		self.b_dont_merge.on_clicked(self.dont_merge_callback)
 
-		a_merge = pylab.axes([0.15, 0.10, 0.3, 0.05])
-		self.b_merge = Button(a_merge, "Yes, merge segments.")
-		self.b_merge.on_clicked(self.merge_callback)
+
 
 #		rax = pylab.axes([0.4, 0.00, 0.15, 0.15])
 #		rax.set_axis_off()

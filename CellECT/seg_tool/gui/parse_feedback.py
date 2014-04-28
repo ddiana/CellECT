@@ -104,6 +104,20 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection):
 	return nucleus_index_for_segment
 
 
+def parse_to_delete_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
+
+	for label1 in to_merge_predicted:
+
+		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection)
+	
+		nucleus1 = nuclei_collection.nuclei_list[nucleus_idx1]
+		nuclei_collection.delete_nucleus(nucleus1)
+
+		idx1 = segment_collection.segment_label_to_list_index_dict[label1]
+		seg1 = segment_collection.list_of_segments[idx1]
+
+		incorrect_segments.add(seg1)
+	
 
 def parse_to_merge_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
 

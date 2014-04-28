@@ -280,7 +280,7 @@ def main():
 
 				# split predict too slow, not using this anymore.
 				#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
-				all_user_feedback, to_merge_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, vol_nuclei=vol_nuclei)
+				all_user_feedback, to_merge_predicted, to_delete_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, vol_nuclei=vol_nuclei)
 
 				for label in correct_labels:
 
@@ -318,6 +318,13 @@ def main():
 						made_changes = True
 						gui_parse.parse_to_merge_predictions(to_merge_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
 
+
+					if len(to_delete_predicted):
+						made_changes = True
+						gui_parse.parse_to_delete_predictions(to_delete_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+
+
+
 					if old_len_bg_seeds != len(bg_seeds):
 						made_changes = True
 				
@@ -344,7 +351,7 @@ def main():
 				cellness_metric.train()
 
 				## Rerun Watershed if necessary ################################
-				if old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
+				if True: #old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
 				
 					watershed = ws.run_watershed(vol, init_pts, bg_seeds)
 					seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)

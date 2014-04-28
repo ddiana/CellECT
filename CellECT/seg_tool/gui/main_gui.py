@@ -460,7 +460,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 
 
-	return list_of_all_mouse_events, merge_pred.list_to_merge
+	return list_of_all_mouse_events, merge_pred.list_to_merge, merge_pred.list_to_delete
 
 
 

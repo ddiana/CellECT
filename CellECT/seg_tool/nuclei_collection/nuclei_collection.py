@@ -118,6 +118,9 @@ class NucleusCollection(object):
 		return min_nucleus
 
 
+	def delete_nucleus(self, nucleus):
+
+		print "DELETING NUCLEUS"
 		
 
 	def merge_two_nuclei (self, nucleus1, nucleus2):

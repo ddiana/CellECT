@@ -18,6 +18,7 @@ class MergePredictor(object):
 		self.label_map = label_map
 		self.ui = None
 		self.list_to_merge = []
+		self.list_to_delete = []
 		self.color_map = color_map
 		self.all_answers = []
 
@@ -68,7 +69,7 @@ class MergePredictor(object):
 			highlight_map = (label_map == 0) + 100*(label_map == seg1.label) + 200*(label_map == seg2.label)
 
 			self.ui = MergePredictorUI()
-			self.ui.set_data(vol, vol_nuclei, label_map, highlight_map, self.color_map, seg1.label, seg2.label, self.list_to_merge, self.all_answers, merge_tuple[0])
+			self.ui.set_data(vol, vol_nuclei, label_map, highlight_map, self.color_map, seg1.label, seg2.label, self.list_to_merge, self.list_to_delete, self.all_answers, merge_tuple[0])
 			self.ui.display()
 
 		else:

@@ -168,7 +168,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			
 	list_of_mouse_events_in_ascidian = []
 
-	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL", "ADD_BG_SEED"])
+	button_tasks = set(["MERGE_TWO_LABELS", "ADD_SEEDS_TO_NEW_LABEL", "ADD_SEEDS_TO_EXISTING_LABEL", "ADD_BG_SEED", "DELETE_SEG"])
 
 
 	CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
@@ -209,7 +209,16 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 			print colored("(One click per seed", "grey")
 			logging.info(CellECT.seg_tool.globals.current_button_task)
 
-						
+
+		def delete_segment(self, event):
+			CellECT.seg_tool.globals.task_index += 1
+			CellECT.seg_tool.globals.current_button_task = "DELETE_SEG"
+			print "--------------------------------------------------------------------------------"
+			print colored("DELETE SEGMENT: Right click to select segment to delete.","blue")
+			print colored("(One click per segment", "grey")
+			logging.info(CellECT.seg_tool.globals.current_button_task)
+			
+
 		def clear_task(self, event):
 			CellECT.seg_tool.globals.current_button_task = "NO_TASK_SELECTED"
 			print "--------------------------------------------------------------------------------"
@@ -309,15 +318,22 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 		if event.mouseevent.button == 3:
 			# right		
-			print "Label %d @ (%d, %d, %d)" % (watershed[int(xval), int(yval), int (zval)], xval, yval, zval)
+			label = watershed[int(xval), int(yval), int (zval)]
+			text = "Label %d" % label
+			if label == 1:
+				text = "Background"
+			if label == 0:
+				text = "Border"
+			print "%s @ (%d, %d, %d)" % (text, xval, yval, zval)
 
 			
 		elif event.mouseevent.button == 1: 
 			# left
 			
-			# draw the current click in one or both plots (if the coords match), unless "clear task" was selected
+			# draw the current click in one or both plots (if the coords match), unless "clear task", "merge 2" or "delete" was selected
+
 			
-			if CellECT.seg_tool.globals.current_button_task != "NO_TASK_SELECTED":
+			if not CellECT.seg_tool.globals.current_button_task in set(["NO_TASK_SELECTED", "MERGE_TWO_LABELS", "DELETE_SEG"]):
 
 				# if second seed for new label click in a row, then make a new label task:
 				if CellECT.seg_tool.globals.current_button_task == "ADD_SEEDS_TO_NEW_LABEL":
@@ -502,18 +518,22 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 	callback = ButtonCallback()
-	a_seed_old_label = pylab.axes([0.07, 0.05, 0.16, 0.05])
-	a_seed_new_label = pylab.axes([0.24, 0.05, 0.13, 0.05])
-	a_merge_two_labels = pylab.axes([0.38, 0.05, 0.17, 0.05])
-	a_clear_task = pylab.axes( [0.56, 0.05, 0.09, 0.05 ])
-	a_undo = pylab.axes( [0.66, 0.05, 0.06, 0.05 ])
-	a_toggle = pylab.axes([0.73, 0.05, 0.08, 0.05])
-	a_bg_seed = pylab.axes([0.82, 0.05, 0.11, 0.05])
+	a_seed_old_label = pylab.axes([0.07, 0.06, 0.16, 0.04])
+	a_seed_new_label = pylab.axes([0.24, 0.06, 0.13, 0.04])
+	a_merge_two_labels = pylab.axes([0.38, 0.06, 0.17, 0.04])
+	a_delete_seg = pylab.axes([0.56, 0.06, 0.16, 0.04])
+	a_bg_seed = pylab.axes([0.73, 0.06, 0.20, 0.04])
 
-	a_next_z = pylab.axes([0.34, 0.11, 0.03, 0.03])
-	a_prev_z = pylab.axes([0.30, 0.11, 0.03, 0.03])
-	a_next_y = pylab.axes([0.74, 0.11, 0.03, 0.03])
-	a_prev_y = pylab.axes([0.70, 0.11, 0.03, 0.03])
+	
+	a_clear_task = pylab.axes( [0.35, 0.01, 0.09, 0.04 ])
+	a_undo = pylab.axes( [0.45, 0.01, 0.13, 0.04 ])
+	a_toggle = pylab.axes([0.59, 0.01, 0.13, 0.04])
+
+
+	a_next_z = pylab.axes([0.34, 0.125, 0.025, 0.025])
+	a_prev_z = pylab.axes([0.30, 0.125, 0.025, 0.025])
+	a_next_y = pylab.axes([0.74, 0.125, 0.025, 0.025])
+	a_prev_y = pylab.axes([0.70, 0.125, 0.025, 0.025])
 	
 	b_seed_old_label = Button(a_seed_old_label, 'Modify segment')
 	b_seed_old_label.on_clicked(callback.seed_old_label)
@@ -523,12 +543,15 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	b_merge_two_labels.on_clicked(callback.merge_two_labels)
 	b_clear_task = Button(a_clear_task, "No task")
 	b_clear_task.on_clicked(callback.clear_task)
-	b_undo_task = Button(a_undo, "Undo")
+	b_undo_task = Button(a_undo, "Undo task")
 	b_undo_task.on_clicked(callback.undo_task)
-	b_toggle = Button(a_toggle, "Borders")
+	b_toggle = Button(a_toggle, "Show Borders")
 	b_toggle.on_clicked(callback.toggle_boundary)
-	b_bg_seed = Button(a_bg_seed, "Background")
+	b_bg_seed = Button(a_bg_seed, "Background segment")
 	b_bg_seed.on_clicked(callback.add_bg_seed)
+	b_delete_seg = Button(a_delete_seg, "Delete segment")
+	b_delete_seg.on_clicked(callback.delete_segment)
+
 
 	b_next_z = Button(a_next_z, ">")
 	b_next_z.on_clicked(next_z_click)
@@ -550,6 +573,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	fig._b_prev_z = b_prev_z
 	fig._b_next_y = b_next_y
 	fig._b_prev_y = b_prev_y
+	fig._b_delete_seg = b_delete_seg
 
 
 	if z_default > -1:
@@ -644,10 +668,10 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	
 
 	axcolor = 'lightgoldenrodyellow'
-	ax_z = pylab.axes([0.2, 0.15, 0.25, 0.03], axisbg=axcolor)
+	ax_z = pylab.axes([0.2, 0.16, 0.25, 0.03], axisbg=axcolor)
 	s_z = Slider(ax_z, 'z-slice', 0, vol.shape[2]-1, valinit=z0)
 
-	ax_y = pylab.axes([0.6, 0.15, 0.25, 0.03], axisbg=axcolor)
+	ax_y = pylab.axes([0.6, 0.16, 0.25, 0.03], axisbg=axcolor)
 	s_y = Slider(ax_y, 'y-slice', 0, vol.shape[1]-1, valinit=y0)
 
 	s_z.on_changed(update_z)

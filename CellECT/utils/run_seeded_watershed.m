@@ -1,5 +1,8 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
+p = path;
+path(p, [pwd, '/fast_marching']);
+
 load (input_mat_file, 'vol', 'seeds');
 
 background_seeds = [];
