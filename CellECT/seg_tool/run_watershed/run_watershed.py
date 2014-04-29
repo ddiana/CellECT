@@ -91,7 +91,7 @@ def make_list_of_seed_groups(nuclei_collection, seed_collection = None):
 	dict_of_grouped_seeds = {}
 
 	
-	for nucleus in nuclei_collection.nuclei_list:
+	for nucleus in nuclei_collection.list_all_nuclei():
 		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)
 		if dict_of_grouped_seeds.has_key(head_nucleus.index):
 			dict_of_grouped_seeds[head_nucleus.index].append([nucleus.x, nucleus.y, nucleus.z])
@@ -106,8 +106,9 @@ def make_list_of_seed_groups(nuclei_collection, seed_collection = None):
 			parent_nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[index_of_parent_nucleus]
 			parent_nucleus = nuclei_collection.nuclei_list[parent_nucleus_list_pos]
 			# get the head nucleus of the set this nucleus is (in case it was merged with soemthing else)
-			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)		
-			dict_of_grouped_seeds[head_nucleus.index].append([seed.x, seed.y, seed.z])
+			head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(parent_nucleus)	
+			if	head_nucleus is not None:
+				dict_of_grouped_seeds[head_nucleus.index].append([seed.x, seed.y, seed.z])
 
 
 
@@ -129,7 +130,7 @@ def make_list_of_input_points(nuclei_collection, seed_collection = None):
 	init_pts = np.zeros((3, len_nuclei + len_seeds))
 	
 	counter = 0
-	for nucleus in nuclei_collection.nuclei_list:
+	for nucleus in nuclei_collection.list_all_nuclei():
 		init_pts[:,counter] = (nucleus.x, nucleus.y, nucleus.z)
 		counter += 1
 		

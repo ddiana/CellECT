@@ -14,7 +14,7 @@ class UnionFind(object):
 	def __init__ (self, number_lements):
 		self.parents = range(number_lements)
 		self.set_size = [1] * number_lements
-		self.is_deleted = [False] * number_lements
+		self.is_deleted = [0] * number_lements
 
 
 
@@ -24,7 +24,7 @@ class UnionFind(object):
 
 		self.parents.append(len(self.parents))
 		self.set_size.append(1)
-		self.is_deleted.append(False)
+		self.is_deleted.append(0)
 
 	
 	def find(self, element):
@@ -39,7 +39,7 @@ class UnionFind(object):
 	def delete_set_of(self, element):
 
 		root = self.find(element)
-		self.is_deleted[root] = True
+		self.is_deleted[root] = 1
 
 
 	# TODO check if you need to call find for set size.	

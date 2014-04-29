@@ -68,12 +68,18 @@ def load_nuclei_from_xml():
 	parents_string = union_find_field[0][0].text
 	parents_string = re.findall("(\d+)", parents_string)
 	parents = [int(val) for val in parents_string]
+
 	set_size_string = union_find_field[0][1].text
 	set_size_string = re.findall("(\d+)", set_size_string)
 	set_size = [int(val) for val in set_size_string]
 
+	is_deleted_string = union_find_field[0][2].text
+	is_deleted_string = re.findall("(\d+)", is_deleted_string)
+	is_deleted = [int(val) for val in is_deleted_string]
+
 	nuclei_collection.union_find.parents = parents
 	nuclei_collection.union_find.set_size = set_size
+	nuclei_collection.union_find.is_deleted = is_deleted
 
 
 	return nuclei_collection

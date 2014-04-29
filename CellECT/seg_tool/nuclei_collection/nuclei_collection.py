@@ -71,7 +71,13 @@ class NucleusCollection(object):
 
 		nucleus_list_pos = self.nucleus_index_to_list_pos[nucleus.index]
 		head_nucleus_list_pos = self.union_find.find(nucleus_list_pos)
-		return self.nuclei_list[head_nucleus_list_pos]
+
+		head_nucl = None
+		if not self.union_find.is_deleted[head_nucleus_list_pos]:
+			head_nucl = self.nuclei_list[head_nucleus_list_pos]
+
+		return head_nucl
+
 
 
 	def add_nucleus (self, nucleus):
@@ -92,6 +98,35 @@ class NucleusCollection(object):
 			list_of_segment_labels.append (label_map[nucleus.x, nucleus.y, nucleus.z])
 
 		return list_of_segment_labels
+
+
+	def list_head_nuclei(self,):
+
+		heads = set()
+
+		for i in xrange(len(self.nuclei_list)):
+
+			parent  = self.union_find.find(i)
+			if not self.union_find.is_deleted[parent]:
+
+				heads.add(self.nuclei_list[parent])
+
+		return list(heads)
+	
+
+	def list_all_nuclei(self,):
+
+		heads = set()
+
+		for i in xrange(len(self.nuclei_list)):
+
+			parent  = self.union_find.find(i)
+			if not self.union_find.is_deleted[parent]:
+
+				heads.add(self.nuclei_list[i])
+
+		return list(heads)
+
 
 		
 	def find_closest_nucleus_to_segment(self, segment):
@@ -118,9 +153,10 @@ class NucleusCollection(object):
 		return min_nucleus
 
 
-	def delete_nucleus(self, nucleus):
+	def delete_set_of_nucleus(self, nucleus):
 
-		print "DELETING NUCLEUS"
+		nucleus_list_pos = self.nucleus_index_to_list_pos[nucleus.index]
+		self.union_find.delete_set_of(nucleus_list_pos)
 		
 
 	def merge_two_nuclei (self, nucleus1, nucleus2):

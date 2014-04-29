@@ -130,7 +130,7 @@ def recolor_label_map_correctly( label_map, nuclei_collection, seed_collection, 
 	# check if already colored correctly (in case user said just merge 2 nuclei, and watershed was not rerun)
 
 	# color every nucleus segment to the color of the head nucleus.
-	for nucleus in nuclei_collection.nuclei_list:
+	for nucleus in nuclei_collection.list_all_nuclei():
 		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)
 
 		if head_nucleus.index != nucleus.index:

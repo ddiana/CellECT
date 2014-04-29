@@ -49,8 +49,12 @@ def save_xml_file_nuclei(nuclei_collection):
 	union_find = ET.SubElement(root,"union_find")	
 	union_find_parents = ET.SubElement(union_find, "parents")
 	union_find_parents.text = str(nuclei_collection.union_find.parents)
+
 	union_find_set_size = ET.SubElement(union_find, "set_size")
 	union_find_set_size.text = str(nuclei_collection.union_find.set_size)
+
+	union_find_is_deleted = ET.SubElement(union_find, "set_size")
+	union_find_is_deleted.text = str(nuclei_collection.union_find.is_deleted)
 	
 	tree = ET.ElementTree(root)
 	

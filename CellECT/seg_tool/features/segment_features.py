@@ -178,7 +178,7 @@ def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
 
 	segment_collection.update_index_dict()
 
-	for nucleus in nuclei_collection.nuclei_list:
+	for nucleus in nuclei_collection.list_head_nuclei():
 
 		segment_label = label_map[nucleus.x, nucleus.y, nucleus.z]
 

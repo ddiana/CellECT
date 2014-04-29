@@ -91,7 +91,7 @@ def add_new_nucleus_to_collection(user_mouse_click,box, nuclei_collection, added
 
 
 
-def get_nucleus_index_of_intended_label(segment_label, segment_collection):
+def get_nucleus_index_of_intended_label(segment_label, segment_collection, nuclei_collection):
 
 	"""
 	Given a segment label, what is the index of the nucleus associated with this segment.
@@ -99,16 +99,33 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection):
 
 	segment_list_index = segment_collection.segment_label_to_list_index_dict[segment_label]		
 	segment = segment_collection.list_of_segments[segment_list_index]
-	nucleus_index_for_segment = segment.nucleus_list[0].index
 
-	return nucleus_index_for_segment
+
+	index = None
+
+	for i in xrange(len(segment.nucleus_list)):
+		nucleus_index_for_segment = segment.nucleus_list[0].index
+
+		# return parent of this node, unless it's been deleted
+
+		nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[nucleus_index_for_segment.index]
+		parent_list_pos = nuclei_collection.union_find.find(nucleus_list_pos)
+
+		if nuclei_collection.union_find.is_deleted[parent_list_pos]:
+			break
+
+		parent_nucleus = nuclei_collection.nuclei_list[parent_list_pos]
+
+		index = parent_nucleus.index
+
+	return index
 
 
 def parse_to_delete_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
 
 	for label1 in to_merge_predicted:
 
-		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection)
+		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection, nuclei_collection)
 	
 		nucleus1 = nuclei_collection.nuclei_list[nucleus_idx1]
 		nuclei_collection.delete_nucleus(nucleus1)
@@ -125,8 +142,8 @@ def parse_to_merge_predictions(to_merge_predicted, segment_collection, nuclei_co
 		label1 = pair[0]
 		label2 = pair[1]
 		
-		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection)
-		nucleus_idx2 = get_nucleus_index_of_intended_label(label2, segment_collection)
+		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection, nuclei_collection)
+		nucleus_idx2 = get_nucleus_index_of_intended_label(label2, segment_collection, nuclei_collection)
 	
 		nucleus1 = nuclei_collection.nuclei_list[nucleus_idx1]
 		nucleus2 = nuclei_collection.nuclei_list[nucleus_idx2]			
@@ -142,7 +159,7 @@ def parse_to_merge_predictions(to_merge_predicted, segment_collection, nuclei_co
 		incorrect_segments.add(seg2)
 
 
-def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, label_map, segment_collection):
+def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, label_map, segment_collection, nuclei_collection):
 
 	"""
 	Given a user right click, what was the segment label associated with it?
@@ -166,7 +183,7 @@ def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, 
 
 	if segment_label >1:
 		# If the label selected is valid (no background/border), pick up the nucleus associated with it.		
-		nucleus_index_for_segment = get_nucleus_index_of_intended_label(segment_label, segment_collection)
+		nucleus_index_for_segment = get_nucleus_index_of_intended_label(segment_label, segment_collection, nuclei_collection)
 	else:
 		return None, None
 	
@@ -224,7 +241,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 			return False
 
 		# get the last right click information
-		segment_label, nucleus_index_for_segment = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection)
+		segment_label, nucleus_index_for_segment = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection, nuclei_collection)
 
 		# if they returned None, None
 		if not (segment_label and nucleus_index_for_segment):
@@ -267,8 +284,8 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		# check the last 2 right clicks:
 
-		segment1, nucleus_index_for_segment1 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection)
-		segment2, nucleus_index_for_segment2 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-2], box, label_map, segment_collection)
+		segment1, nucleus_index_for_segment1 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection, nuclei_collection)
+		segment2, nucleus_index_for_segment2 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-2], box, label_map, segment_collection, nuclei_collection)
 
 
 		# if either one came None
