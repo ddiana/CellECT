@@ -108,7 +108,7 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection, nucle
 
 		# return parent of this node, unless it's been deleted
 
-		nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[nucleus_index_for_segment.index]
+		nucleus_list_pos = nuclei_collection.nucleus_index_to_list_pos[nucleus_index_for_segment]
 		parent_list_pos = nuclei_collection.union_find.find(nucleus_list_pos)
 
 		if nuclei_collection.union_find.is_deleted[parent_list_pos]:
@@ -123,12 +123,14 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection, nucle
 
 def parse_to_delete_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
 
+	pdb.set_trace()
+
 	for label1 in to_merge_predicted:
 
 		nucleus_idx1 = get_nucleus_index_of_intended_label(label1, segment_collection, nuclei_collection)
 	
 		nucleus1 = nuclei_collection.nuclei_list[nucleus_idx1]
-		nuclei_collection.delete_nucleus(nucleus1)
+		nuclei_collection.delete_set_of_nucleus(nucleus1)
 
 		idx1 = segment_collection.segment_label_to_list_index_dict[label1]
 		seg1 = segment_collection.list_of_segments[idx1]
