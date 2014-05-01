@@ -30,8 +30,6 @@ def run_watershed(vol, init_pts, bg_seeds):
 	TODO: Replace this with C extension of watershed.
 	"""
 	
-	pdb.set_trace()
-
 
 	path_to_temp = tempfile.mkdtemp()
 

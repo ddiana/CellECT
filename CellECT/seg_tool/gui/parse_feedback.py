@@ -123,7 +123,6 @@ def get_nucleus_index_of_intended_label(segment_label, segment_collection, nucle
 
 def parse_to_delete_predictions(to_merge_predicted, segment_collection, nuclei_collection, incorrect_segments):
 
-	pdb.set_trace()
 
 	for label1 in to_merge_predicted:
 
