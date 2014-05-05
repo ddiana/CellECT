@@ -21,9 +21,10 @@ class MergePredictorUI(object):
 		self.label2 = None
 		self.list_to_merge = []
 		self.list_to_delete = []
+		self.blacklisted_labels = set()
 
 
-	def set_data(self, vol, vol_nuclei, label_map, highlight_map, color_map, label1, label2, list_to_merge, list_to_delete, all_answers, score):
+	def set_data(self, vol, vol_nuclei, label_map, highlight_map, color_map, label1, label2, list_to_merge, list_to_delete, all_answers, score, blacklisted_labels):
 
 		self.vol = vol
 		self.vol_nuclei = vol_nuclei
@@ -36,6 +37,7 @@ class MergePredictorUI(object):
 		self.list_to_delete = list_to_delete
 		self.all_answers = all_answers
 		self.score = score
+		self.blacklisted_labels = blacklisted_labels
 
 
 	def merge_callback(self,event):
@@ -48,15 +50,17 @@ class MergePredictorUI(object):
 	def delete_red_callback(self,event):
 		self.answer = True
 		print "Delete red!"
-		self.list_to_delete.append((self.label2))
+		self.list_to_delete.append((self.label1))
 		self.all_answers. append((self.score,True))
+		self.blacklisted_labels.add(self.label1)
 		pylab.close(self.fig)
 
 	def delete_yellow_callback(self,event):
 		self.answer = True
 		print "Delete yellow!"
-		self.list_to_delete.append((self.label1))
+		self.list_to_delete.append((self.label2))
 		self.all_answers. append((self.score,True))
+		self.blacklisted_labels.add(self.label2)
 		pylab.close(self.fig)
 
 	def dont_merge_callback(self, event):

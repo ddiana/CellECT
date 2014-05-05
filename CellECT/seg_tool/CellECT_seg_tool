@@ -133,6 +133,15 @@ def main():
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
 	bg_seeds = set()
 
+	try:
+		print "Loading background seeds..."
+		bg_seeds = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_var"])
+		bg_seeds = set((tuple(x) for x in bg_seeds))   # from nparray to set
+	except:
+		print "No background seeds."
+	
+
+
 	# load nuclei channel volume, if available
 	vol_nuclei = None
 	try:
@@ -170,10 +179,13 @@ def main():
 
 	last_length_of_seeds_list = 0 
 
+	# obsolete... keeping this as dummy variable.
 	seed_segment_collection = ssc.SeedSegmentCollection()
 
 
 	ask_feedback = True
+
+
 	watershed_old = watershed
 
 	CellECT.seg_tool.globals.should_load_last_save
@@ -186,13 +198,13 @@ def main():
 
 	made_changes = False
 
-	while ask_feedback or CellECT.seg_tool.globals.should_load_last_save:
+	while (ask_feedback or CellECT.seg_tool.globals.should_load_last_save):
 
 
 		## Load last save, or continue with current setup ######################
 		if CellECT.seg_tool.globals.should_load_last_save:
 			nuclei_collection, seed_collection, watershed, bg_seeds = load_all.load_last_save()
-			seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+			#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 			#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 	
 			CellECT.seg_tool.globals.should_load_last_save = False
@@ -210,6 +222,8 @@ def main():
 		#test_data = cellness.prepare_test_data(collection_of_ws_segments)
 
 		## Apply cellness metric ###############################################
+
+
 
 		if not 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
@@ -282,6 +296,7 @@ def main():
 				#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
 				all_user_feedback, to_merge_predicted, to_delete_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, vol_nuclei=vol_nuclei)
 
+
 				for label in correct_labels:
 
 					idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
@@ -294,7 +309,7 @@ def main():
 
 		if not CellECT.seg_tool.globals.should_load_last_save:
 
-			print "Processing user feedback..."
+
 			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
 			old_number_of_seeds = len(seed_collection.list_of_seeds)
 	
@@ -303,6 +318,8 @@ def main():
 			
 
 			if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
+
+				print "Processing user feedback..."
 				# Get feedback #####################################################
 				if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 					# TODO: bisque UI parser
@@ -312,7 +329,7 @@ def main():
 				else:
 					logging.info("DESKTOP CLIENT UI PARSER.")
 					old_len_bg_seeds = len(bg_seeds)
-					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments, bg_seeds)	
+					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, to_delete_predicted)	
 
 					if len(to_merge_predicted):
 						made_changes = True
@@ -350,11 +367,12 @@ def main():
 
 				cellness_metric.train()
 
+
 				## Rerun Watershed if necessary ################################
 				if True: #old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
 				
 					watershed = ws.run_watershed(vol, init_pts, bg_seeds)
-					seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+					#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 
 
 				#watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
@@ -391,7 +409,7 @@ def main():
 	## Save ####################################################################
 
 	if should_save.lower() == "y":
-		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed, bg_seed)
+		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed, bg_seeds)
 		CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
 
 	else:

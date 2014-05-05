@@ -46,6 +46,8 @@ default_parameter_dictionary_keys = ("volume_mat_path",
    "first_seg_mat_var", \
    "nuclei_mat_path",\
    "nuclei_mat_var",\
+   "bg_seeds_var",\
+   "bg_seeds_path",\
    "save_location_prefix",\
    "has_bg", \
    "use_size", \

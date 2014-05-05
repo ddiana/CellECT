@@ -81,7 +81,7 @@ class PrepNuclei(object):
 #			z = float(round(number_z / 2))
 #			nuclei_mat[0,:] = np.array([x,y,z])
 			self.nuclei_dict[time] = [] #nuclei_mat
-		pdb.set_trace()
+
 
 		self.write_mat_files()
 
@@ -290,6 +290,8 @@ class WorkspaceCreator(object):
 					f.write("first_seg_mat_var = ws\n")
 					f.write("nuclei_mat_path =  init_watershed_all_time_stamps/time_stamp_%d_nuclei%s.mat\n" % (time, filetype))
 					f.write("nuclei_mat_var = seeds\n")
+					f.write("bg_seeds_path =  init_watershed_all_time_stamps/time_stamp_%d_bg_seeds%s.mat\n" % (time, filetype))
+					f.write("bg_seeds_var = seeds\n")
 					f.write("training_vol_mat_path =  training_data/positive_example.mat\n")
 					f.write("training_vol_mat_var = vol\n")
 					f.write("training_vol_nuclei_mat_path = training_data/positive_example.mat\n")

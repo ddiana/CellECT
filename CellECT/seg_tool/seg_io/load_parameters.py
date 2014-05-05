@@ -210,6 +210,7 @@ def prepare_program_parameters(config_file_path):
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_mat_path"])
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_vol_nuclei_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_seg_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_positive_labels_mat_path"])

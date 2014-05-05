@@ -15,13 +15,20 @@ end
 
 start_pts_mask = zeros(size(vol));
 
+if ~strcmp(class(seeds),'cell')
+	seeds = squeeze(seeds);
+	if size(seeds,1) == 3
+		seeds = seeds';
+	end
+end
+
 
 for i = 1:size(seeds,1)
    	seed_group = [];
     if strcmp(class(seeds),'cell')
         seed_group = floor(seeds{i} + 1);
     else
-        seed_group = floor(seeds(i,:));
+        seed_group = floor(seeds(i,:) +1);
     end
     if size(seed_group,1) >1
         min_box = min(seed_group,[],1);
@@ -60,23 +67,17 @@ for i = 1:size(seeds,1)
 end
 
 
-for i = 1:size(background_seeds,2)
-	for x = -0:1
-		for y = -0:1
-			for z = -0:1
-				xloc = max( round(background_seeds(1,i)+1) + x, 1);
-				xloc = min( xloc, size(vol,1));
+for i = 1:size(background_seeds,1)
+	xloc = max( round(background_seeds(i,1)+1) , 1);
+	xloc = min( xloc, size(vol,1));
 
-				yloc = max( round(background_seeds(2,i)+1) + y, 1);
-				yloc = min( yloc, size(vol,2));
+	yloc = max( round(background_seeds(i,2)+1) , 1);
+	yloc = min( yloc, size(vol,2));
 
-				zloc = max( round(background_seeds(3,i)+1) + z, 1);
-				zloc = min( zloc, size(vol,3));
+	zloc = max( round(background_seeds(i,3)+1) , 1);
+	zloc = min( zloc, size(vol,3));
 				
-			    start_pts_mask(xloc, yloc,zloc) = 1;
-			end
-		end
-	end
+    start_pts_mask(xloc, yloc,zloc) = 1;
 end
 
 

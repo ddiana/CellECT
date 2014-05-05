@@ -4,6 +4,7 @@ import re
 import numpy as np
 from scipy import io
 from os import path
+import os
 
 from CellECT.seg_tool.seg_utils.union_find import UnionFind
 
@@ -35,12 +36,38 @@ class PreparePropagateInput(object):
 		if len(nuclei_pts) == 0:
 			raise Exception("No information in saved data.")
 
+		bg_seeds = set()
+		# if propagate segmentation result exists from before, delete it, so that seg tool recomputes.
+	
+		prev_seg_file_name = "%s/init_watershed_all_time_stamps/init_ws_%d_propagate.mat" % (self.ws_data.workspace_location ,self.time_point)
+		os.system('[ -f "%s" ] && rm %s' % (prev_seg_file_name, prev_seg_file_name))
+
+
+		try:
+			file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.xml" % (self.ws_data.workspace_location ,self.time_point+1)
+			bg_seeds = self.load_bg_seeds_from_xml(file_name)
+			bg_seeds = list(bg_seeds)
+		except:
+			print "Could not propagate user saved background seeds. Trying default background seeds."
+
+			try:		
+				file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.mat" % (self.ws_data.workspace_location ,self.time_point+1)
+				import scipy.io as sio
+				bg_seeds = sio.loadmat(file_name)["bg_seeds"]
+				bg_seeds = [x for x in bg_seeds]
+			except:
+				print "Could not propagate any background seeds. Continuing without background seeds."
+			
 
 		#nuclei_pts = self.prune_nuclei(nuclei_pts, union_find)
 
 		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_nuclei_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
 
 		self.write_mat_file(file_name, nuclei_pts)
+
+		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_bg_seeds_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
+
+		io.savemat(file_name, {"seeds":bg_seeds})
 
 		self.write_vol_file()
 
@@ -50,7 +77,7 @@ class PreparePropagateInput(object):
 
 
 		next_seg = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location, self.time_point +1))["ws"]
-		current_vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_%d.mat"% (self.ws_data.workspace_location, self.time_point))["vol"]
+		current_vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_%d.mat"  % (self.ws_data.workspace_location, self.time_point))["vol"]
 
 		from scipy.ndimage.morphology import distance_transform_edt
 
@@ -88,6 +115,20 @@ class PreparePropagateInput(object):
 
 		return final_set_nuclei
 
+
+
+	def load_bg_seeds_from_xml(self, file_name):
+	
+		try:
+			tree = ET.parse(file_name)
+		except IOError as err:
+			err.message = "Could not open nuclei xml file at %s" % file_name
+			raise err
+
+		root = tree.getroot()
+		bg_seeds = eval(tree.findall("list_of_seeds")[0].text)
+	
+		return bg_seeds
 
 
 	def load_inner_pts_from_xml(self, file_name):

@@ -546,7 +546,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		else:
 			status = " failed"
 
-		self.listView.model().contents[index] += status
+		current_status = self.listView.model().contents[index]
+		
+		current_status = re.search("Volume at t=(\d+)[.]*", current_status).group()
+
+		self.listView.model().contents[index] = current_status + status
 
 
 	def call_cellect_seg_tool_preliminary(self, config_file_location, index):
@@ -601,11 +605,19 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
-
 	def run_preliminary_seg(self):
 	
+		p = threading.Thread(target = self.run_preliminary_seg_thread)
+		p.start()
+
+
+
+	def run_preliminary_seg_thread(self):
+
+
 		"""
-		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode
+		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode.
+		If propagate, then running sequentially, otherwise, runnign in parallel, backwards.
 		"""
 
 
@@ -620,7 +632,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		if self.checkBox_propagate.isChecked():
 			valid_indexes = segmentation_indexes
-
+			valid_indexes.reverse()
 		else:
 
 			for index in segmentation_indexes:
@@ -660,13 +672,32 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			#config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
 		
-			p = threading.Thread(target = self.call_cellect_seg_tool_preliminary, args=(config_file_location, index))
-			p.start()
+			if self.checkBox_propagate.isChecked():
+			# if propagate is checked, then run sequentially, otherwise, run in parallel.
+
+				self.call_cellect_seg_tool_preliminary(config_file_location, index)
+
+			else:  # spawn a new thread
+				p = threading.Thread(target = self.call_cellect_seg_tool_preliminary, args=(config_file_location, index))
+				p.start()
 
 			
 			print config_file_location
 
 
+
+	def call_cellect_seg_tool_interactive(self, command, index):
+
+		"""
+		Run interactive seg tool.
+		"""		
+
+
+		print command
+		os.system(command)
+
+		# always displays failed.. command detaches itself?
+		#self.update_list_of_segs.emit(index)
 
 
 
@@ -719,8 +750,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep %d"' %  (use_metric, config_file_location, sleep_time)
-		print command
-		os.system(command)
+
+		p = threading.Thread(target = self.call_cellect_seg_tool_interactive, args=(command, segmentation_index))
+		p.start()
+
 
 
 	def run_CellECT_track_tool(self):

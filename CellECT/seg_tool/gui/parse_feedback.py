@@ -192,7 +192,7 @@ def get_valid_segment_label_and_nucleus_index_from_user_click(right_click, box, 
 
 
 
-def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds):
+def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_segments):
 
 	"""
 	Given the left and right clicks, the label map and the task wanted,
@@ -244,9 +244,13 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		# get the last right click information
 		segment_label, nucleus_index_for_segment = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection, nuclei_collection)
 
+		# make sure label is not blacklisted (marked for delete)
+		if segment_label in blacklisted_segments:
+			segment_label = None
+
 		# if they returned None, None
 		if not (segment_label and nucleus_index_for_segment):
-			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background or border)"
+			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background, border or deleted)"
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
 			return False
@@ -288,6 +292,10 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 		segment1, nucleus_index_for_segment1 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection, nuclei_collection)
 		segment2, nucleus_index_for_segment2 = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-2], box, label_map, segment_collection, nuclei_collection)
 
+		if (segment1 in blacklisted_segments) or (segment2 in blacklisted_segments):
+			segment1 = None
+			segment2 = None
+
 
 		# if either one came None
 		if not (segment1 and segment2 and nucleus_index_for_segment1 and nucleus_index_for_segment2):
@@ -317,13 +325,138 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 	return True
 
 
+def confirm_delete_task_is_correct_and_add_label(left_clicks, right_clicks, task_name, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_labels, nuclei_to_delete):
 
-def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments, bg_seeds):
+
+	"""
+	Given the left and right clicks, the label map,
+	confirm that the user gave all the proper information for the delete segment task.
+	If so, add the label to be deleted to a set.
+	"""
+
+
+	def get_label_from_click(user_click):
+
+		asc_coords = user_click.asc_coordinates
+		label = label_map[ asc_coords.xval + box.xmin, asc_coords.yval + box.ymin, asc_coords.zval + box.zmin]
+		return label
+
+	
+
+	if task_name == "DELETE_SEG":
+		# if adding seed to an old label, check if 
+		# (2) valid label is given (not background, not border)
+
+		# check if no label
+		if not (len(right_clicks)):
+			message = "Ignoring DELETE SEGMENT task. No label given."
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
+			return False
+
+		# get the last right click information
+		segment_label, nucleus_index_for_segment = get_valid_segment_label_and_nucleus_index_from_user_click(right_clicks[-1], box, label_map, segment_collection, nuclei_collection)
+
+		# make sure label is not blacklisted (marked for delete)
+		if segment_label in blacklisted_labels:
+			segment_label = None
+
+		# if they returned None, None
+		if not (segment_label and nucleus_index_for_segment):
+			message = "Ignoring DELETE SEGMENT task. Bad label (background or border)"
+			logging.warning(message)
+			print colored("Warning: %s" % message,"red")
+			return False
+
+		# add to blacklist, and list of nuclei to remove.
+
+		blacklisted_labels.add(segment_label)
+		nuclei_to_delete.add(nucleus_index_for_segment)
+
+
+	return True
+	
+
+
+def get_blacklisted_segments(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, blacklisted_labels):
+
+
+	"""
+	Go through all the user feedback and mark the segments to be deleted, 
+	so that every interaction involving these segments can be ignored.
+	"""
+
+	task_index = -1
+	current_task = ""
+
+	task_left_click_buffer = []
+	task_right_click_buffer = []
+
+	box = None
+	made_changes = False
+
+	incorrect_labels = set()
+
+	blacklisted_labels = set(blacklisted_labels)
+	nuclei_to_delete = set()
+
+
+	# get segments which need to be deleted
+
+	for segment_gui_feedback in all_user_feedback:
+
+	
+		# for each click that was made in this segment correction window
+		# what task did that click associated with it?
+		# did the user provide all the information?
+		
+		# detect all the tasks that the user wanted
+		# make changes for the ones with complete information
+
+
+
+		for user_mouse_click in segment_gui_feedback.list_of_cropped_ascidian_events:
+		
+			# task index starts at -1. Reinitialized to the index of current task from clicks.
+			# Also check if current task is legit (has all info), otherwise, discard it.
+			
+
+			if user_mouse_click.task_index != task_index:
+				# Finish business with current task                              
+				if current_task == "DELETE_SEG" and box:
+					made_changes = confirm_delete_task_is_correct_and_add_label(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_labels, nuclei_to_delete) or made_changes 
+				
+
+				# Initialize next task
+				task_index = user_mouse_click.task_index
+				current_task = user_mouse_click.button_task
+
+				# empty click buffers per task
+				task_left_click_buffer = []
+				task_right_click_buffer = []
+				box = segment_gui_feedback.bounding_box
+	
+			if user_mouse_click.right_click:
+				task_right_click_buffer.append(user_mouse_click)
+			else:
+				task_left_click_buffer.append(user_mouse_click)
+
+	if current_task == "DELETE_SEG" and box:
+		made_changes = confirm_delete_task_is_correct_and_add_label(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_labels, nuclei_to_delete) or made_changes
+				
+
+	return blacklisted_labels, nuclei_to_delete, made_changes
+
+
+
+
+def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, to_delete_predicted):
 
 	"""
 	Given all the user feedback, extract relevant information and make changes accordingly:
 	- add nuclei, add seeds, modify union of nuclei, etc.
 	"""
+
 
 
 	task_index = -1
@@ -336,6 +469,9 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 	made_changes = False
 
 	incorrect_labels = set()
+
+	blacklisted_segments = set(to_delete_predicted)
+	blacklisted_segments, nuclei_to_delete, made_changes = get_blacklisted_segments(label_map, nuclei_collection, segment_collection, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, blacklisted_segments)
 
 	# for each segment correction window that was open:
 	for segment_gui_feedback in all_user_feedback:
@@ -360,7 +496,7 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 			if user_mouse_click.task_index != task_index:
 				# Finish business with current task                              
 				if current_task != "NO_TASK_SELECTED" and box:
-					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds) or made_changes 
+					made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection, seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_segments) or made_changes 
 				
 
 				# Initialize next task
@@ -378,11 +514,10 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 				task_left_click_buffer.append(user_mouse_click)
 
 	if current_task != "NO_TASK_SELECTED" and box:
-		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels, bg_seeds) or made_changes
+		made_changes = confirm_current_task_is_correct_and_apply(task_left_click_buffer, task_right_click_buffer, current_task, box, label_map, nuclei_collection,seed_collection, segment_collection, incorrect_labels, bg_seeds, blacklisted_segments) or made_changes
 				
 
 	# take all the incorrect labels and get the segments corresponding
-
 
 
 	for label in incorrect_labels:
@@ -390,6 +525,15 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 		if label >1:
 			idx = segment_collection.segment_label_to_list_index_dict[label]
 			incorrect_segments.add(segment_collection.list_of_segments[idx])
+
+
+	# delete all the nuclei to delete..
+
+	for nucleus_index in nuclei_to_delete:
+
+		nuclei_collection.delete_set_of_nucleus_by_index(nucleus_index)
+
+	
 
 	return made_changes
 

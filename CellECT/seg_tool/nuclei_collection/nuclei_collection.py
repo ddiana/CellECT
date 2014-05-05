@@ -157,6 +157,13 @@ class NucleusCollection(object):
 
 		nucleus_list_pos = self.nucleus_index_to_list_pos[nucleus.index]
 		self.union_find.delete_set_of(nucleus_list_pos)
+
+	def delete_set_of_nucleus_by_index(self, nucleus_index):
+
+
+		nucleus_list_pos = self.nucleus_index_to_list_pos[nucleus_index]
+		self.union_find.delete_set_of(nucleus_list_pos)
+		
 		
 
 	def merge_two_nuclei (self, nucleus1, nucleus2):
