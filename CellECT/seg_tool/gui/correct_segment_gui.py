@@ -36,6 +36,7 @@ def display_segment_to_correct(vol, label_map, segment):
 	Return GUI interactions.
 	"""
 
+	pdb.set_trace()
 
 	#x,y,z = zip(*segment.list_of_voxel_tuples)	
 

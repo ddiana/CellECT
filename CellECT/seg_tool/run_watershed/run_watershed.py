@@ -70,7 +70,6 @@ def run_watershed(vol, init_pts, bg_seeds):
 #	call_silent.call_silent(os.system, command)
 	os.system("stty echo")
 
-		
 	print ".......", time.time() - t, "sec"
 	
 	try:

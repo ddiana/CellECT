@@ -169,7 +169,7 @@ def main():
 			watershed = np.ones(vol.shape, "uint16")
 		else:
 			# input pts
-			init_pts = ws.make_list_of_input_points(nuclei_collection, seed_collection)
+			init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
 			# make first seg
 			watershed = ws.run_watershed(vol, init_pts, bg_seeds)
 			# save it so that it does not need to be computed again

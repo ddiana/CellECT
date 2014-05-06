@@ -40,7 +40,7 @@ for i = 1:size(seeds,1)
         three = seed_group(:,3) - min_box(3) +1;
         input = [ one, two, three ];
         input = double(input);
-        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input);
+        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input, start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)));
         start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)) = output;
     else
         start_pts_mask(seed_group(1), seed_group(2), seed_group(3)) = 1;        
