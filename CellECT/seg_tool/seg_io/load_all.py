@@ -6,6 +6,7 @@ import scipy as sp
 from scipy import io
 import pdb
 import logging
+from termcolor import colored
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_xml
@@ -16,7 +17,9 @@ Functions to load last save.
 """
 
 def load_last_save():
-	
+
+	pdb.set_trace()
+
 	"Load .mat files and .xml files."
 
 	logging.info("Loading last save.")	
