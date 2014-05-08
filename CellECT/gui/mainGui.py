@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Thu Mar 20 20:59:36 2014
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Wed May  7 18:23:01 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1170, 792)
+        MainWindow.resize(1170, 822)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -22,7 +22,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout_5 = QtGui.QHBoxLayout(self.centralwidget)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        spacerItem = QtGui.QSpacerItem(10, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        spacerItem = QtGui.QSpacerItem(13, 17, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem)
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -366,8 +366,15 @@ class Ui_MainWindow(object):
         self.checkBox_propagate.setChecked(False)
         self.checkBox_propagate.setObjectName("checkBox_propagate")
         self.verticalLayout_3.addWidget(self.checkBox_propagate)
+        self.radioButton_forward = QtGui.QRadioButton(self.centralwidget)
+        self.radioButton_forward.setChecked(True)
+        self.radioButton_forward.setObjectName("radioButton_forward")
+        self.verticalLayout_3.addWidget(self.radioButton_forward)
+        self.radioButton_backward = QtGui.QRadioButton(self.centralwidget)
+        self.radioButton_backward.setObjectName("radioButton_backward")
+        self.verticalLayout_3.addWidget(self.radioButton_backward)
         self.horizontalLayout_5.addLayout(self.verticalLayout_3)
-        spacerItem1 = QtGui.QSpacerItem(8, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        spacerItem1 = QtGui.QSpacerItem(13, 17, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem1)
         self.verticalLayout_8 = QtGui.QVBoxLayout()
         self.verticalLayout_8.setObjectName("verticalLayout_8")
@@ -476,7 +483,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5.addLayout(self.verticalLayout_8)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1170, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1170, 25))
         self.menubar.setObjectName("menubar")
         self.menuWorkspace = QtGui.QMenu(self.menubar)
         self.menuWorkspace.setObjectName("menuWorkspace")
@@ -586,8 +593,10 @@ class Ui_MainWindow(object):
         self.btn_save_metadata.setText(QtGui.QApplication.translate("MainWindow", "Save metadata file", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("MainWindow", "Segmentation checklist:", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_select_all.setText(QtGui.QApplication.translate("MainWindow", "Select All", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox_use_metric.setText(QtGui.QApplication.translate("MainWindow", "use cellness metric", None, QtGui.QApplication.UnicodeUTF8))
-        self.checkBox_propagate.setText(QtGui.QApplication.translate("MainWindow", "propagate corrections", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkBox_use_metric.setText(QtGui.QApplication.translate("MainWindow", "Use cellness metric", None, QtGui.QApplication.UnicodeUTF8))
+        self.checkBox_propagate.setText(QtGui.QApplication.translate("MainWindow", "Propagate corrections", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioButton_forward.setText(QtGui.QApplication.translate("MainWindow", "forward", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioButton_backward.setText(QtGui.QApplication.translate("MainWindow", "backward", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("MainWindow", "Original image preview:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("MainWindow", "Segmentation preview (if available):", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("MainWindow", "Navigate time:", None, QtGui.QApplication.UnicodeUTF8))

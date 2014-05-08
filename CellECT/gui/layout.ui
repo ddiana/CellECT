@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1170</width>
-    <height>792</height>
+    <height>822</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,8 +31,8 @@
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>10</width>
-        <height>20</height>
+        <width>13</width>
+        <height>17</height>
        </size>
       </property>
      </spacer>
@@ -681,7 +681,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>use cellness metric</string>
+         <string>Use cellness metric</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -694,10 +694,27 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>propagate corrections</string>
+         <string>Propagate corrections</string>
         </property>
         <property name="checked">
          <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButton_forward">
+        <property name="text">
+         <string>forward</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButton_backward">
+        <property name="text">
+         <string>backward</string>
         </property>
        </widget>
       </item>
@@ -713,8 +730,8 @@
       </property>
       <property name="sizeHint" stdset="0">
        <size>
-        <width>8</width>
-        <height>20</height>
+        <width>13</width>
+        <height>17</height>
        </size>
       </property>
      </spacer>
@@ -914,7 +931,7 @@
      <x>0</x>
      <y>0</y>
      <width>1170</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWorkspace">

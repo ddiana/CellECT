@@ -10,20 +10,24 @@ from CellECT.seg_tool.seg_utils.union_find import UnionFind
 
 class PreparePropagateInput(object):
 
-	def __init__(self, ws_data, tp):
+	def __init__(self, ws_data, tp, direction):
 
 		self.ws_data = ws_data
 		self.time_point = tp
+		self.direction = direction
 		self.prepare_propagate()
 
 
 
 	def prepare_propagate(self):
+		
+		# direction = +1 (for backward)
+		# direction = -1 (for forward)
 
 
 		# load only the head nuclei from the time point ahead, if there is such saved output
 
-		file_name = "%s/segs_all_time_stamps/timestamp_%d_segment_props.xml" % (self.ws_data.workspace_location ,self.time_point+1)
+		file_name = "%s/segs_all_time_stamps/timestamp_%d_segment_props.xml" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
 
 		if not path.isfile(file_name):
 			raise Exception("No saved data to propagate.")
@@ -44,14 +48,14 @@ class PreparePropagateInput(object):
 
 
 		try:
-			file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.xml" % (self.ws_data.workspace_location ,self.time_point+1)
+			file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.xml" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
 			bg_seeds = self.load_bg_seeds_from_xml(file_name)
 			bg_seeds = list(bg_seeds)
 		except:
 			print "Could not propagate user saved background seeds. Trying default background seeds."
 
 			try:		
-				file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.mat" % (self.ws_data.workspace_location ,self.time_point+1)
+				file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
 				import scipy.io as sio
 				bg_seeds = sio.loadmat(file_name)["bg_seeds"]
 				bg_seeds = [x for x in bg_seeds]
@@ -76,7 +80,7 @@ class PreparePropagateInput(object):
 	def write_vol_file(self,):
 
 
-		next_seg = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location, self.time_point +1))["ws"]
+		next_seg = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location, self.time_point + self.direction))["ws"]
 		current_vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_%d.mat"  % (self.ws_data.workspace_location, self.time_point))["vol"]
 
 		from scipy.ndimage.morphology import distance_transform_edt

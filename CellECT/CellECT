@@ -659,8 +659,12 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			if self.checkBox_propagate.isChecked():
 				config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, index)
 
+				direction = 1
+				if self.radioButton_forward.isChecked():
+					direction = -1
+
 				try:
-					propagate.PreparePropagateInput(self.workspace_data, index )
+					propagate.PreparePropagateInput(self.workspace_data, index, direction )
 				except Exception as err:
 					QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
 					return
@@ -722,8 +726,13 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		if self.checkBox_propagate.isChecked():
 			config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, segmentation_index)
 
+			direction = 1
+			if self.radioButton_forward.isChecked():
+				direction = -1
+
+
 			try:
-				propagate.PreparePropagateInput(self.workspace_data, segmentation_index )
+				propagate.PreparePropagateInput(self.workspace_data, segmentation_index, direction )
 			except Exception as err:
 				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
 				return
