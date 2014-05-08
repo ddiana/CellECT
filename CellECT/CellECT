@@ -632,7 +632,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		if self.checkBox_propagate.isChecked():
 			valid_indexes = segmentation_indexes
-			if if self.radioButton_backward.isChecked():
+			if  self.radioButton_backward.isChecked():
 				valid_indexes.reverse()
 		else:
 
