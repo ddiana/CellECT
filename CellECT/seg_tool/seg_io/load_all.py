@@ -18,8 +18,6 @@ Functions to load last save.
 
 def load_last_save():
 
-	pdb.set_trace()
-
 	"Load .mat files and .xml files."
 
 	logging.info("Loading last save.")	

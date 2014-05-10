@@ -49,36 +49,6 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 
 			# removing background segments border if necessary
 
-			if len(bg_seeds) >1:
-
-				mask = (label_map == 1)
-				mask = ndimage.binary_dilation( mask)
-				mask = ndimage.binary_dilation( mask)
-				mask = ndimage.binary_erosion( mask)
-				mask = ndimage.binary_erosion( mask)
-
-				mask = (label_map > 1)
-				mask = ndimage.binary_dilation( mask)
-				mask = ndimage.binary_dilation( mask)
-
-				label_map = label_map * mask + (1-mask)
-				
-#				label_map = mask + (1-mask) * (label_map)
-
-#				label_map[:,:,0] = 0
-#				label_map[:,:,-1] = 0
-#				label_map[:,0,:] = 0
-#				label_map[:,-1,:] =0
-#				label_map[0,:,:] = 0
-#				label_map[-1,:,:] = 0
-#				label_map[:,:,1] = 0
-#				label_map[:,:,-2] = 0
-#				label_map[:,1,:] = 0
-#				label_map[:,-2,:] =0
-#				label_map[1,:,:] = 0
-#				label_map[-2,:,:] = 0
-
-
 			print colored("Saving label map in MAT file...", "cyan")
 			save_seg_to_mat(label_map)
 	

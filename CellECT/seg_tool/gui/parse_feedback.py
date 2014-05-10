@@ -458,7 +458,6 @@ def parse_user_feedback(label_map, nuclei_collection, segment_collection, seed_c
 	"""
 
 
-
 	task_index = -1
 	current_task = ""
 

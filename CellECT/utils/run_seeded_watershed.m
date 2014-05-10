@@ -68,13 +68,16 @@ end
 
 
 for i = 1:size(background_seeds,1)
-	xloc = max( round(background_seeds(i,1)+1) , 1);
+	background_seeds(i,1) = max( round(background_seeds(i,1)+1) , 1);
+    xloc = background_seeds(i,1) ;
 	xloc = min( xloc, size(vol,1));
 
-	yloc = max( round(background_seeds(i,2)+1) , 1);
+	background_seeds(i,2) = max( round(background_seeds(i,2)+1) , 1);
+    yloc = background_seeds(i,2);
 	yloc = min( yloc, size(vol,2));
 
-	zloc = max( round(background_seeds(i,3)+1) , 1);
+    background_seeds(i,3) = max( round(background_seeds(i,3)+1) , 1);
+    zloc = background_seeds(i,3);
 	zloc = min( zloc, size(vol,3));
 				
     start_pts_mask(xloc, yloc,zloc) = 1;
@@ -117,6 +120,9 @@ else
     ws = watershed(vol);
 end
 
+mask = cast(ws >=1, class(ws));
+ws = ws+mask; 
+
 % make label 1 for everything that is background
 for i = 1:size(background_seeds,1)
     label = ws(background_seeds(i,1), background_seeds(i,2), background_seeds(i,3));
@@ -128,19 +134,30 @@ end
 
 has_bg = (size(background_seeds,1)>0);
 
-if (~has_bg) && (size(seeds,2)>0)
-% if it doesnt have a bg, skip label 1 since this is reserved for background
-	try
-		ws = ws + uint16(ws>0);
-	catch
-		try
-			ws = ws + uint8(ws>0);
-		catch
-			ws = ws + double(ws>0);
-		end
-	end
-end
+% if (~has_bg) && (size(seeds,2)>0)
+% % if it doesnt have a bg, skip label 1 since this is reserved for background
+% 	try
+% 		ws = ws + uint16(ws>0);
+% 	catch
+% 		try
+% 			ws = ws + uint8(ws>0);
+% 		catch
+% 			ws = ws + double(ws>0);
+% 		end
+% 	end
+% end
 
+% remove background boundary
+if size(background_seeds,1)>0
+    mask = (ws > 1);
+    
+    mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
+    mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
+    mask = cast(mask, class(ws));
+    
+    ws = ws .* mask + (1-mask);
+    
+end
 
 save (output_mat_file, 'ws');
 

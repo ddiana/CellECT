@@ -58,9 +58,40 @@ def run_watershed(vol, init_pts, bg_seeds):
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 
-
+	pdb.set_trace()
 	with open(os.devnull, "wb") as devnull:
 		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)]) #, stdout=devnull, stderr=subprocess.STDOUT)
+
+
+#			if len(bg_seeds) >1:
+#
+#				mask = (label_map == 1)
+#				mask = ndimage.binary_dilation( mask)
+#				mask = ndimage.binary_dilation( mask)
+#				mask = ndimage.binary_erosion( mask)
+#				mask = ndimage.binary_erosion( mask)
+#
+#				mask = (label_map > 1)
+#				mask = ndimage.binary_dilation( mask)
+#				mask = ndimage.binary_dilation( mask)
+
+#				label_map = label_map * mask + (1-mask)
+				
+##				label_map = mask + (1-mask) * (label_map)
+
+##				label_map[:,:,0] = 0
+##				label_map[:,:,-1] = 0
+##				label_map[:,0,:] = 0
+##				label_map[:,-1,:] =0
+##				label_map[0,:,:] = 0
+##				label_map[-1,:,:] = 0
+##				label_map[:,:,1] = 0
+##				label_map[:,:,-2] = 0
+##				label_map[:,1,:] = 0
+##				label_map[:,-2,:] =0
+##				label_map[1,:,:] = 0
+##				label_map[-2,:,:] = 0
+
 
 #	subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)])
 
