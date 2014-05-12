@@ -216,7 +216,7 @@ def main():
 
 		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
 
-		original_init_pts = ws.make_list_of_seed_groups(nuclei_collection)
+		#original_init_pts = ws.make_list_of_seed_groups(nuclei_collection)
 
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
 		#test_data = cellness.prepare_test_data(collection_of_ws_segments)

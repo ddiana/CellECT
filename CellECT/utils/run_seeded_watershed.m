@@ -1,5 +1,7 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
+debug = false;
+
 p = path;
 path(p, [pwd, '/fast_marching']);
 
@@ -23,6 +25,7 @@ if ~strcmp(class(seeds),'cell')
 end
 
 
+
 for i = 1:size(seeds,1)
    	seed_group = [];
     if strcmp(class(seeds),'cell')
@@ -40,10 +43,13 @@ for i = 1:size(seeds,1)
         three = seed_group(:,3) - min_box(3) +1;
         input = [ one, two, three ];
         input = double(input);
-        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input, start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)));
+        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input, start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), min_box);
         start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)) = output;
     else
-        start_pts_mask(seed_group(1), seed_group(2), seed_group(3)) = 1;        
+        start_pts_mask(seed_group(1), seed_group(2), seed_group(3)) = 1;     
+        if debug
+            plot3(seed_group(1), seed_group(2), seed_group(3) ,'k.','markersize',15);
+        end
     end
           
         
