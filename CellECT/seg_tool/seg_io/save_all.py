@@ -20,7 +20,7 @@ import CellECT.seg_tool.globals
 Functions to save the current status.
 """
 
-def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map, bg_seeds):
+def save_current_status(nuclei_collection, seed_collection,segment_collection, seed_segment_collection, label_map, bg_seeds, bg_prior):
 	
 	"Save XML and MAT files."
 
@@ -50,7 +50,7 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 			# removing background segments border if necessary
 
 			print colored("Saving label map in MAT file...", "cyan")
-			save_seg_to_mat(label_map)
+			save_seg_to_mat(label_map, bg_prior)
 	
 			print colored("Saving segmentation slices as PNG files...", "cyan")
 			save_seg_slices(label_map)
@@ -70,14 +70,17 @@ def save_current_status(nuclei_collection, seed_collection,segment_collection, s
 
 
 
-def save_seg_to_mat(watershed):
+def save_seg_to_mat(watershed, bg_prior):
 
 	"Save label map to .mat file."
 
 	file_name = CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] + "label_map.mat"
 
 	try:
-		io.savemat(file_name, {"ws": watershed})
+		if bg_prior is not None:
+			io.savemat(file_name, {"ws": watershed, "bg_mask": bg_prior})
+		else:
+			io.savemat(file_name, {"ws": watershed})
 	except Exception as err:
 		err.message = "Error saving variable in  file %s" % file_name
 		raise err

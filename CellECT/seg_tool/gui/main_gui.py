@@ -70,7 +70,7 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 
 
-def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds , **kwargs):
+def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds , bg_prior, **kwargs):
 
 	"""
 	Main GUI which shows uncertainty map and allows user to select which segment
@@ -220,7 +220,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		pylab.close()
 
 	def save_current_status_callback(event):
-		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed, bg_seeds)
+		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed, bg_seeds, bg_prior)
 
 	def add_boundary(im_slice, seg_slice):
 		mask = np.array(seg_slice == 0)

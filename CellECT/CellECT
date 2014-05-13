@@ -671,7 +671,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 					return
 
 			else:
-				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
 
 
 

@@ -36,7 +36,13 @@ def load_last_save():
 		logging.exception(err.message)
 		sys.exit()
 
-	return nuclei_collection, seed_collection, watershed, bg_seeds
+	bg_prior = None
+	try:
+		bg_prior =  io.loadmat(file_name)["bg_mask"]
+	except:
+		print "No background prior."
+
+	return nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior
 
 
 

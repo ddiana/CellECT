@@ -31,6 +31,9 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	"""
 	
 
+	if bg_mask is None:
+		bg_mask = np.zeros(vol.shape)
+
 	path_to_temp = tempfile.mkdtemp()
 
 
@@ -57,6 +60,7 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	
 	
 	matlab_file_path = CellECT.__path__[0] + "/utils"
+	
 
 	with open(os.devnull, "wb") as devnull:
 		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)]) #, stdout=devnull, stderr=subprocess.STDOUT)

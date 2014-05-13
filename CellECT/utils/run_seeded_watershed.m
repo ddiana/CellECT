@@ -17,7 +17,7 @@ end
 
 start_pts_mask = [];
 try
-start_pts_mask = bg_mask
+start_pts_mask = bg_mask;
 catch
 start_pts_mask = zeros(size(vol));
 end
