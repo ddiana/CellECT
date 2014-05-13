@@ -5,7 +5,7 @@ debug = false;
 p = path;
 path(p, [pwd, '/fast_marching']);
 
-load (input_mat_file, 'vol', 'seeds');
+load (input_mat_file, 'vol', 'seeds', 'bg_mask');
 
 background_seeds = [];
 
@@ -15,7 +15,13 @@ catch
 end
         
 
+start_pts_mask = [];
+try
+start_pts_mask = bg_mask
+catch
 start_pts_mask = zeros(size(vol));
+end
+
 
 if ~strcmp(class(seeds),'cell')
 	seeds = squeeze(seeds);
@@ -88,6 +94,7 @@ for i = 1:size(background_seeds,1)
 				
     start_pts_mask(xloc, yloc,zloc) = 1;
 end
+
 
 
 % if it has background, assume that this background surrounds the object of interest.

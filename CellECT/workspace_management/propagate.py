@@ -5,6 +5,7 @@ import numpy as np
 from scipy import io
 from os import path
 import os
+from scipy.ndimage.morphology import binary_erosion
 
 from CellECT.seg_tool.seg_utils.union_find import UnionFind
 
@@ -69,9 +70,16 @@ class PreparePropagateInput(object):
 
 		self.write_mat_file(file_name, nuclei_pts)
 
+
+		bg_mask = []
+
+		if len(bg_seeds):
+			file_name = "%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
+			bg_mask = self.load_bg_mask_from_seg(file_name)
+
 		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_bg_seeds_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
 
-		io.savemat(file_name, {"seeds":bg_seeds})
+		io.savemat(file_name, {"seeds":bg_seeds, "bg_mask": bg_mask})
 
 		self.write_vol_file()
 
@@ -133,6 +141,17 @@ class PreparePropagateInput(object):
 		bg_seeds = eval(tree.findall("list_of_seeds")[0].text)
 	
 		return bg_seeds
+
+	def load_bg_mask_from_seg(self, file_name):
+
+		ws = io.loadmat(file_name)["ws"]
+
+		bg_mask = (ws == 1).astype(ws.dtype)
+		bg_mask = binary_erosion(bg_mask, iterations = 15, mask = bg_mask)
+
+		return bg_mask
+
+			
 
 
 	def load_inner_pts_from_xml(self, file_name):

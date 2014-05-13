@@ -155,6 +155,8 @@ def main():
 	
 	#watershed = shuffle_labels(watershed)
 
+	pdb.set_trace()
+
 	print "Loading nuclei..."
 	nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_var"])
 	seed_collection = seedc.SeedCollection([])
@@ -171,7 +173,7 @@ def main():
 			# input pts
 			init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
 			# make first seg
-			watershed = ws.run_watershed(vol, init_pts, bg_seeds)
+			watershed = ws.run_watershed(vol, init_pts, bg_seeds, watershed == 1)
 			# save it so that it does not need to be computed again
 			call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
@@ -371,7 +373,7 @@ def main():
 				## Rerun Watershed if necessary ################################
 				if True: #old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
 				
-					watershed = ws.run_watershed(vol, init_pts, bg_seeds)
+					watershed = ws.run_watershed(vol, init_pts, bg_seeds, watershed == 1)
 					#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 
 

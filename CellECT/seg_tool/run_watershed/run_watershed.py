@@ -23,7 +23,7 @@ TODO: Rplace this with custom C-extension of watershed algorithm to remove the
 need for matlab.
 """
 
-def run_watershed(vol, init_pts, bg_seeds):
+def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 
 	"""
 	This function calls matlab to run watershed on the given volume.
@@ -45,7 +45,7 @@ def run_watershed(vol, init_pts, bg_seeds):
 	print path_to_temp
 
 	try:
-		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds_temp})
+		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds_temp, "bg_mask": bg_mask})
 	except Exception as err:
 		err.message = "Could not write input file for Matlab at %s" % save_mat_file
 		print colored("Error: %s" % err.message, "red")
