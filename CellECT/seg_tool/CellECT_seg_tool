@@ -162,6 +162,8 @@ def main():
 	bg_prior = None
 	# background prior comes from propag
 
+	pdb.set_trace()
+
 	print "Loading initial segmentation if any..."
 	try:
 		watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])

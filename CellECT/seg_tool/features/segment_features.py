@@ -422,67 +422,72 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
 
 	for segment in segment_collection.list_of_segments:
-		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
-			if should_compute_feature(segment.name_of_parent, "size"):
-				segment.add_feature("size", len(segment.list_of_voxel_tuples))
+
+		try:
+			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
+				if should_compute_feature(segment.name_of_parent, "size"):
+					segment.add_feature("size", len(segment.list_of_voxel_tuples))
 
 
-		if segment.name_of_parent == "test_volume":		
+			if segment.name_of_parent == "test_volume":		
 
 
-			init_neighbor_props_for_segment(segment)
+				init_neighbor_props_for_segment(segment)
 
-			for neighbor_label in segment.neighbor_labels:
-				seg_idx = segment_collection.segment_label_to_list_index_dict[neighbor_label]
-				segment2 = segment_collection.list_of_segments[seg_idx]
-				init_neighbor_props_for_segment(segment2)
-				add_neighbor_border_properties(segment,segment2, vol )	
+				for neighbor_label in segment.neighbor_labels:
+					seg_idx = segment_collection.segment_label_to_list_index_dict[neighbor_label]
+					segment2 = segment_collection.list_of_segments[seg_idx]
+					init_neighbor_props_for_segment(segment2)
+					add_neighbor_border_properties(segment,segment2, vol )	
 
-		box_bounds = segment.bounding_box
+			box_bounds = segment.bounding_box
 				
-		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
+			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 
-			if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_ratio"):
-				segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
-			if should_compute_feature(segment.name_of_parent, "interior_intensity_hist"):
-				segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
-			if should_compute_feature(segment.name_of_parent, "interior_weighted_intensity_mean"):
-				segment.add_feature("interior_weighted_intensity_mean", weighted_mean_from_hist(segment.feature_dict["interior_intensity_hist"]))
-			if should_compute_feature(segment.name_of_parent, "border_intensity_hist"):
-				segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
-			if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_hist_dif"):
-				segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
+				if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_ratio"):
+					segment.add_feature("border_to_interior_intensity_ratio", segment_border_to_interior_intensity(vol, segment, label_map))
+				if should_compute_feature(segment.name_of_parent, "interior_intensity_hist"):
+					segment.add_feature("interior_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.mask))
+				if should_compute_feature(segment.name_of_parent, "interior_weighted_intensity_mean"):
+					segment.add_feature("interior_weighted_intensity_mean", weighted_mean_from_hist(segment.feature_dict["interior_intensity_hist"]))
+				if should_compute_feature(segment.name_of_parent, "border_intensity_hist"):
+					segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
+				if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_hist_dif"):
+					segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
 
 
-		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
 
-			if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
-				segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
-				segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
-				segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
+				if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
+					segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+					segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
+					segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
 
-		if should_compute_feature(segment.name_of_parent, "inner_point"):
-				segment.add_feature("inner_point", segment_inner_point(segment))
+			if should_compute_feature(segment.name_of_parent, "inner_point"):
+					segment.add_feature("inner_point", segment_inner_point(segment))
 			
 
-		if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
-			dist_vector = segment_border_to_nucleus(segment)
-			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
-				segment.add_feature("border_to_nucleus_distance",dist_vector)
+			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
+				dist_vector = segment_border_to_nucleus(segment)
+				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
+					segment.add_feature("border_to_nucleus_distance",dist_vector)
 		
-			dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
-			# if the segment is tiny:
-			if dist_hist[0].sum() == 0:
-				dist_hist = dist_hist[0]
-				dist_hist[0] = 1.0
-			else:
-				dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
-			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
-				segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
-			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
-				segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
-			if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
-				segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
+				dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
+				# if the segment is tiny:
+				if dist_hist[0].sum() == 0:
+					dist_hist = dist_hist[0]
+					dist_hist[0] = 1.0
+				else:
+					dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
+				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
+					segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
+				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
+					segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
+				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
+					segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
+
+		except:
+			pdb.set_trace()
 		
 		counter += 1
 		misc.print_progress(counter, total)
