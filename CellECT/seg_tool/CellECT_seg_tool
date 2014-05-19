@@ -162,7 +162,6 @@ def main():
 	bg_prior = None
 	# background prior comes from propag
 
-	pdb.set_trace()
 
 	print "Loading initial segmentation if any..."
 	try:

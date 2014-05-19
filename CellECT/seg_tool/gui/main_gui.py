@@ -82,7 +82,6 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	vol_nuclei = None
 	
 
-
 	if "z_default" in kwargs.keys():
 		z_default = kwargs["z_default"]
 
@@ -413,8 +412,8 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 				bounding_box = bbx_module.BoundingBox(0, vol.shape[0], 0, vol.shape[1], 0, vol.shape[2])
 
-				focus_z = zval - bounding_box.zmin
-				focus_y = bounding_box.ymin + (bounding_box.ymax - bounding_box.ymin)/2
+				focus_z = zval - bounding_box.zmin 
+				focus_y = bounding_box.ymin + (bounding_box.ymax - bounding_box.ymin )/2
 			
 				if label > 1: # not background
 
@@ -425,8 +424,8 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 					bounding_box = segment_collection.list_of_segments[segment_index].bounding_box
 					bounding_box.extend_by(10,vol.shape)
 
-					focus_y = segment_collection.list_of_segments[segment_index].nucleus_list[0].y - bounding_box.ymin
-					focus_z = segment_collection.list_of_segments[segment_index].nucleus_list[0].z - bounding_box.zmin
+					focus_y = min(bounding_box.ymax-1, segment_collection.list_of_segments[segment_index].nucleus_list[0].y - bounding_box.ymin )
+					focus_z = min(bounding_box.zmax-1, segment_collection.list_of_segments[segment_index].nucleus_list[0].z - bounding_box.zmin )
 
 			
 				cropped_nuclei_coords = filter(lambda nucl: nucl[0] >= bounding_box.xmin and nucl[0] < bounding_box.xmax and nucl[1] >= bounding_box.ymin and nucl[1] < bounding_box.ymax and nucl[2] >= bounding_box.zmin and nucl[2] < bounding_box.zmax, nuclei_coords )
@@ -441,6 +440,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 					cropped_vol_nuclei = vol_nuclei[bounding_box.xmin : bounding_box.xmax, bounding_box.ymin: bounding_box.ymax, bounding_box.zmin: bounding_box.zmax]
 
 				#print "box: %d, %d" % (bounding_box.xmin, bounding_box.ymin)
+
 				list_of_mouse_events_in_cropped_ascidian, temp_fig = seg_gui.correct_segment_gui (cropped_vol, cropped_watershed, label, color_map, vol.max(), watershed_max,  z_default = focus_z, y_default = focus_y,  nuclei_coords =  cropped_nuclei_coords, vol_nuclei = cropped_vol_nuclei)
 				sub_figs.append(temp_fig)
 

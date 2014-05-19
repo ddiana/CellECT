@@ -32,6 +32,8 @@ class SegmentCollection(object):
 		if len(set_of_labels)>0:
 			self.add_segments_to_collection(label_map, set_of_labels, name_of_parent)
 
+		self.update_index_dict
+
 
 
 	def make_contours_for_all_segments(self, label_map):

@@ -383,6 +383,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	#X, Y = np.meshgrid(range(vol.shape[0]), range(vol.shape[1]))
 
 
+
 	list_of_segments  = []
 
 	total = len(set_of_labels)
@@ -420,6 +421,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	t1 = time.time()
 
 	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
+
 
 	for segment in segment_collection.list_of_segments:
 

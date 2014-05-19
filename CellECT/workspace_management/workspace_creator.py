@@ -173,10 +173,16 @@ class PrepImage(object):
 
 			if z_counter_mem >= self.metadata.numz:
 				z_counter_mem = 0
+				maxim = mat.max()
+				if maxim:
+					mat *= 255./maxim
 				io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
 
 			if z_counter_nuc >= self.metadata.numz:
 				z_counter_nuc = 0
+				maxim = mat_nuclei.max()
+				if maxim:
+					mat_nuclei *= 255./maxim
 				io.savemat("%s/init_watershed_all_time_stamps/vol_nuclei_t_%d.mat" % (ws_location, time_counter), {"vol_nuclei": mat_nuclei})
 
 			if z_counter_mem == 0 and z_counter_nuc == 0:

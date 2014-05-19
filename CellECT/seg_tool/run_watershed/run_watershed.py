@@ -32,23 +32,30 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	
 
 	if bg_mask is None:
-		bg_mask = np.zeros(vol.shape)
+		bg_mask = []
 
 	path_to_temp = tempfile.mkdtemp()
 
 
-	
+
 	print "Running seeded watershed...."
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
 
 	save_mat_file = "%s/watershed_input.mat" % path_to_temp
 
-	bg_seeds_temp = [ list (x) for x in bg_seeds ]
+	sbx = [ x[0] for x in bg_seeds ]
+	sby = [ x[1] for x in bg_seeds ]
+	sbz = [ x[2] for x in bg_seeds ]
+
+	# add dummy values in the list to make sure the values are ported in the right format (wtf scipy io?!)
+
+	init_pts.append([[-1,-1,-1]])
+	init_pts.append([[-1,-1,-1], [-1,-1,-1]])
 
 	print path_to_temp
 
 	try:
-		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "background_seeds": bg_seeds_temp, "bg_mask": bg_mask})
+		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "sbx": sbx, "sby": sby, "sbz": sbz, "bg_mask": bg_mask})
 	except Exception as err:
 		err.message = "Could not write input file for Matlab at %s" % save_mat_file
 		print colored("Error: %s" % err.message, "red")

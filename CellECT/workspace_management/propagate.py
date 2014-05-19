@@ -42,26 +42,27 @@ class PreparePropagateInput(object):
 			raise Exception("No information in saved data.")
 
 		bg_seeds = set()
+		bg_seeds = []
 		# if propagate segmentation result exists from before, delete it, so that seg tool recomputes.
 	
 		prev_seg_file_name = "%s/init_watershed_all_time_stamps/init_ws_%d_propagate.mat" % (self.ws_data.workspace_location ,self.time_point)
 		os.system('[ -f "%s" ] && rm %s' % (prev_seg_file_name, prev_seg_file_name))
 
 
-		try:
-			file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.xml" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
-			bg_seeds = self.load_bg_seeds_from_xml(file_name)
-			bg_seeds = list(bg_seeds)
-		except:
-			print "Could not propagate user saved background seeds. Trying default background seeds."
+#		try:
+#			file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.xml" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
+#			bg_seeds = self.load_bg_seeds_from_xml(file_name)
+#			bg_seeds = list(bg_seeds)
+#		except:
+#			print "Could not propagate user saved background seeds. Trying default background seeds."
 
-			try:		
-				file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
-				import scipy.io as sio
-				bg_seeds = sio.loadmat(file_name)["bg_seeds"]
-				bg_seeds = [x for x in bg_seeds]
-			except:
-				print "Could not propagate any background seeds. Continuing without background seeds."
+#			try:		
+#				file_name = "%s/segs_all_time_stamps/timestamp_%d_bg_seeds.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
+#				import scipy.io as sio
+#				bg_seeds = sio.loadmat(file_name)["bg_seeds"]
+#				bg_seeds = [x for x in bg_seeds]
+#			except:
+#				print "Could not propagate any background seeds. Continuing without background seeds."
 			
 
 		#nuclei_pts = self.prune_nuclei(nuclei_pts, union_find)
@@ -73,9 +74,11 @@ class PreparePropagateInput(object):
 
 		bg_mask = []
 
-		if len(bg_seeds):
+		try:
 			file_name = "%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
 			bg_mask = self.load_bg_mask_from_seg(file_name)
+		except:
+			pass
 
 		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_bg_seeds_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
 

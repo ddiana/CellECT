@@ -22,7 +22,7 @@ end
 newvol = zeros(size(vol));
 
 for k = 1:size(vol,3)
-    k
+    k;
     for j = 1:size(vol,2)
         for i = 1:size(vol,1)
             newvol(i,j,k) = label_assignment(vol(i,j,k)+1);

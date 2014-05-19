@@ -131,26 +131,29 @@ class NucleusCollection(object):
 		
 	def find_closest_nucleus_to_segment(self, segment):
 	
+
 		"Given a segment, which one of the nuclei from this collection is associated with this segment."
 		#x,y,z = zip(*segment.list_of_voxel_tuples)
 
-		(xsum, ysum, zsum) = reduce(lambda a,b: (a[0]+b[0], a[1] + b[1], a[2] + b[2]), segment.list_of_voxel_tuples)		
 
-		length = float(len(segment.list_of_voxel_tuples))
-		cx = xsum / length
-		cy = ysum / length
-		cz = zsum / length
-		
-		min_dist = 10000
-		min_nucleus = self.nuclei_list[0]
-		
-		for nucleus in self.nuclei_list:
-			dist = feat.euclidian_distance(voxel.Voxel(cx,cy,cz), nucleus)
-			if dist < min_dist:
-				min_dist = dist
-				min_nucleus = nucleus
+		# pick only nuclei within this segment:	
+		bbx = segment.bounding_box
+		target_nucleus = None
+		for nucleus in self.list_head_nuclei():
+			
+			try:
+				if segment.mask[nucleus.x - bbx.xmin, nucleus.y - bbx.ymin, nucleus.z - bbx.zmin]:
+					target_nucleus = nucleus
+					break
+			except:
+				pass
 
-		return min_nucleus
+		if target_nucleus is None:
+			print "NO NUCLEUS IN SEGMENT!! Wtf."
+			pdb.set_trace()
+
+
+		return target_nucleus
 
 
 	def delete_set_of_nucleus(self, nucleus):

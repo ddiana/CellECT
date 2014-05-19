@@ -1,44 +1,38 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
 debug = false;
+display3d = false;
 
 p = path;
 path(p, [pwd, '/fast_marching']);
 
-load (input_mat_file, 'vol', 'seeds', 'bg_mask');
+load (input_mat_file, 'vol', 'sbx', 'sby', 'sbz','seeds', 'bg_mask');
 
-background_seeds = [];
+background_seeds = [sbx(:), sby(:), sbz(:)];
 
-try
-    load(input_mat_file, 'background_seeds');
-catch
-end
+number_seeds = size(seeds,1) -2;
+
         
 
 start_pts_mask = [];
-try
-start_pts_mask = bg_mask;
-catch
-start_pts_mask = zeros(size(vol));
+if size(bg_mask,1)>0
+    start_pts_mask = bg_mask;
+else
+    start_pts_mask = zeros(size(vol));
 end
 
 
-if ~strcmp(class(seeds),'cell')
-	seeds = squeeze(seeds);
-	if size(seeds,1) == 3
-		seeds = seeds';
-	end
-end
+% if ~strcmp(class(seeds),'cell')
+% 	seeds = squeeze(seeds);
+% % 	if size(seeds,1) == 3
+% % 		seeds = seeds';
+% % 	end
+% end
 
 
 
-for i = 1:size(seeds,1)
-   	seed_group = [];
-    if strcmp(class(seeds),'cell')
-        seed_group = floor(seeds{i} + 1);
-    else
-        seed_group = floor(seeds(i,:) +1);
-    end
+for i = 1:number_seeds
+    seed_group = floor(seeds{i} + 1);
     if size(seed_group,1) >1
         min_box = min(seed_group,[],1);
         max_box = max(seed_group,[],1);
@@ -55,6 +49,7 @@ for i = 1:size(seeds,1)
         start_pts_mask(seed_group(1), seed_group(2), seed_group(3)) = 1;     
         if debug
             plot3(seed_group(1), seed_group(2), seed_group(3) ,'k.','markersize',15);
+            hold on
         end
     end
           
@@ -95,6 +90,9 @@ for i = 1:size(background_seeds,1)
     start_pts_mask(xloc, yloc,zloc) = 1;
 end
 
+bg_mask_sum = sum(bg_mask(:));
+
+has_bg = (size(background_seeds,1)>0) | (bg_mask_sum>0);
 
 
 % if it has background, assume that this background surrounds the object of interest.
@@ -126,17 +124,44 @@ end
 % 	ws = watershed(vol);
 % end
 
-if (size(seeds,1) <= 1)
+if (number_seeds < 1)
     ws = ones(size(vol));
 else
-    vol = imimposemin (vol, start_pts_mask);
-    ws = watershed(vol);
+    if ((number_seeds >= 1) & ( has_bg ) ) | (number_seeds>1)
+        % run watershed if at least one other background seed
+        vol = imimposemin (vol, start_pts_mask);
+        ws = watershed(vol);
+    else
+        % make everythign label 1 (this will get boosted to 2 later)
+        ws =  ones(size(vol));
+    end
 end
+
+
+% move segment labels to starts at 2, because 1 will be given to bg
+% segments
 
 mask = cast(ws >=1, class(ws));
 ws = ws+mask; 
 
-% make label 1 for everything that is background
+
+% make label 1 for everything background from connected components in
+% bg_mask
+
+if bg_mask_sum
+   
+    labels = unique(cast(bg_mask, class(ws)) .* ws);
+    for label = labels'
+       if label ~=0
+           mask = cast(ws == label, class(ws));
+           ws = mask + (1-mask).*ws;
+       end
+    end
+    
+end
+
+
+% make label 1 for everything that is background from seeds
 for i = 1:size(background_seeds,1)
     label = ws(background_seeds(i,1), background_seeds(i,2), background_seeds(i,3));
     if label ~=0
@@ -145,7 +170,8 @@ for i = 1:size(background_seeds,1)
     end
 end
 
-has_bg = (size(background_seeds,1)>0);
+
+
 
 % if (~has_bg) && (size(seeds,2)>0)
 % % if it doesnt have a bg, skip label 1 since this is reserved for background
@@ -161,7 +187,7 @@ has_bg = (size(background_seeds,1)>0);
 % end
 
 % remove background boundary
-if size(background_seeds,1)>0
+if (size(background_seeds,1)>1) | (bg_mask_sum)
     mask = (ws > 1);
     
     mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
@@ -173,6 +199,25 @@ if size(background_seeds,1)>0
 end
 
 save (output_mat_file, 'ws');
+
+if display3d
+    figure
+    [mx,my,mz] = meshgrid(0:1:size(ws,1)-1, 0:1:size(ws,2)-1, 0:1:size(ws,3)-1);
+    recolored = reassign_labels_and_shuffle(ws);
+    recolored = double(recolored<2)*double(max(ws(:)+1)) + recolored.* double(recolored>=2);
+    xslice = [160];
+    yslice = [];
+    zslice = [70];
+    slice(mx,my,mz,recolored, xslice, yslice, zslice);
+    colormap colorcube
+    shading interp
+    colormapeditor
+    
+    figure
+    slice(mx,my,mz,vol, xslice, yslice, zslice);
+    colormap hot
+    shading interp
+end
 
 quit
 

@@ -36,7 +36,6 @@ def display_segment_to_correct(vol, label_map, segment):
 	Return GUI interactions.
 	"""
 
-	pdb.set_trace()
 
 	#x,y,z = zip(*segment.list_of_voxel_tuples)	
 
@@ -600,7 +599,6 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	z0 = int(z0) 
 
 
-	
 # x-y plane, volume
 	ax1 = pylab.subplot(221)	
 	pylab.subplots_adjust(bottom=0.25)
