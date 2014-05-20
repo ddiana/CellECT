@@ -1,8 +1,10 @@
-function  output = connect_seeds(I, pts, mask_to_avoid, min_box )
+function  output = connect_seeds(I, pts, mask_to_avoid_copy, min_box, bg_mask )
 
-debug = false;
+debug = true;
 
-output = mask_to_avoid;
+mask_to_avoid = mask_to_avoid_copy;
+output = mask_to_avoid_copy;
+mask_to_avoid = (mask_to_avoid + bg_mask)>0;
 min_box = double(min_box);
 
 x = pts(:,1)';
@@ -38,6 +40,8 @@ end
 
 % TODO: round out of range
 
+ 
+    
 
 options.nb_iter_max = Inf;
 [D,S] = perform_fast_marching(I1, [x(pos); y(pos); z(pos)], options);
@@ -71,6 +75,7 @@ for i = [1:pos-1, pos+1:size(x,2)]
         zval = path(3,idx);
         output(xval, yval, zval) = 1;    
     end
+    
 
 
     %plot( path(2,:), path(1,:), 'k' , 'linewidth', 3);

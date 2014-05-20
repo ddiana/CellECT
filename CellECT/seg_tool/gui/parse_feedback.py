@@ -250,6 +250,7 @@ def confirm_current_task_is_correct_and_apply(left_clicks, right_clicks, task_na
 
 		# if they returned None, None
 		if (segment_label is None) or (nucleus_index_for_segment is None):
+
 			message = "Ignoring ADD SEEDS TO EXISTING LABEL task. Bad label (background, border or deleted)"
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")
@@ -362,7 +363,8 @@ def confirm_delete_task_is_correct_and_add_label(left_clicks, right_clicks, task
 			segment_label = None
 
 		# if they returned None, None
-		if (segment_label is not None) and (nucleus_index_for_segment is not None):
+	
+		if (segment_label is  None) or (nucleus_index_for_segment is None):
 			message = "Ignoring DELETE SEGMENT task. Bad label (background or border)"
 			logging.warning(message)
 			print colored("Warning: %s" % message,"red")

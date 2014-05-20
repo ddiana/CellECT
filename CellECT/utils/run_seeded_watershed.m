@@ -1,10 +1,12 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
-debug = false;
+debug = true;
 display3d = false;
 
 p = path;
 path(p, [pwd, '/fast_marching']);
+
+bg_mask = [];
 
 load (input_mat_file, 'vol', 'sbx', 'sby', 'sbz','seeds', 'bg_mask');
 
@@ -12,14 +14,16 @@ background_seeds = [sbx(:), sby(:), sbz(:)];
 
 number_seeds = size(seeds,1) -2;
 
-        
+start_pts_mask = zeros(size(vol));
 
-start_pts_mask = [];
-if size(bg_mask,1)>0
-    start_pts_mask = bg_mask;
-else
-    start_pts_mask = zeros(size(vol));
+if size(bg_mask,1)==0
+    bg_mask = zeros(size(start_pts_mask));
 end
+
+radius = 20;
+
+[mx, my, mz] = ndgrid(1 : size(vol,1) , 1:size(vol,2), 1:size(vol,3));
+
 
 
 % if ~strcmp(class(seeds),'cell')
@@ -33,22 +37,40 @@ end
 
 for i = 1:number_seeds
     seed_group = floor(seeds{i} + 1);
+
+
+    
     if size(seed_group,1) >1
         min_box = min(seed_group,[],1);
         max_box = max(seed_group,[],1);
         min_box = max(min_box - 10, 1);
         max_box = min(max_box + 10, cast(size(vol), class(max_box)));
+        
         one =  seed_group(:,1) - min_box(1)+1;
         two =  seed_group(:,2) - min_box(2)+1;
         three = seed_group(:,3) - min_box(3) +1;
+ 
+        
+        for idx = 1:size(one,1)
+            [one, two, three] = perturb_seed(one, two, three, start_pts_mask);
+            tic
+            bg_mask = bg_mask .* ((mx - double(one(idx))) .^2 + (my-double(two(idx))).^2 + (mz-double(three(idx))).^2 > radius^2);
+            toc
+        end
+        
         input = [ one, two, three ];
-        input = double(input);
-        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input, start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), min_box);
+        input = double(input);        
+        
+        output = connect_seeds(vol(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), input, start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)), min_box, bg_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)));
         start_pts_mask(min_box(1):max_box(1), min_box(2):max_box(2), min_box(3):max_box(3)) = output;
     else
-        start_pts_mask(seed_group(1), seed_group(2), seed_group(3)) = 1;     
+        
+        [new_x, new_y, new_z] = perturb_seed([seed_group(1)], [seed_group(2)], [seed_group(3)], start_pts_mask);
+        bg_mask = bg_mask .* ((mx - double(new_x(1))) .^2 + (my-double(new_y(1))).^2 + (mz-double(new_z(1))).^2 > radius^2);
+            
+        start_pts_mask(new_x(1), new_y(1), new_x(1)) = 1;     
         if debug
-            plot3(seed_group(1), seed_group(2), seed_group(3) ,'k.','markersize',15);
+            plot3(new_x(1), new_y(1), new_x(1) ,'k.','markersize',15);
             hold on
         end
     end
@@ -86,7 +108,13 @@ for i = 1:size(background_seeds,1)
     background_seeds(i,3) = max( round(background_seeds(i,3)+1) , 1);
     zloc = background_seeds(i,3);
 	zloc = min( zloc, size(vol,3));
+    
+    [xloc, yloc, zloc] = perturb_seed([xloc], [yloc], [zloc], start_pts_mask);
 				
+    xloc = xloc(1);
+    yloc = yloc(1);
+    zloc = zloc(1);
+    
     start_pts_mask(xloc, yloc,zloc) = 1;
 end
 

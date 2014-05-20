@@ -118,7 +118,7 @@ def load_seeds_from_xml():
 			index = int(child.attrib["index"])
 			nucleus_index = int(child.attrib["nucleus_index"])
 
-			nucleus = seed_collection.add_seed(sc.Seed(x,y,z,index,nucleus_index))
+			nucleus = seed_collection.add_seed(sc.Seed(x,y,z,nucleus_index, index))
 
 
 	return seed_collection
