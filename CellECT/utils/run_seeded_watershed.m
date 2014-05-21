@@ -1,6 +1,6 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
-debug = true;
+debug = false;
 display3d = false;
 
 p = path;

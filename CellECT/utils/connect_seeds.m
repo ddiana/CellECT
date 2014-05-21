@@ -1,6 +1,6 @@
 function  output = connect_seeds(I, pts, mask_to_avoid_copy, min_box, bg_mask )
 
-debug = true;
+debug = false;
 
 mask_to_avoid = mask_to_avoid_copy;
 output = mask_to_avoid_copy;
