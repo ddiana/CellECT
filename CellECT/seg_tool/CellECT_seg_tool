@@ -133,12 +133,12 @@ def main():
 	vol = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["volume_mat_var"])
 	bg_seeds = set()
 
-	try:
-		print "Loading background seeds..."
-		bg_seeds = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_var"])
-		bg_seeds = set((tuple(x) for x in bg_seeds))   # from nparray to set
-	except:
-		print "No background seeds."
+#	try:
+#		print "Loading background seeds..."
+#		bg_seeds = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_var"])
+#		bg_seeds = set((tuple(x) for x in bg_seeds))   # from nparray to set
+#	except:
+#		print "No background seeds."
 	
 
 

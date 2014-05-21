@@ -69,7 +69,6 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	matlab_file_path = CellECT.__path__[0] + "/utils"
 	
 
-	pdb.set_trace()
 	with open(os.devnull, "wb") as devnull:
 		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)]) #, stdout=devnull, stderr=subprocess.STDOUT)
 
@@ -132,7 +131,6 @@ def make_list_of_seed_groups(nuclei_collection, seed_collection = None):
 
 	dict_of_grouped_seeds = {}
 
-	pdb.set_trace()	
 
 	for nucleus in nuclei_collection.list_all_nuclei():
 		head_nucleus = nuclei_collection.get_head_nucleus_in_its_set(nucleus)

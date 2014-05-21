@@ -4,7 +4,7 @@ debug = true;
 
 mask_to_avoid = mask_to_avoid_copy;
 output = mask_to_avoid_copy;
-mask_to_avoid = (mask_to_avoid + bg_mask)>0;
+%mask_to_avoid = (mask_to_avoid + bg_mask)>0;
 min_box = double(min_box);
 
 x = pts(:,1)';

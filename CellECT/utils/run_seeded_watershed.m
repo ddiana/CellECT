@@ -20,11 +20,11 @@ if size(bg_mask,1)==0
     bg_mask = zeros(size(start_pts_mask));
 end
 
-radius = 20;
+radius = 40;
 
-[mx, my, mz] = ndgrid(1 : size(vol,1) , 1:size(vol,2), 1:size(vol,3));
+[mx, my, mz] = ndgrid(1 : radius*2 +2 , 1:radius*2 +2, 1:radius*2 +2);
 
-
+mask_neighborhood = ((mx - radius -1) .^2 + (my-radius -1).^2 + (mz-radius -1).^2 > radius^2);
 
 % if ~strcmp(class(seeds),'cell')
 % 	seeds = squeeze(seeds);
@@ -53,9 +53,7 @@ for i = 1:number_seeds
         
         for idx = 1:size(one,1)
             [one, two, three] = perturb_seed(one, two, three, start_pts_mask);
-            tic
-            bg_mask = bg_mask .* ((mx - double(one(idx))) .^2 + (my-double(two(idx))).^2 + (mz-double(three(idx))).^2 > radius^2);
-            toc
+            bg_mask = paste_mask_in_vol(bg_mask, mask_neighborhood, [one(idx), two(idx), three(idx)]);
         end
         
         input = [ one, two, three ];
@@ -66,11 +64,11 @@ for i = 1:number_seeds
     else
         
         [new_x, new_y, new_z] = perturb_seed([seed_group(1)], [seed_group(2)], [seed_group(3)], start_pts_mask);
-        bg_mask = bg_mask .* ((mx - double(new_x(1))) .^2 + (my-double(new_y(1))).^2 + (mz-double(new_z(1))).^2 > radius^2);
+        bg_mask = paste_mask_in_vol(bg_mask, mask_neighborhood, [new_x(1), new_y(1), new_z(1)]);
             
-        start_pts_mask(new_x(1), new_y(1), new_x(1)) = 1;     
+        start_pts_mask(new_x(1), new_y(1), new_z(1)) = 1;     
         if debug
-            plot3(new_x(1), new_y(1), new_x(1) ,'k.','markersize',15);
+            plot3(new_x(1), new_y(1), new_z(1) ,'k.','markersize',15);
             hold on
         end
     end
@@ -157,7 +155,7 @@ if (number_seeds < 1)
 else
     if ((number_seeds >= 1) & ( has_bg ) ) | (number_seeds>1)
         % run watershed if at least one other background seed
-        vol = imimposemin (vol, start_pts_mask);
+        vol = imimposemin (vol, start_pts_mask + bg_mask);
         ws = watershed(vol);
     else
         % make everythign label 1 (this will get boosted to 2 later)
