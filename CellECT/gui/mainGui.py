@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Tue May 27 12:45:59 2014
+# Created: Tue May 27 14:02:17 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -454,7 +454,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.checkBox_use_metric.sizePolicy().hasHeightForWidth())
         self.checkBox_use_metric.setSizePolicy(sizePolicy)
-        self.checkBox_use_metric.setChecked(True)
+        self.checkBox_use_metric.setChecked(False)
         self.checkBox_use_metric.setObjectName("checkBox_use_metric")
         self.horizontalLayout_4.addWidget(self.checkBox_use_metric)
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
