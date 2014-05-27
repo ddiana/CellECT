@@ -9,6 +9,7 @@ path(p, [pwd, '/fast_marching']);
 bg_mask = [];
 
 load (input_mat_file, 'vol', 'sbx', 'sby', 'sbz','seeds', 'bg_mask');
+seeds = seeds(:);
 
 background_seeds = [sbx(:), sby(:), sbz(:)];
 

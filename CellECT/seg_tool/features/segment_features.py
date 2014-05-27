@@ -51,6 +51,7 @@ class DistanceFromMargin(object):
 
 	def get_min_dist_for_segment(self, segment):
 
+
 		return min((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
 
 	def get_mean_dist_for_segment(self, segment):
@@ -61,7 +62,7 @@ class DistanceFromMargin(object):
 		return max((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
 
 	def rescale_coords(self, coords):
-		return (coords[0]*self.x_scale, coords[1]*self.y_scale, coords[2]*self.z_scale)
+		return (int(coords[0]*self.x_scale), int(coords[1]*self.y_scale), int(coords[2]*self.z_scale))
 
 
 def segment_inner_point(segment):

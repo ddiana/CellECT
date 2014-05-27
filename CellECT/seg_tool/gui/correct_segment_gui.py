@@ -81,10 +81,10 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 	show_boundary = False
 
 	if "z_default" in kwargs.keys():
-		z_default = kwargs["z_default"]
+		z_default = int(kwargs["z_default"])
 
 	if "y_default" in kwargs.keys():
-		y_default = kwargs["y_default"]
+		y_default = int(kwargs["y_default"])
 	
 	if "nuclei_coords" in kwargs.keys():
 		nuclei_coords = kwargs["nuclei_coords"]
@@ -111,6 +111,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 
 	def get_slice_to_show_z(vol, vol_nuclei,z, seg ):
+		z = int(z)
 		global show_boundary
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[1],3))
 		slice_to_show[:,:,0] = vol[:,:,z]
@@ -124,6 +125,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		return slice_to_show.astype("uint8")
 
 	def get_slice_to_show_y(vol, vol_nuclei,y, seg ):
+		y = int(y)
 		global show_boundary
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[2],3))
 		slice_to_show[:,:,0] = vol[:,y,:]
@@ -455,7 +457,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 
 	def update_z(val=None):
 
-		z = s_z.val
+		z = int(s_z.val)
 		# draw lines
 		l1.set_data(get_slice_to_show_z(vol, vol_nuclei,z,watershed))
 		l2.set_data(watershed[:,:,z])
@@ -464,7 +466,7 @@ def correct_segment_gui (vol, watershed, label, color_map, vol_max, watershed_ma
 		
 	def update_y(val= None):
 
-		y = s_y.val
+		y = int(s_y.val)
 		# draw lines
 		# draw image
 		l4.set_data(watershed[:,y,:])
