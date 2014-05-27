@@ -54,6 +54,7 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 
 	print path_to_temp
 
+	
 	try:
 		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "sbx": sbx, "sby": sby, "sbz": sbz, "bg_mask": bg_mask})
 	except Exception as err:

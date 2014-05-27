@@ -274,7 +274,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 
 
 	def update(val = None):
-		z = s_z.val
+		z = int(s_z.val)
 
 		slice_to_show = np.zeros((vol.shape[0], vol.shape[1], 3))
 		slice_to_show[:,:,0] = vol[:,:,z]
