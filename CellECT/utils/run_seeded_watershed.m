@@ -3,6 +3,20 @@ function run_seeded_waterhsed(input_mat_file, output_mat_file)
 debug = false;
 display3d = false;
 
+h_sig = [7,7,3];
+h_size = [19,19,19];
+[h_x,h_y,h_z] = ndgrid(-h_size(1):h_size(1), -h_size(2):h_size(2),-h_size(3):h_size(3));
+h = exp(-(h_x.*h_x/2/h_sig(1)^2 + h_y.*h_y/2/h_sig(2)^2 + h_z.*h_z/2/h_sig(3)^2));
+h = h/sum(h(:));
+h = max(h(:)) - h;
+h = h / max(h(:)) + 0.01;
+h = h / max(h(:));
+
+
+[mx, my, mz] = ndgrid(1 : 5, 1:5, 1:5);
+sphere_mask = ((mx - 3 ) .^2 + (my-3).^2 + (mz- 3).^2  <5);
+
+
 p = path;
 path(p, [pwd, '/fast_marching']);
 
@@ -66,7 +80,9 @@ for i = 1:number_seeds
         
         [new_x, new_y, new_z] = perturb_seed([seed_group(1)], [seed_group(2)], [seed_group(3)], start_pts_mask);
         bg_mask = paste_mask_in_vol(bg_mask, mask_neighborhood, [new_x(1), new_y(1), new_z(1)]);
-            
+    
+        vol = paste_mask_in_vol(vol, h, [new_x(1), new_y(1), new_z(1)]);
+        
         start_pts_mask(new_x(1), new_y(1), new_z(1)) = 1;     
         if debug
             plot3(new_x(1), new_y(1), new_z(1) ,'k.','markersize',15);
@@ -115,6 +131,11 @@ for i = 1:size(background_seeds,1)
     zloc = zloc(1);
     
     start_pts_mask(xloc, yloc,zloc) = 1;
+    
+    % scale vol around bg_seeds:
+    vol = paste_mask_in_vol(vol, h, [xloc, yloc, zloc]);
+        
+    
 end
 
 bg_mask_sum = sum(bg_mask(:));
@@ -215,10 +236,12 @@ end
 
 % remove background boundary
 if (size(background_seeds,1)>1) | (bg_mask_sum)
-    mask = (ws > 1);
+    %mask = (ws > 1);
     
-    mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
-    mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
+    near_non1s = convn(logical (ws > 1), sphere_mask, 'same');
+    mask = (near_non1s >0);
+    %mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
+    %mask = convn(logical(mask),[1 1 1;1 1 1;1 1 1],'same')>=1;
     mask = cast(mask, class(ws));
     
     ws = ws .* mask + (1-mask);
