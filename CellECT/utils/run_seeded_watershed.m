@@ -1,5 +1,6 @@
 function run_seeded_waterhsed(input_mat_file, output_mat_file)
 
+
 debug = false;
 display3d = false;
 
@@ -81,7 +82,7 @@ for i = 1:number_seeds
         [new_x, new_y, new_z] = perturb_seed([seed_group(1)], [seed_group(2)], [seed_group(3)], start_pts_mask);
         bg_mask = paste_mask_in_vol(bg_mask, mask_neighborhood, [new_x(1), new_y(1), new_z(1)]);
     
-        vol = paste_mask_in_vol(vol, h, [new_x(1), new_y(1), new_z(1)]);
+        %vol = paste_mask_in_vol(vol, h, [new_x(1), new_y(1), new_z(1)]);
         
         start_pts_mask(new_x(1), new_y(1), new_z(1)) = 1;     
         if debug
@@ -133,7 +134,7 @@ for i = 1:size(background_seeds,1)
     start_pts_mask(xloc, yloc,zloc) = 1;
     
     % scale vol around bg_seeds:
-    vol = paste_mask_in_vol(vol, h, [xloc, yloc, zloc]);
+    %vol = paste_mask_in_vol(vol, h, [xloc, yloc, zloc]);
         
     
 end

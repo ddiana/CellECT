@@ -1,5 +1,7 @@
 function vol = paste_mask_in_vol(vol, mask, center)
 
+    mask = cast(mask, class(vol));
+
     radius = floor(size(mask,1)/2);
     rx_m = min(center(1) , radius) -1; 
     rx_p = min(size(vol,1) - center(1) , radius) ;

@@ -9,7 +9,7 @@ import pdb
 
 from CellECT.track_tool.tissue_selection import select_similar
 import CellECT.seg_tool.globals
-
+from CellECT.seg_tool.seg_utils import bounding_box as bounding_box_module
 """
 CellProfile and CellProfilesPerTimestamp classes.
 Creates a profile for every cell at a given segmentation (time stamp) based on 
@@ -26,11 +26,13 @@ class CellProfile(object):
 	segment collection xml output from CellECT_seg_tool.
 	"""
 
-	def __init__(self, label, nucleus, size, feature_dict):
+	def __init__(self, label, nucleus, size, bbx, neighbor_labels, feature_dict):
 		self.label = label
 		self.nucleus = nucleus
 		self.size = size		
+		self.neighbor_labels = neighbor_labels
 		self.dict_of_features = feature_dict
+		self.bounding_box = bbx
 
 
 
@@ -61,6 +63,48 @@ class CellProfilesPerTimestamp(object):
 		self.size_mean = np.mean(sizes_list)
 		self.size_stdev = np.std(sizes_list)
 
+
+	def get_cells_within_space(self,bbx):
+		# return cells whose centroid falls in a space
+	
+		result = []
+
+		for cp in self.list_of_cell_profiles:
+			if cp.nucleus.x > bbx.xmin and cp.nucleus.x < bbx.xmax and \
+               cp.nucleus.y > bbx.ymin and cp.nucleus.y < bbx.ymax and \
+               cp.nucleus.z > bbx.zmin and cp.nucleus.z < bbx.zmax:
+				result.append(cp)
+
+		return result
+
+	def get_bounding_box_of_group(self,cell_labels):
+		
+			xmin = +1000000
+			xmax = -1
+			ymin = +1000000
+			ymax = -1
+			zmin = +1000000
+			zmax = -1
+
+			for label in cell_labels:
+
+				cp_index = self.seg_label_to_cp_list_index[label]
+				cp = self.list_of_cell_profiles[cp_index]
+
+				bbx = cp.bounding_box
+				xmin = min(xmin, bbx.xmin)
+				ymin = min(ymin, bbx.ymin)
+				zmin = min(zmin, bbx.zmin)
+
+				xmax = max(xmax, bbx.xmax)
+				ymax = max(ymax, bbx.ymax)
+				zmax = max(zmax, bbx.zmax)
+
+			if xmin !=1000000 and ymin != 1000000 and zmin !=1000000 and xmax != -1 and ymax != -1 and zmax != -1:
+				return bounding_box_module.BoundingBox(xmin, xmax, ymin, ymax, zmin, zmax)
+			else:
+				return None
+			
 
 	def get_target_cells_size(self,target_cells):
 

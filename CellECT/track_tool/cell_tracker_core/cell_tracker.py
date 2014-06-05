@@ -9,6 +9,8 @@ import numpy as np
 import re
 #from openopt import LP
 import pdb
+import copy
+from munkres import Munkres
 
 # Imports from this project
 import CellECT.track_tool.globals
@@ -167,7 +169,144 @@ class CellTracker(object):
 
 
 
+
+	def cost_for_pair(self, cp1, cp2):
+
+		xres = 0.3 # CellECT.track_tool.globals.PARAMETER_DICT["xres"]
+		yres = 0.3 # CellECT.track_tool.globals.PARAMETER_DICT["yres"]
+		zres = 2.0 #CellECT.track_tool.globals.PARAMETER_DICT["zres"]
+
+		centroid_distance = (((cp1.nucleus.x - cp2.nucleus.x) * xres)**2 + ((cp1.nucleus.y - cp2.nucleus.y)*yres)**2 + ((cp1.nucleus.z - cp2.nucleus.z)*zres)**2) **1/2
+
+		voxel_size = xres*yres*zres
+		percent_size_difference =  cp2.size / cp1.size * float(voxel_size)    # closer to 1 is better
+
+		score_centroid = abs (1-percent_size_difference)  # small is better
+
+
+		centroid_distance_relative_to_size = centroid_distance / (0.5*cp1.size + 0.5*cp2.size)  # small is better
+
+		score = (score_centroid + centroid_distance_relative_to_size) /2
+
+		return score
+
+
+	def get_hungarian_association(self, cp, cp_list_1, cp_list_2):
+
+
+		if len(cp_list_2) ==0:
+			return None
+
+		cost_to_none = 100
+
+		matrix = np.zeros((len(cp_list_1) +1, len(cp_list_1) + len(cp_list_2))) + cost_to_none
+
+		print matrix.shape
+
+		for i in xrange(len(cp_list_1)):
+
+			cp_i = cp_list_1[i]
+
+#			count = 0
+			for j in xrange(len(cp_list_2)):
+
+#				count += 1
+				cp_j = cp_list_2[j]
+				
+				matrix[i,j] = self.cost_for_pair(cp_i, cp_j)
+#		print count
+
+
+#		count = 0
+		for j in xrange(len(cp_list_2)):
+			cp_j = cp_list_2[j]
+			matrix[-1,j] =  self.cost_for_pair(cp, cp_j)
+#			count += 1
+#		print count
+
+		solver = Munkres()
+
+		associations = solver.compute(matrix)
+
+		result = None
+		if associations[-1][1] < len(cp_list_2):
+			result = associations[-1][1]
+
+		return result
+
+		
+		
+
+
 	def add_confident_associations_to_graph(self):
+
+		threshold_dist = CellECT.track_tool.globals.PARAMETER_DICT["cell-association-distance-threshold"]
+		threshold_cell_size_growth = CellECT.track_tool.globals.PARAMETER_DICT["max-cell-growth-rate"]
+
+
+
+		# for every timestamp 
+		for i in xrange (0, len( self.list_of_cell_profiles_per_timestamp) -1):
+
+			matrix = self.distance_matrix_list[i]
+			used_cells = np.zeros(len(self.list_of_cell_profiles_per_timestamp[i+1].list_of_cell_profiles))
+			
+			cell_profiles_this_timestamp = self.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles
+			cell_profiles_next_timestamp = self.list_of_cell_profiles_per_timestamp[i+1].list_of_cell_profiles
+	
+			# for all cell_profiles in the first of two consecutive time_stamps
+			for cp1 in self.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles:
+
+				cp1_index = self.list_of_cell_profiles_per_timestamp[i].seg_label_to_cp_list_index[ cp1.label]
+
+				node_name = "t" + str(i) + "_c" + str(cp1_index)
+
+				bbx_group1 = self.list_of_cell_profiles_per_timestamp[i]. get_bounding_box_of_group(cp1.neighbor_labels)
+
+				cp_list_labels_1 = [self.list_of_cell_profiles_per_timestamp[i].seg_label_to_cp_list_index[l] for l in cp1.neighbor_labels]
+
+				cp_list_1 = [self.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[j] for j in cp_list_labels_1]
+				# remove the ones already associated
+				cp_list_1 = filter(lambda x:  self.list_of_cell_profiles_per_timestamp[i].seg_label_to_cp_list_index[x.label] > cp1_index, cp_list_1)
+
+
+				cp_list_2 = self.list_of_cell_profiles_per_timestamp[i+1].get_cells_within_space(bbx_group1)	
+				# remove the ones already associated
+				cp_list_2 = filter(lambda x: not used_cells[ self.list_of_cell_profiles_per_timestamp[i+1].seg_label_to_cp_list_index[x.label] ], cp_list_2)
+				
+
+				link_with = self.get_hungarian_association(cp1, cp_list_1, cp_list_2)
+
+				if link_with is not None:
+
+					cp_used = cp_list_2[link_with]
+					cp_used_index = self.list_of_cell_profiles_per_timestamp[i+1].seg_label_to_cp_list_index[ cp_used.label]
+
+					used_cells[cp_used_index] = 1
+					node_name_closest = "t" + str(i+1) + "_c" + str(cp_used_index)
+					self.graph.add_edge((node_name, node_name_closest))
+					
+
+
+		print "cells in 1:", len(self.list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles)
+		print "cells in 2:", len(self.list_of_cell_profiles_per_timestamp[1].list_of_cell_profiles)
+				
+
+#				node_name = "t" + str(i) + "_c" + str(cp1)
+
+#				correct = False
+#				num_tries = 0			
+#			
+#				
+
+#				matrix_row = copy.deepcopy(matrix[cp1,:])
+
+
+		
+
+
+
+	def add_confident_associations_to_graph1(self):
 
 		"""
 		Associate nuclei from two consecutive time stamps based on how close
@@ -195,7 +334,9 @@ class CellTracker(object):
 				correct = False
 				num_tries = 0			
 			
-				matrix_row = matrix[cp1,:]
+				matrix_row = copy.deepcopy(matrix[cp1,:])
+
+				
 
 				# try 5 times to find the closest node that matches
 				while (not correct) and num_tries < 5:
@@ -219,8 +360,11 @@ class CellTracker(object):
 									used_cells[closest] = 1
 									node_name_closest = "t" + str(i+1) + "_c" + str(closest)
 									self.graph.add_edge((node_name, node_name_closest))
+									break
 							except:
 								pdb.set_trace()
+						else:
+							break
 							
 					if not correct:
 						matrix_row[closest] = 100000. # so that it doesnt get picked next
