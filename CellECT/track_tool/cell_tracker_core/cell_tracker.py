@@ -178,6 +178,14 @@ class CellTracker(object):
 
 		centroid_distance = (((cp1.nucleus.x - cp2.nucleus.x) * xres)**2 + ((cp1.nucleus.y - cp2.nucleus.y)*yres)**2 + ((cp1.nucleus.z - cp2.nucleus.z)*zres)**2) **1/2
 
+		first_cell_size = cp1.size
+		equivalent_sphere_radius = (3*first_cell_size / 4 / 3.14) ** (1/3)
+	
+		weight = 
+
+
+		
+
 		voxel_size = xres*yres*zres
 		percent_size_difference =  cp2.size / cp1.size * float(voxel_size)    # closer to 1 is better
 
@@ -186,7 +194,7 @@ class CellTracker(object):
 
 		centroid_distance_relative_to_size = centroid_distance / (0.5*cp1.size + 0.5*cp2.size)  # small is better
 
-		score = (score_centroid + centroid_distance_relative_to_size) /2
+		score = centroid_distance  #+ 0.2 *centroid_distance_relative_to_size
 
 		return score
 
@@ -197,7 +205,7 @@ class CellTracker(object):
 		if len(cp_list_2) ==0:
 			return None
 
-		cost_to_none = 100
+		cost_to_none = 80
 
 		matrix = np.zeros((len(cp_list_1) +1, len(cp_list_1) + len(cp_list_2))) + cost_to_none
 
@@ -270,6 +278,7 @@ class CellTracker(object):
 				cp_list_1 = filter(lambda x:  self.list_of_cell_profiles_per_timestamp[i].seg_label_to_cp_list_index[x.label] > cp1_index, cp_list_1)
 
 
+				#bbx_group1.extend_by(30,  ( 800, 500, int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"]))   )
 				cp_list_2 = self.list_of_cell_profiles_per_timestamp[i+1].get_cells_within_space(bbx_group1)	
 				# remove the ones already associated
 				cp_list_2 = filter(lambda x: not used_cells[ self.list_of_cell_profiles_per_timestamp[i+1].seg_label_to_cp_list_index[x.label] ], cp_list_2)

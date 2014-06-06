@@ -77,6 +77,22 @@ class CellProfilesPerTimestamp(object):
 
 		return result
 
+
+	def get_cells_fully_within_space(self, bbx):
+
+		# return cells fully contained in the bounding box.
+
+		result = []
+
+		for cp in self.list_of_cell_profiles:
+			if cp.bounding_box.xmin > bbx.xmin and cp.bounding_box.xmax < bbx.xmax and \
+               cp.bounding_box.ymin > bbx.ymin and cp.bounding_box.ymax < bbx.ymax and \
+               cp.bounding_box.zmin > bbx.zmin and cp.bounding_box.zmax < bbx.zmax:
+				result.append(cp)
+
+		return result
+
+
 	def get_bounding_box_of_group(self,cell_labels):
 		
 			xmin = +1000000

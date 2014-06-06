@@ -303,12 +303,12 @@ class CellTrackerUI:
 
 		t += CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"][0]
 	
-		membrane_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z))+".tif"
+		membrane_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z)+1)+".tif"
 		membrane_file = sp.misc.imread(membrane_file_location)
 
 		nuclei_file = None
 		if CellECT.track_tool.globals.PARAMETER_DICT["number-channels"] > 1:
-			nuclei_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_nuclei_file_number_in_tif_sequence(t,z))+".tif"
+			nuclei_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_nuclei_file_number_in_tif_sequence(t,z)+1)+".tif"
 			nuclei_file = sp.misc.imread(nuclei_file_location)
 
 		if nuclei_file is None:
