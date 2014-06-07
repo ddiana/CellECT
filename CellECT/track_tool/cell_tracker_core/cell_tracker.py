@@ -11,6 +11,7 @@ import re
 import pdb
 import copy
 from munkres import Munkres
+from numpy import exp
 
 # Imports from this project
 import CellECT.track_tool.globals
@@ -176,27 +177,37 @@ class CellTracker(object):
 		yres = 0.3 # CellECT.track_tool.globals.PARAMETER_DICT["yres"]
 		zres = 2.0 #CellECT.track_tool.globals.PARAMETER_DICT["zres"]
 
-		centroid_distance = (((cp1.nucleus.x - cp2.nucleus.x) * xres)**2 + ((cp1.nucleus.y - cp2.nucleus.y)*yres)**2 + ((cp1.nucleus.z - cp2.nucleus.z)*zres)**2) **1/2
+		voxel_size = xres*yres*zres
 
-		first_cell_size = cp1.size
-		equivalent_sphere_radius = (3*first_cell_size / 4 / 3.14) ** (1/3)
+		centroid_distance = (((cp1.nucleus.x - cp2.nucleus.x) * xres)**2 + ((cp1.nucleus.y - cp2.nucleus.y)*yres)**2 + ((cp1.nucleus.z - cp2.nucleus.z)*zres)**2) **0.5
+
+		first_cell_size = cp1.size *voxel_size
+		equivalent_sphere_radius = (3*first_cell_size / 4. / 3.14) ** (1/3.)
+
+		sigma = equivalent_sphere_radius *2
+
 	
-		weight = 
+		x = centroid_distance # / equivalent_sphere_radius * 100
 
+		weight = 1 - exp(- (x**2) / (2* sigma **2)) #* 1./ (sigma * (2.*3.14)**0.5) 
+
+
+		centroid_distance_score =  x*weight
 
 		
 
-		voxel_size = xres*yres*zres
-		percent_size_difference =  cp2.size / cp1.size * float(voxel_size)    # closer to 1 is better
+		percent_size_difference = min( cp2.size / float(cp1.size) * float(voxel_size) ,cp1.size / float(cp2.size) * float(voxel_size)  )   # closer to 1 is better
 
-		score_centroid = abs (1-percent_size_difference)  # small is better
+		score_size = abs (1-percent_size_difference)  # small is better
 
 
-		centroid_distance_relative_to_size = centroid_distance / (0.5*cp1.size + 0.5*cp2.size)  # small is better
+		#centroid_distance_relative_to_size = centroid_distance / (0.5*cp1.size + 0.5*cp2.size)  # small is better
 
-		score = centroid_distance  #+ 0.2 *centroid_distance_relative_to_size
+		score = centroid_distance_score * score_size
 
-		return score
+		print centroid_distance, equivalent_sphere_radius, x, weight, weight * x, score_size, score
+
+		return centroid_distance_score
 
 
 	def get_hungarian_association(self, cp, cp_list_1, cp_list_2):
@@ -205,9 +216,9 @@ class CellTracker(object):
 		if len(cp_list_2) ==0:
 			return None
 
-		cost_to_none = 80
+		cost_to_none = 25
 
-		matrix = np.zeros((len(cp_list_1) +1, len(cp_list_1) + len(cp_list_2))) + cost_to_none
+		matrix = np.zeros((len(cp_list_1) +1, len(cp_list_1) +1 + len(cp_list_2))) + cost_to_none
 
 		print matrix.shape
 
