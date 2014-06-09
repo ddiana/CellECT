@@ -12,7 +12,7 @@ import cv
 from collections import namedtuple
 from scipy.ndimage.morphology import binary_dilation
 import math
-
+import cv2
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import misc
@@ -50,16 +50,24 @@ class DistanceFromMargin(object):
 
 
 	def get_min_dist_for_segment(self, segment):
+		
+		# min dist is on the boundary, using boundary pixels.
+		dists = []
+		for i in xrange(len(segment.contour_polygons_list)):
+			dists.extend([self.dist[self.rescale_coords(coords)] for coords in segment.contour_polygons_list[i]])
+		
+		return min(dists)
 
+#	def get_mean_dist_for_segment(self, segment):
+#		return sum((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples)) / len(segment.list_of_voxel_tuples)
 
-		return min((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
+	def get_centroid_dist(self, segment):
 
-	def get_mean_dist_for_segment(self, segment):
-		return sum((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples)) / len(segment.list_of_voxel_tuples)
+		return self.dist[self.rescale_coords(segment.feature_dict["centroid"])]
 
-	def get_max_dist_for_segment(self, segment):
+#	def get_max_dist_for_segment(self, segment):
 
-		return max((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
+#		return max((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
 
 	def rescale_coords(self, coords):
 		return (int(coords[0]*self.x_scale), int(coords[1]*self.y_scale), int(coords[2]*self.z_scale))
@@ -81,35 +89,37 @@ def segment_inner_point(segment):
 
 
 
-def segment_border_to_nucleus(segment):
+#def segment_border_to_nucleus(segment):
 
-	"""
-	Return a list of all the distance values from the border to the nucleus.
-	"""
+#	# DO NOT USE THIS. BETTER VERSION AVAILABLE.
 
-
-	box_bounds = segment.bounding_box
-
-	nucleus = vx.Voxel(segment.nucleus_list[0].x - box_bounds.xmin, segment.nucleus_list[0].y - box_bounds.ymin, segment.nucleus_list[0].z-box_bounds.zmin)
-
-	cropped_mask = np.zeros((box_bounds.xmax - box_bounds.xmin+1, box_bounds.ymax - box_bounds.ymin+1, box_bounds.zmax - box_bounds.zmin+1))
-
-	for voxel in segment.list_of_voxel_tuples:
-		cropped_mask[voxel[0] - box_bounds.xmin, voxel[1] - box_bounds.ymin, voxel[2] - box_bounds.zmin] = 1
-		
-	cropped_mask_eroded = ndimage.morphology.binary_erosion(cropped_mask )
-	cropped_mask_border = cropped_mask - cropped_mask_eroded
-
-	[x,y,z] = np.nonzero(cropped_mask_border)
-
-	dist_values = []
-
-	for i in xrange(len(x)):
-
-		dist_values.append( euclidian_distance( vx.Voxel(x[i], y[i], z[i]), nucleus ))
+#	"""
+#	Return a list of all the distance values from the border to the nucleus.
+#	"""
 
 
-	return dist_values
+#	box_bounds = segment.bounding_box
+
+#	nucleus = vx.Voxel(segment.nucleus_list[0].x - box_bounds.xmin, segment.nucleus_list[0].y - box_bounds.ymin, segment.nucleus_list[0].z-box_bounds.zmin)
+
+#	cropped_mask = np.zeros((box_bounds.xmax - box_bounds.xmin+1, box_bounds.ymax - box_bounds.ymin+1, box_bounds.zmax - box_bounds.zmin+1))
+
+#	for voxel in segment.list_of_voxel_tuples:
+#		cropped_mask[voxel[0] - box_bounds.xmin, voxel[1] - box_bounds.ymin, voxel[2] - box_bounds.zmin] = 1
+#		
+#	cropped_mask_eroded = ndimage.morphology.binary_erosion(cropped_mask )
+#	cropped_mask_border = cropped_mask - cropped_mask_eroded
+
+#	[x,y,z] = np.nonzero(cropped_mask_border)
+
+#	dist_values = []
+
+#	for i in xrange(len(x)):
+
+#		dist_values.append( euclidian_distance( vx.Voxel(x[i], y[i], z[i]), nucleus ))
+
+
+#	return dist_values
 
 
 
@@ -201,6 +211,30 @@ def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
 			nucleus = nuclei_collection.find_closest_nucleus_to_segment(segment)
 			segment.add_nucleus(nucleus)
 			
+
+def get_fourier_shape_descriptor(segment):
+
+	pass
+	
+#	midx = sum([x[0] for x in segment.mid_slice_contour]) / len(segment.mid_slice_contour)
+#	midy = sum([x[1] for x in segment.mid_slice_contour]) / len(segment.mid_slice_contour)
+#	polygon = [(x[0] - midx, x[1] - midy) for x in segment.mid_slice_contour]
+
+#	maxx = min([x[0] for x in polygon])
+#	maxy = min([x[1] for x in polygon])
+#	
+	
+
+def hu_moments(mid_slice):
+	
+	moments = cv2.moments(mid_slice.astype("uint8"), True)
+	hu_moments = cv2. HuMoments(moments)
+	hu_moments = -np.sign(hu_moments)*np.log10(np.abs(hu_moments))
+
+	return [x[0] for x in hu_moments]
+
+
+
 
 def get_bounding_box_union_two_segments(segment1, segment2):
 
@@ -358,6 +392,41 @@ def weighted_mean_from_hist(histogram):
 	return mean
 
 
+def fit_line(segment):
+
+	pts = np.nonzero(segment.mask)
+	pts = np.array(pts).T
+
+	line = cv2.fitLine(pts, 1,0, 0.01, 0.01)
+
+	line = [x[0] for x in line]
+
+	return line
+
+
+def get_convex_hull_properties(segment):
+
+
+	cnt = np.array(segment.get_mid_slice_contour())
+
+	if len(cnt)>3:
+
+		hull = cv2.convexHull(cnt,returnPoints = False)
+		defects = cv2.convexityDefects(cnt,hull)
+
+		segment.feature_dict["mid_slice_convex_hull_indices"] = [x[0] for x in hull]
+		if defects is not None:
+			segment.feature_dict["mid_slice_convexity_deffects"] = [[i for i in defects[k][0]] for k in xrange(len(defects))]
+		else: 
+			segment.feature_dict["mid_slice_convexity_deffects"] = [[]]
+
+
+	else:
+		segment.feature_dict["mid_slice_convex_hull_indices"] = []
+		segment.feature_dict["mid_slice_convexity_deffects"] = [[]]
+		
+
+	
 
 def init_neighbor_props_for_segment(segment):
 
@@ -373,6 +442,37 @@ def init_neighbor_props_for_segment(segment):
 	if not segment.feature_dict.has_key("weighted_merge_score"):
 		segment.feature_dict["weighted_merge_score"] = []
 
+
+def get_border_to_nucleus_properties(segment):
+
+	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
+	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
+	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
+
+
+	pts = []
+
+	for ls in segment.contour_polygons_list:
+		pts.extend(ls)
+
+	centroid = reduce(lambda x,y: (x[0]+y[0], x[1] +y[1], x[2] + y[2]),pts)
+	centroid = (centroid[0] * x_res /len(pts), centroid[1] * y_res /len(pts), centroid[2] * z_res /len(pts))
+
+	calc_dist = lambda x,y, x_res, y_res, z_res: ((x[0]*x_res - y[0])**2 + (x[1]*y_res - y[1])**2 + (x[2]*z_res - y[2])**2 ) ** 0.5
+		
+	distances = [calc_dist(x, centroid, x_res, y_res, z_res) for x in pts]
+	max_dist = max(distances)
+	distances = [x/max_dist for x in distances]
+
+	bins = np.arange(0, 1, 0.05)
+	dist_hist = histogram(distances, bins = bins) [0]
+
+	segment.add_feature("centroid_res", centroid)
+	segment.add_feature("centroid", (int(centroid[0]/x_res),int(centroid[1]/y_res), int(centroid[2]/z_res) ))
+	segment.add_feature("border_to_nucleus_dist_hist", dist_hist)
+	segment.add_feature("border_to_nucleus_dist_mean", np.mean(distances))
+	segment.add_feature("border_to_nucleus_dist_std", np.std(distances))
+	segment.add_feature("distance_to_border_scale_factor", max_dist)
 
 
 def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
@@ -423,6 +523,9 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 	add_nucleus_to_segments(segment_collection, nuclei_collection, label_map)
 
+	segment_collection.make_contours_for_all_segments(label_map)
+
+	sum_time = 0
 
 	for segment in segment_collection.list_of_segments:
 
@@ -459,44 +562,64 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 					segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
 
 
-			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
-
-				if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
-					segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
-					segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
-					segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
-
+	
 			if should_compute_feature(segment.name_of_parent, "inner_point"):
 					segment.add_feature("inner_point", segment_inner_point(segment))
-			
 
-			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
-				dist_vector = segment_border_to_nucleus(segment)
-				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
-					segment.add_feature("border_to_nucleus_distance",dist_vector)
-		
-				dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
-				# if the segment is tiny:
-				if dist_hist[0].sum() == 0:
-					dist_hist = dist_hist[0]
-					dist_hist[0] = 1.0
-				else:
-					dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
-				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
-					segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
-				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
-					segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
-				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
-					segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
+
+			segment.add_feature("mid_slice_hu_moments", hu_moments(segment.get_mid_slice()))
+			segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
+			segment.add_feature("mid_slice_z", segment.mid_slice_z)
+
+			segment.add_feature("line_fit", fit_line(segment))
+
+
+			get_convex_hull_properties(segment)
+
+			get_border_to_nucleus_properties(segment)
+			
+			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+
+				t = time.time()
+				if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
+					segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+					#segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
+					#segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
+					segment.add_feature("centroid_dist_from_margin", dist_metric.get_centroid_dist(segment))
+				sum_time += time.time() - t
+
+
+
+
+#			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
+#				dist_vector = segment_border_to_nucleus(segment)
+#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
+#					segment.add_feature("border_to_nucleus_distance",dist_vector)
+#		
+#				dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
+#				# if the segment is tiny:
+#				if dist_hist[0].sum() == 0:
+#					dist_hist = dist_hist[0]
+#					dist_hist[0] = 1.0
+#				else:
+#					dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
+#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
+#					segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
+#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
+#					segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
+#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
+#					segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
 
 		except:
 			pdb.set_trace()
+		
 		
 		counter += 1
 		misc.print_progress(counter, total)
 
 		#print np.mean(segment.feature_dict["border_to_nucleus_distance"]), segment.nucleus.index
 	t2 = time.time()
+	print sum_time
 	print "....... %.3f sec                           " % (t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
 

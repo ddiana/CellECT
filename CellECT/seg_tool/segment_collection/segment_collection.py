@@ -41,6 +41,8 @@ class SegmentCollection(object):
 		for segment in self.list_of_segments:
 			segment.make_segment_contours(label_map)
 
+
+
 	def add_segments_to_collection(self, label_map, set_of_labels, name_of_parent):
 	
 		"""Given a label map, and a list of labels of interest, 
@@ -152,12 +154,55 @@ class Segment(object):
 
 		for z in xrange(cropped_mask.shape[2]):
 			contour_output = cv2.findContours(cropped_mask[:,:,z].astype('uint8'),cv.CV_RETR_LIST, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
-			if contour_output[0]:
-				polygon = [(contour_output[0][0][i][0][1], contour_output[0][0][i][0][0], z + self.bounding_box.zmin) for i in xrange(len(contour_output[0][0]))]
+			for idx in xrange(len( contour_output[0])):
+				
+				polygon = [(contour_output[0][idx][i][0][1], contour_output[0][idx][i][0][0], z + self.bounding_box.zmin) for i in xrange(len(contour_output[0][idx]))]
 				self.contour_polygons_list.append(polygon)
 	
 
-		
+	def get_mid_slice(self,):
+
+
+		try:
+			mid_slice = self.mid_slice
+
+		except:
+
+			cropped_mask = self.mask
+
+			z_list = np.unique(np.nonzero(cropped_mask)[2])
+			z = z_list[len(z_list)/2]
+	
+			mid_slice = cropped_mask[:,:,z]
+
+			mid_slice = binary_dilation (binary_erosion(mid_slice))		
+			if not mid_slice.any():
+				mid_slice = cropped_mask[:,:,z]
+
+			self.mid_slice = mid_slice
+			self.mid_slice_z = z
+
+		return mid_slice
+
+
+	def get_mid_slice_contour(self):
+
+
+		try:
+			mid_slice_contour = self.mid_slice_contour
+
+		except:
+
+			mid_slice = self.get_mid_slice()
+
+			contour_output = cv2.findContours(mid_slice.astype('uint8'),cv.CV_RETR_LIST, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
+
+			idx = np.argmax([len(x) for x in contour_output[0]])
+
+			self.mid_slice_contour = [(contour_output[0][idx][i][0][1], contour_output[0][idx][i][0][0]) for i in xrange(len(contour_output[0][idx]))]
+	
+		return self.mid_slice_contour
+	
 
 
 	def add_feature(self,feat_name, feat_value):

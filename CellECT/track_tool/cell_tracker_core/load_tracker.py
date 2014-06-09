@@ -85,6 +85,17 @@ def parse_file_at_timestamp(file_name, timestamp):
 		neighbor_labels = [x[0] for x in eval(res[0].text)]
 
 
+		feat = "mid_slice_hu_moments"
+		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
+		try:
+			segment_feature[feat] = eval(res[0].text)
+		except: 
+			segment_feature[feat] = None
+
+		feat = "mid_slice_best_contour"
+		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
+		segment_feature[feat] = eval(res[0].text)
+
 
 #		for feat in features_of_interest:
 

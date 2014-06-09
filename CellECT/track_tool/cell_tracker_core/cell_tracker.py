@@ -12,6 +12,7 @@ import pdb
 import copy
 from munkres import Munkres
 from numpy import exp
+import cv2
 
 # Imports from this project
 import CellECT.track_tool.globals
@@ -173,6 +174,17 @@ class CellTracker(object):
 
 	def cost_for_pair(self, cp1, cp2):
 
+
+
+		ct1 = np.reshape(np.array(cp1.dict_of_features["mid_slice_best_contour"]) , (len(cp1.dict_of_features["mid_slice_best_contour"]), 1, 2))
+		ct2 = np.reshape(np.array(cp2.dict_of_features["mid_slice_best_contour"]) , (len(cp2.dict_of_features["mid_slice_best_contour"]), 1, 2))
+		
+		shape_cost = cv2.matchShapes(ct1, ct2, 2,0)
+
+		print shape_cost
+		return shape_cost
+
+
 		xres = 0.3 # CellECT.track_tool.globals.PARAMETER_DICT["xres"]
 		yres = 0.3 # CellECT.track_tool.globals.PARAMETER_DICT["yres"]
 		zres = 2.0 #CellECT.track_tool.globals.PARAMETER_DICT["zres"]
@@ -211,6 +223,7 @@ class CellTracker(object):
 
 
 	def get_hungarian_association(self, cp, cp_list_1, cp_list_2):
+
 
 
 		if len(cp_list_2) ==0:

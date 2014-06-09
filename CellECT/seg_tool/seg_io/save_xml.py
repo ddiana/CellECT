@@ -107,7 +107,10 @@ def save_xml_file_segment_props(segment_collection):
 	for segment in segment_collection.list_of_segments:
 		segment_field = ET.SubElement(list_of_segments_field, "segment")
 		segment_field.set("label", str(segment.label))
-		segment_field.set("contour_polygons", str(segment.contour_polygons_list))
+
+		segment_contours_field = ET.SubElement(segment_field, "contours")
+		segment_contours_field.set("name", "contour_polygons")
+		segment_contours_field.text =  str(segment.contour_polygons_list)
 		
 		nucleus_field = ET.SubElement(segment_field, "nucleus")
 		nucleus_field.set("x",str( segment.nucleus_list[0].x))
