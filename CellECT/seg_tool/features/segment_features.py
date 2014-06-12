@@ -19,6 +19,7 @@ from CellECT.seg_tool.seg_utils import misc
 from CellECT.seg_tool.segment_collection import segment_collection as segc
 import CellECT.seg_tool.globals
 from CellECT.seg_tool.seg_utils import voxel as vx
+from CellECT.seg_tool.features import APaxis
 
 
 """
@@ -511,7 +512,11 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
 	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
 	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
+#[[270, 200,15],[280, 400, 14], [280, 600,14], [290, 700,13]]
 
+	# LEFT-RIGHT coordinate first
+	# UP-DOWN coordinate second
+	ap_axis = APaxis.APaxis([200, 400, 500, 600],[300, 300, 300, 300], [15, 14, 14, 13], x_res, y_res, z_res, label_map.shape, label_map>1)
 
 
 	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and \
@@ -577,6 +582,9 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 			get_convex_hull_properties(segment)
 
 			get_border_to_nucleus_properties(segment)
+	
+			ap_axis.add_segment_projection_properties(segment)
+
 			
 			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
 
@@ -622,6 +630,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	print sum_time
 	print "....... %.3f sec                           " % (t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
+
 
 
 	return segment_collection
