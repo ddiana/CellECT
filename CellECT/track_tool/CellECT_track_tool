@@ -5,7 +5,7 @@
 
 # Module information
 import CellECT.track_tool.module_info
-
+from optparse import OptionParser
 
 # Imports
 import pdb
@@ -34,6 +34,7 @@ from CellECT.track_tool.track_io import load_parameters
 from CellECT.track_tool.cell_tracker_core import load_tracker
 from CellECT.track_tool.gui import cell_tracker_ui as ctui
 import CellECT.track_tool.cell_tracker_core.tracklet_connector as tc
+import CellECT.track_tool.globals
 
 
 def setup_logging():
@@ -59,15 +60,29 @@ def ask_for_config_file():
 
 
 
+
+def parse_input():
+
+	parser = OptionParser()
+	parser.add_option("-f", "--config_file", dest="filename", help="Specify configuration file.", default="", metavar="FILE")
+	parser.add_option("-t", "--with_tracker", action="store_true", dest="with_tracker", default=False, help="Construct lineage in analysis.")
+
+	(options, args) = parser.parse_args()
+
+	CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"] = options.with_tracker
+
+	if options.filename == "":
+		config_file_path = ask_for_config_file()
+	else:
+		config_file_path = options.filename
+	return config_file_path
+
+
 def main():
 
 	setup_logging()
 	
-	## CHECK INPUT #############################################################
-	if len(sys.argv) != 2:
-		config_file_path = ask_for_config_file()
-	else:
-		config_file_path = sys.argv[1]
+	config_file_path = parse_input()
 
 	print "Loading config parameters..."
 	load_parameters.read_program_parameters(config_file_path)
@@ -79,9 +94,12 @@ def main():
 	
 	#ct_ui.gui_menu()
 
-	tc.TrackletConnector(ct)
+	if CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:
 
-	print "EDGES: ", len(ct.graph.edges())
+		tc.TrackletConnector(ct)
+
+		print "EDGES: ", len(ct.graph.edges())
+
 	ct_ui = ctui.CellTrackerUI(ct)
 	ct_ui.gui_menu()
 

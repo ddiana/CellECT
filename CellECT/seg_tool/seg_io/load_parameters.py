@@ -217,7 +217,8 @@ def prepare_program_parameters(config_file_path):
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_seg_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["training_negative_labels_mat_path"])
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["save_location_prefix"])
-	
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"] = make_absolute_path(CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"])	
+
 	# convert to number
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"])
 

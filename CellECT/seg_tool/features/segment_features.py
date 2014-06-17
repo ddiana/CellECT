@@ -516,7 +516,11 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 	# LEFT-RIGHT coordinate first
 	# UP-DOWN coordinate second
-	ap_axis = APaxis.APaxis([200, 400, 500, 600],[300, 300, 300, 300], [15, 14, 14, 13], x_res, y_res, z_res, label_map.shape, label_map>1)
+
+	axis_pts = 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] 
+	
+	list1, list2, list3 = zip (* axis_pts)
+	ap_axis = APaxis.APaxis(list1, list2, list3, x_res, y_res, z_res, label_map.shape, label_map>1)
 
 
 	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and \

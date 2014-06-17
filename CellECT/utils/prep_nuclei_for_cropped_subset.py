@@ -39,7 +39,7 @@ if __name__ == "__main__":
 	  
 								vals [0] = (vals[0] - x_offset) / downsample_ratio
 								vals [1] = (vals[1] - y_offset) / downsample_ratio
-								vals [3] = 11
+								#vals [3] = 11
 		
 								g.write("%.2f, %.2f, %.2f, %.2f, %.2f\n" % (vals[0], vals[1], vals[2], vals[3], vals[4]) )
 					else:

@@ -9,6 +9,7 @@ import pdb
 import pylab
 import random
 import matplotlib
+from mpl_toolkits.mplot3d import Axes3D
 
 # Imports from this project
 import CellECT
@@ -86,13 +87,13 @@ class CellTrackerUI:
 		pylab.show()
 
 
-	
+
 	def plot_size_histograms_at_timestamp(self):
 		"""
 		plot of histogram of cell sizes, color coded from green to blue based on timestamp
 		"""
 
-		fig = pylab.figure(figsize=(10,7), facecolor='white')
+		fig = pylab.figure(figsize=(7,5), facecolor='white')
 		fig.canvas.set_window_title("Cell size histograms color coded by timestamp.")
 
 		color_idx = np.linspace(0, 1, len(self.cell_tracker.list_of_cell_profiles_per_timestamp))
@@ -113,6 +114,64 @@ class CellTrackerUI:
 		pylab.legend()
 		pylab.show()
 
+	
+	def plot_feature_scatter_plot(self, feat1, feat2, feat3, title_text, axis1_text, axis2_text, axis3_text):
+
+
+		fig = pylab.figure(figsize=(7,5), facecolor='white')
+		fig.canvas.set_window_title(title_text)
+
+		color_idx = np.linspace(0, 1, len(self.cell_tracker.list_of_cell_profiles_per_timestamp))
+		feat1_vals = []
+		feat2_vals = []	
+		feat3_vals = []
+		colors = []
+		
+		ax = fig.add_subplot(111)
+
+		if not feat3 is None:
+			ax = fig.add_subplot(111, projection='3d')
+		
+
+		# histogram of cell sizes
+		for colorshift, i in zip(color_idx, xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp))):
+			feat1_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat1] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
+			feat2_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat2] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
+			if not feat3 is None:
+				feat3_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat3] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
+
+			colors.extend( [ pylab.cm.winter(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+
+		if not feat3 is None:
+			ax.scatter(feat1_vals, feat2_vals, feat3_vals, c = colors)
+		else:
+			ax.scatter(feat1_vals, feat2_vals, c = colors)
+
+		pylab.hold(True)
+
+		ax.set_xlabel(axis1_text)
+		ax.set_ylabel(axis2_text)
+		if not feat3 is None:
+			ax.set_zlabel(axis2_text)
+
+		fig.canvas.set_window_title(title_text)
+	
+		pylab.legend()
+		pylab.show()		
+
+
+	def plot_stats(self):
+	
+		self.plot_size_histograms_at_timestamp()
+
+		#"dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin" ]
+		self.plot_feature_scatter_plot("size", "dist_to_AP_axis", "position_along_AP_axis", "Size, Distance to AP axis, Position along AP axis", "size", "distance to AP", "percent along AP")
+		self.plot_feature_scatter_plot("size", "dist_to_AP_axis", None, "Size Vs Distance to AP axis", "size", "distance to AP", None)
+		self.plot_feature_scatter_plot("size", "position_along_AP_axis", None, "Size Vs Position along AP axis", "size", "percent along AP", None)
+		self.plot_feature_scatter_plot("size", "angle_with_AP_axis", None, "Size Vs Angle with AP axis", "size", "angle with AP", None)
+		self.plot_feature_scatter_plot("position_along_AP_axis", "dist_to_AP_axis", "angle_with_AP_axis", "Position relative to AP axis", "percent along axis", "dist to axis", "angle with axis")
+
+
 
 
 	def plot_nuclei_at_timestamp(self):
@@ -120,7 +179,7 @@ class CellTrackerUI:
 		3-d plot with all the nuclei color coded from green to blue based on time stamp
 		"""
 
-		from mpl_toolkits.mplot3d import Axes3D
+		
 
 		fig = pylab.figure(figsize=(10,3), facecolor='white')
 		fig.canvas.set_window_title("3-D plot of nuclei color coded by timestamp")
@@ -1005,8 +1064,8 @@ class CellTrackerUI:
 		def call_plot_nuclei_at_timestamp_with_tracklet_coloring(event):
 			self.plot_nuclei_at_timestamp_with_tracklet_coloring()
 
-		def call_plot_size_histograms_at_timestamp(event):
-			self.plot_size_histograms_at_timestamp()
+		def call_plot_stats(event):
+			self.plot_stats()
 
 		def call_plot_tracklets_one_slice(event):
 			z_val = int(int(CellECT.track_tool.globals.PARAMETER_DICT["z-slices-per-stack"])/2)
@@ -1029,101 +1088,136 @@ class CellTrackerUI:
 			pdb.set_trace()
 		
 
+		fig = None
 
-		fig = pylab.figure(figsize=(10,7), facecolor='white')
-		fig.canvas.set_window_title("Cell tracker visualization menu")
+		if  CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:
+			fig = pylab.figure(figsize=(10,7), facecolor='white')
+		else:
+			fig = pylab.figure(figsize=(10,2), facecolor='white')
 
-		ax_button1 = pylab.axes([0.075, 0.85, 0.6, 0.075])
-		button1 = Button(ax_button1, "3-D plot of nuclei color coded by timestamp")
-		button1.on_clicked(call_plot_nuclei_at_timestamp)
+		fig.canvas.set_window_title("Visualize Results")
 
 
-		ax1 = pylab.axes( [0.725, 0.85, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")
-		pylab.imshow(im)
-		ax1.axis("off")
+
+
+		if CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:	
+
+
+			ax_button1 = pylab.axes([0.075, 0.85, 0.6, 0.075])
+			button1 = Button(ax_button1, "3-D plot of nuclei color coded by timestamp")
+			button1.on_clicked(call_plot_nuclei_at_timestamp)
+
+
+			ax1 = pylab.axes( [0.725, 0.85, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")
+			pylab.imshow(im)
+			ax1.axis("off")
 
 		
 
-		ax_button2 = pylab.axes([0.075, 0.75, 0.6, 0.075])
-		button2 = Button(ax_button2, "3-d plot of nuclei color coded by tracklet")
-		button2.on_clicked(call_plot_nuclei_at_timestamp_with_tracklet_coloring)
+			ax_button3 = pylab.axes([0.075, 0.75, 0.6, 0.075])
+			button3 = Button(ax_button3, "Statistical plots")
+			button3.on_clicked(call_plot_stats)
 
-		ax2 = pylab.axes( [0.725, 0.75, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "02.png")
-		pylab.imshow(im)
-		ax2.axis("off")
-
-
-
-
-		ax_button3 = pylab.axes([0.075, 0.65, 0.6, 0.075])
-		button3 = Button(ax_button3, "Histograms of cell sizes at each timestamp")
-		button3.on_clicked(call_plot_size_histograms_at_timestamp)
-
-		ax3 = pylab.axes( [0.725, 0.65, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "03.png")
-		pylab.imshow(im)
-		ax3.axis("off")
+			ax3 = pylab.axes( [0.725, 0.75, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "03.png")
+			pylab.imshow(im)
+			ax3.axis("off")
 
 
 
-		ax_button4 = pylab.axes([0.075, 0.55, 0.6, 0.075])
-		button4 = Button(ax_button4, "Draw track projections at one slice")
-		button4.on_clicked(call_plot_tracklets_one_slice)
+			ax_button2 = pylab.axes([0.075, 0.65, 0.6, 0.075])
+			button2 = Button(ax_button2, "3-d plot of nuclei color coded by tracklet")
+			button2.on_clicked(call_plot_nuclei_at_timestamp_with_tracklet_coloring)
 
-		ax4 = pylab.axes( [0.725, 0.55, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "04.png")
-		pylab.imshow(im)
-		ax4.axis("off")
+			ax2 = pylab.axes([0.725, 0.65, 0.2, 0.075] )
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "02.png")
+			pylab.imshow(im)
+			ax2.axis("off")
 
 
 
 
-		ax_button5 = pylab.axes([0.075, 0.45, 0.6, 0.075])
-		button5 = Button(ax_button5, "Plot tracklets as color coded nuclei at slice")
-		button5.on_clicked(call_plot_color_tracklets_time_sequence)
+			ax_button4 = pylab.axes([0.075, 0.55, 0.6, 0.075])
+			button4 = Button(ax_button4, "Draw track projections at one slice")
+			button4.on_clicked(call_plot_tracklets_one_slice)
+
+			ax4 = pylab.axes( [0.725, 0.55, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "04.png")
+			pylab.imshow(im)
+			ax4.axis("off")
+
+
+
+
+			ax_button5 = pylab.axes([0.075, 0.45, 0.6, 0.075])
+			button5 = Button(ax_button5, "Plot tracklets as color coded nuclei at slice")
+			button5.on_clicked(call_plot_color_tracklets_time_sequence)
 	
-		ax5 = pylab.axes( [0.725, 0.45, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "05.png")
-		pylab.imshow(im)
-		ax5.axis("off")
+			ax5 = pylab.axes( [0.725, 0.45, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "05.png")
+			pylab.imshow(im)
+			ax5.axis("off")
 
 
 
 
 
-		ax_button6 = pylab.axes([0.075, 0.35, 0.6, 0.075])
-		button6 = Button(ax_button6, "Cell lineage visualization")
-		button6.on_clicked(call_cell_lineage_gui)
+			ax_button6 = pylab.axes([0.075, 0.35, 0.6, 0.075])
+			button6 = Button(ax_button6, "Cell lineage visualization")
+			button6.on_clicked(call_cell_lineage_gui)
 
-		ax6 = pylab.axes( [0.725, 0.35, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "06.png")
-		pylab.imshow(im)
-		ax6.axis("off")
-
-
-
-
-		ax_button7 = pylab.axes([0.075, 0.25, 0.6, 0.075])
-		button7 = Button(ax_button7, "Segmentation color coded by tracklets")
-		button7.on_clicked(call_plot_tracklets_in_slice_with_seg)
-
-		ax7 = pylab.axes( [0.725, 0.25, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "07.png")
-		pylab.imshow(im)
-		ax7.axis("off")
+			ax6 = pylab.axes( [0.725, 0.35, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "06.png")
+			pylab.imshow(im)
+			ax6.axis("off")
 
 
 
-		ax_button8 = pylab.axes([0.075, 0.05, 0.6, 0.075])
-		button8 = Button(ax_button8, "Enter debug...")
-		button8.on_clicked(enter_debug)
 
-		ax8 = pylab.axes( [0.725, 0.05, 0.2, 0.075])
-		im = sp.misc.imread(self.thumbnail_dir+ "/" + "08.png")
-		pylab.imshow(im)
-		ax8.axis("off")
+			ax_button7 = pylab.axes([0.075, 0.25, 0.6, 0.075])
+			button7 = Button(ax_button7, "Segmentation color coded by tracklets")
+			button7.on_clicked(call_plot_tracklets_in_slice_with_seg)
+
+			ax7 = pylab.axes( [0.725, 0.25, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "07.png")
+			pylab.imshow(im)
+			ax7.axis("off")
+
+
+
+			ax_button8 = pylab.axes([0.075, 0.05, 0.6, 0.075])
+			button8 = Button(ax_button8, "Enter debug...")
+			button8.on_clicked(enter_debug)
+
+			ax8 = pylab.axes( [0.725, 0.05, 0.2, 0.075])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "08.png")
+			pylab.imshow(im)
+			ax8.axis("off")
+
+
+		else:
+			ax_button1 = pylab.axes([0.075, 0.55, 0.6, 0.35])
+			button1 = Button(ax_button1, "3-D plot of nuclei color coded by timestamp")
+			button1.on_clicked(call_plot_nuclei_at_timestamp)
+
+
+			ax1 = pylab.axes( [0.725, 0.55, 0.2, 0.35])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")
+			pylab.imshow(im)
+			ax1.axis("off")
+
+		
+
+			ax_button3 = pylab.axes([0.075, 0.15, 0.6, 0.35])
+			button3 = Button(ax_button3, "Statistical plots")
+			button3.on_clicked(call_plot_stats)
+
+			ax3 = pylab.axes( [0.725, 0.15, 0.2, 0.35])
+			im = sp.misc.imread(self.thumbnail_dir+ "/" + "03.png")
+			pylab.imshow(im)
+			ax3.axis("off")
+
 
 		pylab.show()
 		

@@ -319,7 +319,7 @@ class WorkspaceCreator(object):
 					f.write("x_res = %f\n" % self.metadata.xres)
 					f.write("y_res = %f\n" % self.metadata.yres)
 					f.write("z_res = %f\n" % self.metadata.zres)
-
+					f.write("ap_axis_file =init_watershed_all_time_stamps/time_stamp_%d.csv\n" % time)
 
 	def build_workspace(self, ws_location, progressBar):
 		# called from new_workspace.py

@@ -81,12 +81,19 @@ def parse_input():
 	parser.add_option("-i", "--no_interactive", action="store_true", dest="no_interactive", default=False, help="Ask user for feedback.")
 	parser.add_option("-m", "--no_cellness_metric", action="store_true", dest="no_cellness_metric", default=False, help="Predict bad segments.")
 	parser.add_option("-b", "--bisque", action="store_true", dest="bisque", default=False, help="Run on bisque server.")
+	parser.add_option("-c", "--cleanup_seg", action="store_true", default=False, help="Load saved segmentation, clean up, resave.")
 
 	(options, args) = parser.parse_args()
 
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"] = options.no_interactive
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"] = options.no_cellness_metric
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = options.bisque
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["cleanup_seg"] = options.cleanup_seg
+
+	if options.cleanup_seg:
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"] = True
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"] = True
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = False
 
 	if options.filename == "":
 		config_file_path = ask_for_config_file()
@@ -162,6 +169,23 @@ def main():
 	bg_prior = None
 	# background prior comes from propag
 
+	# load AP axis if any 
+
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] = []
+
+	if os.path.isfile(CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"]):
+
+		
+		with open(CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"]) as ap_file: 
+			pts = ap_file.readline()
+			while pts:
+				pts = pts.split(',')
+				CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([int(pt) for pt in pts])
+				pts = ap_file.readline()
+
+	if len(CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"]) == 0:
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([0,0,0])
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([0, vol.shape[1], 0])
 
 	print "Loading initial segmentation if any..."
 	try:
@@ -212,187 +236,209 @@ def main():
 
 	made_changes = False
 
-	while (ask_feedback or CellECT.seg_tool.globals.should_load_last_save):
 
 
-		## Load last save, or continue with current setup ######################
-		if CellECT.seg_tool.globals.should_load_last_save:
-			nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior = load_all.load_last_save()
-			#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
-			#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+	if CellECT.seg_tool.globals.DEFAULT_PARAMETER["cleanup_seg"]:
+
+		nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior = load_all.load_last_save()
 	
-			CellECT.seg_tool.globals.should_load_last_save = False
-
-		## Prepare cellness metric #############################################
-
-
 		print "Preparing data for classifier..."
 
 		set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
-
-		#original_init_pts = ws.make_list_of_seed_groups(nuclei_collection)
-
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
 		#test_data = cellness.prepare_test_data(collection_of_ws_segments)
 
-		## Apply cellness metric ###############################################
+		class_prediction = [0 for i in xrange(len(set_of_labels))]
+		discriminant_value = [1 for i in xrange(len(set_of_labels))]
+		classified_segments = (set_of_labels, class_prediction, discriminant_value)
 
 
 
-		if not 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
+
+	else:
+
+
+		while (ask_feedback or CellECT.seg_tool.globals.should_load_last_save):
+
+
+			## Load last save, or continue with current setup ######################
+			if CellECT.seg_tool.globals.should_load_last_save:
+				nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior = load_all.load_last_save()
+				#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+				#watershed = recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+	
+				CellECT.seg_tool.globals.should_load_last_save = False
+
+			## Prepare cellness metric #############################################
+
+
+			print "Preparing data for classifier..."
+
+			set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
+
+			#original_init_pts = ws.make_list_of_seed_groups(nuclei_collection)
+
+			collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
+			#test_data = cellness.prepare_test_data(collection_of_ws_segments)
+
+			## Apply cellness metric ###############################################
+
+
+
+			if not 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
 			
-			#test_data_svm = call_silent.call_silent_process(VectorDataSet, test_data)
+				#test_data_svm = call_silent.call_silent_process(VectorDataSet, test_data)
 
-			#generic_classifier = cellness.prepare_SVM(generic_training_data, generic_training_labels)
+				#generic_classifier = cellness.prepare_SVM(generic_training_data, generic_training_labels)
 
-			print "Applying cellness metric to segments..."
-			class_prediction = []
-			discriminant_value = []
-
-			
-			for segment in collection_of_ws_segments.list_of_segments:
-				prd, disc = cellness_metric.test_segment(segment)
-				class_prediction.append(prd)
-				discriminant_value.append(disc)
-			#class_prediction, discriminant_value = cellness.classify_segments(generic_classifier,test_data) #test_data_svm)
+				print "Applying cellness metric to segments..."
+				class_prediction = []
+				discriminant_value = []
 
 			
-			classified_segments = (set_of_labels, class_prediction, discriminant_value)
+				for segment in collection_of_ws_segments.list_of_segments:
+					prd, disc = cellness_metric.test_segment(segment)
+					class_prediction.append(prd)
+					discriminant_value.append(disc)
+				#class_prediction, discriminant_value = cellness.classify_segments(generic_classifier,test_data) #test_data_svm)
 
-		else:
+			
+				classified_segments = (set_of_labels, class_prediction, discriminant_value)
 
-			class_prediction = [0 for i in xrange(len(set_of_labels))]
-			discriminant_value = [1 for i in xrange(len(set_of_labels))]
-			classified_segments = (set_of_labels, class_prediction, discriminant_value)
+			else:
+
+				class_prediction = [0 for i in xrange(len(set_of_labels))]
+				discriminant_value = [1 for i in xrange(len(set_of_labels))]
+				classified_segments = (set_of_labels, class_prediction, discriminant_value)
 			
 
 
 
-		## ASK FOR FEEDBACK ####################################################
+			## ASK FOR FEEDBACK ####################################################
 
-		print "Prompting user for feedback..."	
+			print "Prompting user for feedback..."	
 
-		correct_labels = set()
-		correct_segments = set()
-
-		if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
-			# TODO: bisque UI
-
-			from CellECT.seg_tool.bisque.bisque_io import segments_xml
-			from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
-
-			print colored("BISQUE UI","red")
-			logging.info("BISQUE UI.")
-			talk_to_ui.wait_for_UI_update()
-
-		all_user_feedback = []
-
-
-		if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
+			correct_labels = set()
+			correct_segments = set()
 
 			if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 				# TODO: bisque UI
+
 				from CellECT.seg_tool.bisque.bisque_io import segments_xml
 				from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
+
 				print colored("BISQUE UI","red")
 				logging.info("BISQUE UI.")
 				talk_to_ui.wait_for_UI_update()
 
-			else:
-				import pylab
-				from CellECT.seg_tool.gui import main_gui
-				from CellECT.seg_tool.gui import parse_feedback as gui_parse
-				from CellECT.seg_tool.seg_utils import display_tools
-				logging.info("DESKTOP CLIENT ")
+			all_user_feedback = []
 
-				# split predict too slow, not using this anymore.
-				#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
-				all_user_feedback, to_merge_predicted, to_delete_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, bg_prior, vol_nuclei=vol_nuclei)
-
-
-				for label in correct_labels:
-
-					idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
-					correct_segments.add(collection_of_ws_segments.list_of_segments[idx])
-
-				cellness_metric.add_training_examples(correct_segments, ["Correct" for label in correct_labels], False)
-				cellness_metric.train()
-
-		## USE FEEDBACK ########################################################
-
-		if not CellECT.seg_tool.globals.should_load_last_save:
-
-
-			old_number_of_nuclei = len(nuclei_collection.nuclei_list)
-			old_number_of_seeds = len(seed_collection.list_of_seeds)
-	
-			incorrect_segments = set()
-
-			
 
 			if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
 
-				print "Processing user feedback..."
-				# Get feedback #####################################################
 				if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
-					# TODO: bisque UI parser
-					print colored("BISQUE UI PARSER","red")
-					logging.info("BISQUE UI PARSER.")
-					made_changes = False
+					# TODO: bisque UI
+					from CellECT.seg_tool.bisque.bisque_io import segments_xml
+					from CellECT.seg_tool.bisque.bisque_io import talk_to_ui
+					print colored("BISQUE UI","red")
+					logging.info("BISQUE UI.")
+					talk_to_ui.wait_for_UI_update()
+
 				else:
-					logging.info("DESKTOP CLIENT UI PARSER.")
-					old_len_bg_seeds = len(bg_seeds)
-					made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, to_delete_predicted)	
+					import pylab
+					from CellECT.seg_tool.gui import main_gui
+					from CellECT.seg_tool.gui import parse_feedback as gui_parse
+					from CellECT.seg_tool.seg_utils import display_tools
+					logging.info("DESKTOP CLIENT ")
 
-					if len(to_merge_predicted):
-						made_changes = True
-						gui_parse.parse_to_merge_predictions(to_merge_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
-
-
-					if len(to_delete_predicted):
-						made_changes = True
-						gui_parse.parse_to_delete_predictions(to_delete_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+					# split predict too slow, not using this anymore.
+					#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
+					all_user_feedback, to_merge_predicted, to_delete_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, bg_prior, vol_nuclei=vol_nuclei)
 
 
+					for label in correct_labels:
 
-					if old_len_bg_seeds != len(bg_seeds):
-						made_changes = True
+						idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
+						correct_segments.add(collection_of_ws_segments.list_of_segments[idx])
+
+					cellness_metric.add_training_examples(correct_segments, ["Correct" for label in correct_labels], False)
+					cellness_metric.train()
+
+			## USE FEEDBACK ########################################################
+
+			if not CellECT.seg_tool.globals.should_load_last_save:
+
+
+				old_number_of_nuclei = len(nuclei_collection.nuclei_list)
+				old_number_of_seeds = len(seed_collection.list_of_seeds)
+	
+				incorrect_segments = set()
+
+			
+
+				if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"]:
+
+					print "Processing user feedback..."
+					# Get feedback #####################################################
+					if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+						# TODO: bisque UI parser
+						print colored("BISQUE UI PARSER","red")
+						logging.info("BISQUE UI PARSER.")
+						made_changes = False
+					else:
+						logging.info("DESKTOP CLIENT UI PARSER.")
+						old_len_bg_seeds = len(bg_seeds)
+						made_changes = gui_parse.parse_user_feedback(watershed, nuclei_collection, collection_of_ws_segments, seed_collection, all_user_feedback, incorrect_segments, bg_seeds, to_delete_predicted)	
+
+						if len(to_merge_predicted):
+							made_changes = True
+							gui_parse.parse_to_merge_predictions(to_merge_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+
+
+						if len(to_delete_predicted):
+							made_changes = True
+							gui_parse.parse_to_delete_predictions(to_delete_predicted, collection_of_ws_segments, nuclei_collection, incorrect_segments)
+
+
+
+						if old_len_bg_seeds != len(bg_seeds):
+							made_changes = True
 				
-			else:
-				made_changes = False
+				else:
+					made_changes = False
 		
-			new_number_of_nuclei = len(nuclei_collection.nuclei_list)
-			new_number_of_seeds = len(seed_collection.list_of_seeds)
+				new_number_of_nuclei = len(nuclei_collection.nuclei_list)
+				new_number_of_seeds = len(seed_collection.list_of_seeds)
 
-			## Apply Feedback ##################################################
+				## Apply Feedback ##################################################
 	
 	
-			if made_changes:
+				if made_changes:
 
 				
 
-				init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
-				#call_silent_err( show_new_user_points,original_init_pts, init_pts)
+					init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
+					#call_silent_err( show_new_user_points,original_init_pts, init_pts)
 
-				watershed_old = watershed
+					watershed_old = watershed
 
-				cellness_metric.add_training_examples(list(incorrect_segments), ["Incorrect" for i in xrange(len(incorrect_segments))], True )
+					cellness_metric.add_training_examples(list(incorrect_segments), ["Incorrect" for i in xrange(len(incorrect_segments))], True )
 
-				cellness_metric.train()
+					cellness_metric.train()
 
 
-				## Rerun Watershed if necessary ################################
-				if True: #old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
+					## Rerun Watershed if necessary ################################
+					if True: #old_number_of_nuclei != new_number_of_nuclei or old_number_of_seeds != new_number_of_seeds or old_len_bg_seeds != len(bg_seeds):
 				
-					watershed = ws.run_watershed(vol, init_pts, bg_seeds, bg_prior)
-					#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
+						watershed = ws.run_watershed(vol, init_pts, bg_seeds, bg_prior)
+						#seed_segment_collection.update_seed_segment_collection(seed_segment_collection, watershed, seed_collection)
 
 
-				#watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
+					#watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 
-			else:
-				ask_feedback = False
+				else:
+					ask_feedback = False
 
 
 

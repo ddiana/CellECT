@@ -165,6 +165,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.actionNew_Workspace.triggered.connect(self.show_new_workspace)
 		self.actionPreliminary_Segmentation.triggered.connect(self.run_preliminary_seg)
 		self.actionAppend_Workspace.triggered.connect(self.append_workspace)
+		self.actionAnalysis_2.triggered.connect(self.run_CellECT_analysis_tool)
 
 		self.actionExit.triggered.connect(self.exit_app)
 
@@ -175,6 +176,8 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
 		self.btn_select_all.clicked.connect(self.listView.selectAll)
 		self.btn_save_metadata.clicked.connect(self.save_metadata_to_file)
+		self.btn_analysis.clicked.connect(self.run_CellECT_analysis_tool)
+		self.btn_clean_seg.clicked.connect(self.run_CellECT_clean_seg_batch)
 		
 		self.meta_manager = meta_manager.ManageMetadataInUI(self, self.workspace_data.metadata)
 
@@ -553,6 +556,82 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.listView.model().contents[index] = current_status + status
 
 
+
+	def run_CellECT_clean_seg_batch(self):
+
+		"""
+		Run CellECT_seg_tool and sleep 1 sec in clean up mode.
+		If propagate, then use propagate config file.
+		"""
+
+		if len(self.listView.selectionModel().selectedIndexes()):
+			segmentation_indexes = [ index.row() for index in self.listView.selectionModel().selectedIndexes()]
+		else:
+			QtGui.QMessageBox.information(self, "CellECT Clean-up Segmentation", "Please select one or more time points to run the clean up segmentation on.")
+			return
+
+		valid_indexes = []
+		invalid_indexes = []
+
+		for index in segmentation_indexes:
+#			if re.search("[.]*has segmentation",self.model.contents[index]):
+#				invalid_indexes.append(index)
+#			else:
+
+			# if no segmentation available, it will just make one.
+			valid_indexes.append(index)
+
+
+		for index in valid_indexes:
+
+			if self.checkBox_propagate.isChecked():
+				config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, index)
+
+				direction = 1
+				if self.radioButton_forward.isChecked():
+					direction = -1
+
+				try:
+					propagate.PreparePropagateInput(self.workspace_data, index, direction )
+				except Exception as err:
+					QtGui.QMessageBox.information(self, "CellECT Segmentation Clean-up Tool", err.message)
+					return
+
+			else:
+				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+
+
+
+			#config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+		
+			if self.checkBox_propagate.isChecked():
+			# if propagate is checked, then run sequentially, otherwise, run in parallel.
+				self.call_cellect_seg_cleanup(config_file_location, index)
+
+			else:  # spawn a new thread
+				p = threading.Thread(target = self.call_cellect_seg_cleanup, args=(config_file_location, index))
+				p.start()
+
+			
+			print config_file_location
+
+
+	def call_cellect_seg_cleanup(self, config_file_location, index):
+
+		"""
+		Run seg tool clean up, without any user interaction.
+		"""		
+
+
+		command = 'CellECT_seg_tool -m -i -c -f %s' % config_file_location
+		print command
+		os.system(command)
+
+		self.update_list_of_segs.emit(index)
+		
+
+
+
 	def call_cellect_seg_tool_preliminary(self, config_file_location, index):
 
 		"""
@@ -564,44 +643,8 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		print command
 		os.system(command)
 
-#		import time
-#		print "sleeping"
-#		time.sleep(10)
-#		print "done sleeping"
 		self.update_list_of_segs.emit(index)
 		
-
-
-
-#		#print self.model.contents[index]
-	#	self.listView.model().contents[index] += " has segmentation"
-#		self.listView.update()
-		
-
-
-
-
-#		command = 'CellECT_seg_tool -m -i -f %s' % config_file_location
-#		print command
-#		os.system(command)
-
-#	
-#		print "FINISHED"
-#		#print self.model.contents[index] 
-#		self.model.contents[index] += " has segmentation"
-#		#self.listView.model.contents[index] += "has segmentation"
-#		self.listView().update()
-#		
-#		#model_index = self.model.index(index,0)
-#		#self.model.setData(model_index, new_value)
-#		#self.model = SimpleList(self.model.contents)
-#		#self.listView.setModel(self.model)
-#		print self.listView.model.contents[index]
-
-
-
-##		self.model.dataChanged.emit(index, index)
-#		#self.listView.show()
 
 
 
@@ -773,7 +816,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		"""
 
 		if len(self.listView.selectionModel().selectedIndexes()) <2:
-			QtGui.QMessageBox.information(self, "CellECT Tracking Tool", "Please select two or more time points to run the interactive segmentation on.")
+			QtGui.QMessageBox.information(self, "CellECT Tracking Tool", "Please select two or more time points to run tracking and analysis on.")
 			return
 
 
@@ -788,10 +831,37 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		config_file_location = self.write_tracker_config_file(self.listView.selectionModel().selectedIndexes())
 
-		command = 'gnome-terminal -x sh -c "CellECT_track_tool %s; sleep 10"' % config_file_location
+		command = 'gnome-terminal -x sh -c "CellECT_track_tool -t -f %s; sleep 10"' % config_file_location
 		print command
 		os.system(command)
 
+
+
+	def run_CellECT_analysis_tool(self):
+
+		"""
+		Open gnome-terminal and run CellECT_track_tool and without tracking option sleep 1 sec
+		"""
+
+		if len(self.listView.selectionModel().selectedIndexes()) <1:
+			QtGui.QMessageBox.information(self, "CellECT Analysis Tool", "Please select one or more time points to run analysis on.")
+			return
+
+
+		for i in self.listView.selectionModel().selectedIndexes():
+
+
+			if not i.row() in self.workspace_data.available_segs:
+				QtGui.QMessageBox.information(self, "CellECT Tracking Tool", "Analysis can only be performed on available segmentations.")
+
+				break
+
+
+		config_file_location = self.write_tracker_config_file(self.listView.selectionModel().selectedIndexes())
+
+		command = 'gnome-terminal -x sh -c "CellECT_track_tool  -f %s; sleep 10"' % config_file_location
+		print command
+		os.system(command)
 
 
 	def populate_segmentation_checklist_list(self):

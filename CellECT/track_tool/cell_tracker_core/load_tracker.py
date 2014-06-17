@@ -96,6 +96,18 @@ def parse_file_at_timestamp(file_name, timestamp):
 		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
 		segment_feature[feat] = eval(res[0].text)
 
+		feat = "mid_slice_best_contour"
+		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
+		segment_feature[feat] = eval(res[0].text)
+
+
+		features_of_interest = ["dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin"] #, "border_to_nucleus_dist_std" , "centroid_dist_from_margin"]
+
+
+		for feat in features_of_interest:
+			res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
+			segment_feature[feat] = eval(res[0].text)
+
 
 #		for feat in features_of_interest:
 
@@ -149,7 +161,10 @@ def load_cell_tracker():
 		cell_tracker.add_cell_profiles_per_timestamp(cell_profile_per_ts)
 
 
-	cell_tracker.build_lineage()
+	pdb.set_trace()
+
+	if CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:
+		cell_tracker.build_lineage()
 	
 
 	return cell_tracker

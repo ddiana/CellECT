@@ -56,5 +56,6 @@ default_parameter_dictionary_keys = ("volume_mat_path",
    "use_dist_from_margin", \
    "x_res", \
    "y_res", \
-   "z_res")
+   "z_res", \
+   "ap_axis_file")
 

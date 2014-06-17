@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1171</width>
-    <height>852</height>
+    <width>984</width>
+    <height>703</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -791,7 +791,7 @@
             <item>
              <widget class="QPushButton" name="btn_preliminary_seg">
               <property name="text">
-               <string>Preliminary Segmentation</string>
+               <string>Non-interactive Seg</string>
               </property>
               <property name="icon">
                <iconset resource="app_icons.qrc">
@@ -808,7 +808,7 @@
             <item>
              <widget class="QPushButton" name="btn_seg_tool">
               <property name="text">
-               <string>Run Segmentation Tool</string>
+               <string>Interactive Seg</string>
               </property>
               <property name="icon">
                <iconset resource="app_icons.qrc">
@@ -825,7 +825,24 @@
             <item>
              <widget class="QPushButton" name="btn_track_tool">
               <property name="text">
-               <string>Run Tracking Tool</string>
+               <string>Cell Lineage</string>
+              </property>
+              <property name="icon">
+               <iconset resource="app_icons.qrc">
+                <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>35</width>
+                <height>35</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_analysis">
+              <property name="text">
+               <string>Analysis</string>
               </property>
               <property name="icon">
                <iconset resource="app_icons.qrc">
@@ -871,17 +888,44 @@
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_3">
+         <widget class="Line" name="line_2">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_clean_seg">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-         </spacer>
+          <property name="text">
+           <string>Clean Seg</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_set_input">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Set Input</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="checkBox_propagate">
@@ -918,16 +962,13 @@
      </layout>
     </item>
    </layout>
-   <zorder>horizontalSpacer_3</zorder>
-   <zorder>checkBox_propagate</zorder>
-   <zorder>line</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1171</width>
+     <width>984</width>
      <height>27</height>
     </rect>
    </property>
@@ -942,6 +983,7 @@
     <addaction name="actionPreliminary_Segmentation"/>
     <addaction name="actionRun_Segmentation_Tool"/>
     <addaction name="actionRun_Tracking_Tool"/>
+    <addaction name="actionAnalysis_2"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -988,6 +1030,7 @@
    <addaction name="actionPreliminary_Segmentation"/>
    <addaction name="actionRun_Segmentation_Tool"/>
    <addaction name="actionRun_Tracking_Tool"/>
+   <addaction name="actionAnalysis_2"/>
    <addaction name="separator"/>
    <addaction name="actionHelp"/>
    <addaction name="actionAbout"/>
@@ -1067,7 +1110,7 @@
      <normaloff>:/icons/seg_tool.png</normaloff>:/icons/seg_tool.png</iconset>
    </property>
    <property name="text">
-    <string>Run Segmentation Tool</string>
+    <string>Interactive Segmentation</string>
    </property>
   </action>
   <action name="actionRun_Tracking_Tool">
@@ -1076,7 +1119,7 @@
      <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
    </property>
    <property name="text">
-    <string>Run Tracking Tool</string>
+    <string>CellLineage</string>
    </property>
   </action>
   <action name="actionPreliminary_Segmentation">
@@ -1085,7 +1128,7 @@
      <normaloff>:/icons/preiliminary.png</normaloff>:/icons/preiliminary.png</iconset>
    </property>
    <property name="text">
-    <string>Preliminary Segmentation</string>
+    <string>Non-interactive Segmentation</string>
    </property>
   </action>
   <action name="actionAppend_Workspace">
@@ -1098,6 +1141,15 @@
    </property>
    <property name="toolTip">
     <string>Append Workspace</string>
+   </property>
+  </action>
+  <action name="actionAnalysis_2">
+   <property name="icon">
+    <iconset resource="app_icons.qrc">
+     <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Analysis</string>
    </property>
   </action>
  </widget>
