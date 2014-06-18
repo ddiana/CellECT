@@ -291,8 +291,8 @@ def add_neighbor_border_properties( segment1, segment2, vol):
 	s = mask.sum()
 	segment1.feature_dict["percent_border_with_neighbor"].append((segment2.label, s/float(s1) ))
 	segment2.feature_dict["percent_border_with_neighbor"].append((segment1.label, s/float(s2) ))
-	segment1.feature_dict["size_border_with_neighbor"].append((segment1.label, s))
-	segment2.feature_dict["size_border_with_neighbor"].append((segment2.label, s))
+	segment1.feature_dict["size_border_with_neighbor"].append((segment2.label, s))
+	segment2.feature_dict["size_border_with_neighbor"].append((segment1.label, s))
 	segment1.feature_dict["mean_intensity_border_with_neighbor"].append((segment2.label, np.sum(mask*vol_crop)/float(s)))
 	segment2.feature_dict["mean_intensity_border_with_neighbor"].append((segment1.label, segment1.feature_dict["mean_intensity_border_with_neighbor"][-1][1]))
 	
@@ -395,10 +395,16 @@ def weighted_mean_from_hist(histogram):
 
 def fit_line(segment):
 
+
+
 	pts = np.nonzero(segment.mask)
 	pts = np.array(pts).T
 
-	line = cv2.fitLine(pts, 1,0, 0.01, 0.01)
+	pts_len = pts.shape[0]
+
+	pts = pts.reshape((pts_len, 1, 3))
+	
+	line = cv2.fitLine(pts.astype("float32"), 1,0, 0.01, 0.01)
 
 	line = [x[0] for x in line]
 
@@ -409,16 +415,23 @@ def get_convex_hull_properties(segment):
 
 
 	cnt = np.array(segment.get_mid_slice_contour())
+	cnt_len = cnt.shape[0]
+	cnt = cnt.reshape((cnt_len,1,2))
 
 	if len(cnt)>3:
 
 		hull = cv2.convexHull(cnt,returnPoints = False)
-		defects = cv2.convexityDefects(cnt,hull)
+		
 
 		segment.feature_dict["mid_slice_convex_hull_indices"] = [x[0] for x in hull]
-		if defects is not None:
-			segment.feature_dict["mid_slice_convexity_deffects"] = [[i for i in defects[k][0]] for k in xrange(len(defects))]
-		else: 
+
+		try:
+			defects = cv2.convexityDefects(cnt,hull)
+			if defects is not None:
+				segment.feature_dict["mid_slice_convexity_deffects"] = [[i for i in defects[k][0]] for k in xrange(len(defects))]
+			else: 
+				segment.feature_dict["mid_slice_convexity_deffects"] = [[]]
+		except:
 			segment.feature_dict["mid_slice_convexity_deffects"] = [[]]
 
 
@@ -536,6 +549,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 	sum_time = 0
 
+
 	for segment in segment_collection.list_of_segments:
 
 		try:
@@ -580,8 +594,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 			segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
 			segment.add_feature("mid_slice_z", segment.mid_slice_z)
 
-			segment.add_feature("line_fit", fit_line(segment))
 
+			segment.add_feature("line_fit", fit_line(segment))
 
 			get_convex_hull_properties(segment)
 

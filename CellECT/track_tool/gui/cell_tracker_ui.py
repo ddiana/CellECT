@@ -112,7 +112,6 @@ class CellTrackerUI:
 		fig.canvas.set_window_title("Histogram of cell sizes for each time stamp")
 	
 		pylab.legend()
-		pylab.show()
 
 	
 	def plot_feature_scatter_plot(self, feat1, feat2, feat3, title_text, axis1_text, axis2_text, axis3_text):
@@ -152,15 +151,48 @@ class CellTrackerUI:
 		ax.set_xlabel(axis1_text)
 		ax.set_ylabel(axis2_text)
 		if not feat3 is None:
-			ax.set_zlabel(axis2_text)
+			ax.set_zlabel(axis3_text)
 
 		fig.canvas.set_window_title(title_text)
 	
 		pylab.legend()
-		pylab.show()		
+
+
+	def plot_dist_to_nucleus_hists(self):
+
+		fig = pylab.figure(figsize=(7,5), facecolor='white')
+		fig.canvas.set_window_title("Distance to nucleus histograms")
+
+		num_bins = len(self.cell_tracker.list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles[0].dict_of_features["border_to_nucleus_dist_hist"])
+		color_idx = np.linspace(0, 1, num_bins )
+	
+		bins = np.arange(0,1, 1/float(num_bins))
+
+
+		# histogram of cell sizes
+		for colorshift, i in zip(color_idx, xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp))):
+			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
+			hists = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[0].dict_of_features["border_to_nucleus_dist_hist"]
+			for idx in  xrange(1,len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles)):
+				cp_item = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx]
+				hist = cp_item.dict_of_features["border_to_nucleus_dist_hist"]
+				hist = np.array(hist) / float(max(hist))
+				hists = np.vstack((hists, hist))
+
+			hist = hists.mean(0)
+			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
+			pylab.hold(True)
+		
+		pylab.xlabel("")
+		pylab.ylabel("")
+		fig.canvas.set_window_title("Distance to nucleus histograms")
+	
+		pylab.legend()
+
 
 
 	def plot_stats(self):
+
 	
 		self.plot_size_histograms_at_timestamp()
 
@@ -171,8 +203,9 @@ class CellTrackerUI:
 		self.plot_feature_scatter_plot("size", "angle_with_AP_axis", None, "Size Vs Angle with AP axis", "size", "angle with AP", None)
 		self.plot_feature_scatter_plot("position_along_AP_axis", "dist_to_AP_axis", "angle_with_AP_axis", "Position relative to AP axis", "percent along axis", "dist to axis", "angle with axis")
 
+		self.plot_dist_to_nucleus_hists()
 
-
+		pylab.show()		
 
 	def plot_nuclei_at_timestamp(self):
 		"""

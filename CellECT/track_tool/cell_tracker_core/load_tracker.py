@@ -40,6 +40,7 @@ def parse_file_at_timestamp(file_name, timestamp):
 
 	# make cell profile for each cell
 
+	nan = None
 
 	for segment in xml_list_of_segments.findall("segment"):
 		
@@ -82,6 +83,7 @@ def parse_file_at_timestamp(file_name, timestamp):
 		
 
 		res = filter(lambda x: x.attrib["name"] == "weighted_merge_score", feat_dict)
+
 		neighbor_labels = [x[0] for x in eval(res[0].text)]
 
 
@@ -96,9 +98,10 @@ def parse_file_at_timestamp(file_name, timestamp):
 		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
 		segment_feature[feat] = eval(res[0].text)
 
-		feat = "mid_slice_best_contour"
+		feat = "border_to_nucleus_dist_hist"
 		res = filter(lambda x: x.attrib["name"] == feat, feat_dict)
-		segment_feature[feat] = eval(res[0].text)
+		segment_feature[feat] = [int(x) for x in res[0].text.strip('[').strip(']').split()]
+
 
 
 		features_of_interest = ["dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin"] #, "border_to_nucleus_dist_std" , "centroid_dist_from_margin"]

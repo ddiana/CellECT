@@ -173,19 +173,25 @@ def main():
 
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] = []
 
+
 	if os.path.isfile(CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"]):
 
 		
 		with open(CellECT.seg_tool.globals.DEFAULT_PARAMETER["ap_axis_file"]) as ap_file: 
 			pts = ap_file.readline()
+
 			while pts:
 				pts = pts.split(',')
-				CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([int(pt) for pt in pts])
+				pts = [pt.strip() for pt in pts]
+				if pts[0] != '':
+					CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([int(pt) for pt in pts])
 				pts = ap_file.readline()
+
 
 	if len(CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"]) == 0:
 		CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([0,0,0])
 		CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"].append([0, vol.shape[1], 0])
+
 
 	print "Loading initial segmentation if any..."
 	try:
@@ -236,8 +242,6 @@ def main():
 
 	made_changes = False
 
-
-
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER["cleanup_seg"]:
 
 		nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior = load_all.load_last_save()
@@ -248,10 +252,30 @@ def main():
 		collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
 		#test_data = cellness.prepare_test_data(collection_of_ws_segments)
 
-		class_prediction = [0 for i in xrange(len(set_of_labels))]
-		discriminant_value = [1 for i in xrange(len(set_of_labels))]
-		classified_segments = (set_of_labels, class_prediction, discriminant_value)
+		too_small_segments = filter(lambda x: x.feature_dict["size"]<20, collection_of_ws_segments.list_of_segments)
 
+		labels_too_small = [segment.label for segment in too_small_segments]
+
+
+		if len(labels_too_small)>0:
+			from CellECT.seg_tool.gui import parse_feedback as gui_parse
+			gui_parse.parse_to_delete_predictions(labels_too_small, collection_of_ws_segments, nuclei_collection, set())
+
+			init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
+
+			watershed = ws.run_watershed(vol, init_pts, bg_seeds, bg_prior)
+
+			set_of_labels = set(int(x) for x in np.unique(watershed) if x > 1)	
+
+			collection_of_ws_segments = feat.get_segments_with_features(vol, watershed, set_of_labels, "test_volume", nuclei_collection)
+
+
+#		class_prediction = [0 for i in xrange(len(set_of_labels))]
+#		discriminant_value = [1 for i in xrange(len(set_of_labels))]
+#		classified_segments = (set_of_labels, class_prediction, discriminant_value)
+
+
+		
 
 
 
@@ -470,7 +494,8 @@ def main():
 
 	if should_save.lower() == "y":
 		save_all.save_current_status(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed, bg_seeds, bg_prior)
-		CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
+		if  CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
+			CellECT.seg_tool.bisque.bisque_io.segments_xml.write_bisque_segments_xml(nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection, watershed)
 
 	else:
 		print "Not saving."

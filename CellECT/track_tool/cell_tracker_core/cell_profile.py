@@ -64,6 +64,7 @@ class CellProfilesPerTimestamp(object):
 		self.size_stdev = np.std(sizes_list)
 
 
+
 	def get_cells_within_space(self,bbx):
 		# return cells whose centroid falls in a space
 	
