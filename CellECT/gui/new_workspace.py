@@ -150,7 +150,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 
 
 
-		self.ws_location = self.ws_dir + "/" + self.lineEdit_ws_name.text()
+		self.ws_location = os.path.join(self.ws_dir, self.lineEdit_ws_name.text())
 		self.new_ws = workspace_creator.WorkspaceCreator()
 
 		self.new_ws.set_info(self.nuclei_csv, self.image_location, self.metadata, False, action)
@@ -174,7 +174,7 @@ class NewWorkspaceWindow(QtGui.QDialog, newWorkspaceGui.Ui_Dialog):
 		ws_obj.write_xml()
 
 		
-		self.main_ui.open_cws_file("%s/workspace_data.cws" % self.ws_location)
+		self.main_ui.open_cws_file(os.path.join(self.ws_location,"workspace_data.cws"))
 
 		self.close()
 

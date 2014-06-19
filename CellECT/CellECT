@@ -192,14 +192,14 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def copy_fles_to_ws(self, source_dir, dest_dir, file_search_format, file_name_regex, offset):
 
-		for item in glob.iglob(source_dir + "/" + file_search_format):
+		for item in glob.iglob(path.join(source_dir, file_search_format)):
 
 			file_name = path.split(item)[1]
 			rex = re.match(file_name_regex, file_name)
 			time_stamp = int(rex.group(2)) + offset
 			new_file_name = rex.group(1) + str(time_stamp) + rex.group(3)
 
-			command = "cp %s/%s %s/%s" % ( source_dir, file_name, dest_dir, new_file_name)  
+			command = "cp %s %s" % ( path.join(source_dir, file_name), path.join(dest_dir, new_file_name))  
 
 			print command
 			try:
@@ -217,39 +217,39 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		#### copy init_watershed_all_time_stamps files:
 
 		# copy init_ws_%d.mat files
-		self.copy_fles_to_ws(ws.workspace_location + "/init_watershed_all_time_stamps/", self.workspace_data.workspace_location + "/init_watershed_all_time_stamps/", "init_ws_*.mat", "(init_ws_)([0-9]*)(.*)", offset )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location ,"init_watershed_all_time_stamps", ""), path.join( self.workspace_data.workspace_location , "init_watershed_all_time_stamps",""), "init_ws_*.mat", "(init_ws_)([0-9]*)(.*)", offset )		
 		self.update_progress.emit(20, "Copying files.")
 
 		# copy time_stamp_%d_nuclei.mat files
-		self.copy_fles_to_ws(ws.workspace_location + "/init_watershed_all_time_stamps/", self.workspace_data.workspace_location + "/init_watershed_all_time_stamps/", "time_stamp_*_nuclei.mat", "(time_stamp_)([0-9]*)(.*)", offset )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location , "init_watershed_all_time_stamps", ""), path.join( self.workspace_data.workspace_location , "init_watershed_all_time_stamps", ""), "time_stamp_*_nuclei.mat", "(time_stamp_)([0-9]*)(.*)", offset )		
 		self.update_progress.emit(30, "Copying files.")
 
 		# copy vol_nuclei_t_%d.mat files
-		self.copy_fles_to_ws(ws.workspace_location + "/init_watershed_all_time_stamps/", self.workspace_data.workspace_location + "/init_watershed_all_time_stamps/", "vol_nuclei_t_*.mat", "(vol_nuclei_t_)([0-9]*)(.*)", offset )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location , "init_watershed_all_time_stamps", ""), path.join( self.workspace_data.workspace_location , "init_watershed_all_time_stamps", ""), "vol_nuclei_t_*.mat", "(vol_nuclei_t_)([0-9]*)(.*)", offset )		
 		self.update_progress.emit(40,"Copying files.")
 
 		# vol_t_%d.mat files
-		self.copy_fles_to_ws(ws.workspace_location + "/init_watershed_all_time_stamps/", self.workspace_data.workspace_location + "/init_watershed_all_time_stamps/", "vol_t_*.mat", "(vol_t_)([0-9]*)(.*)", offset )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location,  "init_watershed_all_time_stamps", ""), path.join( self.workspace_data.workspace_location , "init_watershed_all_time_stamps", ""), "vol_t_*.mat", "(vol_t_)([0-9]*)(.*)", offset )		
 		self.update_progress.emit(50, "Copying files.")
 
 		#### copy input_slices files:
 
 		# copy %d.tif files
 		offset_tif = self.workspace_data.metadata.numz * offset *self.workspace_data.metadata.numch
-		self.copy_fles_to_ws(ws.workspace_location + "/input_slices/", self.workspace_data.workspace_location + "/input_slices/", "*.tif", "()([0-9]*)(.*)", offset_tif )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location , "input_slices", ""), path.join( self.workspace_data.workspace_location , "input_slices", ""), "*.tif", "()([0-9]*)(.*)", offset_tif )		
 		self.update_progress.emit(60, "Copying files.")
 
 		#### copy segs_all_time_stamps files:
 
 		# copy timestamp_%d..... files
-		self.copy_fles_to_ws(ws.workspace_location + "/segs_all_time_stamps/", self.workspace_data.workspace_location + "/segs_all_time_stamps/", "timestamp_*", "(timestamp_)([0-9]*)(.*)", offset )		
+		self.copy_fles_to_ws(path.join(ws.workspace_location , "segs_all_time_stamps", ""), path.join( self.workspace_data.workspace_location, "segs_all_time_stamps", ""), "timestamp_*", "(timestamp_)([0-9]*)(.*)", offset )		
 		self.update_progress.emit(80, "Finished copying files. Continuing..")
 		
 
 	def get_has_bg(self):
 
 		# open config file of time point 0 and check has_bg flag
-		file_name = self.workspace_data.workspace_location + "/config_files/timestamp_0.cnf"
+		file_name = path.join(self.workspace_data.workspace_location , "config_files", "timestamp_0.cnf")
 		with open(file_name, "r") as f:
 			line = f.readline()
 			while line is not None:
@@ -316,7 +316,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		self.progress_window.set_progress(val, text)
 		if val == 100:
 			self.progress_window.close()
-			self.open_cws_file(self.workspace_data.workspace_location + "/workspace_data.cws")
+			self.open_cws_file(path.join(self.workspace_data.workspace_location , "workspace_data.cws"))
 
 		if val == -1:
 			self. progress_window.close()
@@ -441,7 +441,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		Write config file to run tracker app when tracker is run.
 		"""
 
-		file_name = "%s/tracker_config/config_file_tracker.cnf" % self.workspace_data.workspace_location
+		file_name = path.join(self.workspace_data.workspace_location, "tracker_config","config_file_tracker.cnf" )
 		with open(file_name,'w') as f:
 
 		
@@ -457,8 +457,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			f.write("\nsegs-path = segs_all_time_stamps\n")
 			f.write('z-slices-per-stack = %d\n' %  self.workspace_data.metadata.numz)
-			f.write('tif-slices-path = input_slices/\n')
-			f.write('gui-thumbnail-path = gui_thumbnails/\n')
+			path_var = path.join("input_slices", "")
+			f.write('tif-slices-path = %s\n' % path_var)
+			path_var =  path.join("gui_thumbnails", "")
+			f.write('gui-thumbnail-path = %s\n' % path_var)
 			f.write('cell-association-distance-threshold = 200\n')
 			f.write('max-cell-growth-rate = 1.3\n')
 			f.write("number-channels = %d\n" % self.workspace_data.metadata.numch)
@@ -487,7 +489,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		if self.workspace_data.workspace_location:
 
 			i = (self.horizontalSlider_t.value() ) * self.workspace_data.metadata.numz*self.workspace_data.metadata.numch + self.horizontalSlider_z.value()*self.workspace_data.metadata.numch+1
-			img1_full_size = misc.imread("%s/input_slices/%d.tif" % (self.workspace_data.workspace_location, i))	
+			img1_full_size = misc.imread(path.join(self.workspace_data.workspace_location, "input_slices","%d.tif" % i))	
 			img1_full_size = img1_full_size.astype("float")/np.max(img1_full_size)*255
 
 			max_size = 500
@@ -502,7 +504,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			# if there is a nuclear channel image
 			if self.workspace_data.metadata.numch>1:			
 	
-				img2_full_size = misc.imread("%s/input_slices/%d.tif"  % (self.workspace_data.workspace_location, i+1))	
+				img2_full_size = misc.imread(path.join(self.workspace_data.workspace_location, "input_slices", "%d.tif"  % (i+1)))	
 				img2_full_size = img2_full_size.astype("float")/np.max(img2_full_size)*255
 				img2 = misc.imresize(img2_full_size, (int(img2_full_size.shape[0]*factor), int(img2_full_size.shape[1]*factor)))
 				
@@ -523,7 +525,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			# if there is a segmentation
 			try:
 
-				seg_img = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % ( self.workspace_data.workspace_location, self.horizontalSlider_t.value()))["ws"][:,:,self.horizontalSlider_z.value()]
+				seg_img = io.loadmat(path.join( self.workspace_data.workspace_location,  "segs_all_time_stamps", "timestamp_%d_label_map.mat" % self.horizontalSlider_t.value()))["ws"][:,:,self.horizontalSlider_z.value()]
 
 				img3_full_size = np.zeros_like(img1_full_size)
 				img_full_size = np.dstack([img1_full_size, img2_full_size, img3_full_size])
@@ -543,7 +545,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 	def update_list_item(self,index):
 
 
-		file_name = "%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.workspace_data.workspace_location, index)
+		file_name = path.join ( self.workspace_data.workspace_location,  "segs_all_time_stamps", "timestamp_%d_label_map.mat" %  index)
    		if os.path.exists(file_name):
 			status = " has segmentation"
 		else:
@@ -585,7 +587,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		for index in valid_indexes:
 
 			if self.checkBox_propagate.isChecked():
-				config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, index)
+				config_file_location =  path.join( self.workspace_data.workspace_location , "config_files","timestamp_%d_propagate.cnf" %  index)
 
 				direction = 1
 				if self.radioButton_forward.isChecked():
@@ -598,7 +600,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 					return
 
 			else:
-				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+				config_file_location =  path.join( self.workspace_data.workspace_location , "config_files", "timestamp_%d.cnf" % index)
 
 
 
@@ -650,18 +652,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 	def run_preliminary_seg(self):
 	
-		p = threading.Thread(target = self.run_preliminary_seg_thread)
-		p.start()
-
-
-
-	def run_preliminary_seg_thread(self):
-
-
-		"""
-		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode.
-		If propagate, then running sequentially, otherwise, runnign in parallel, backwards.
-		"""
 
 
 		if len(self.listView.selectionModel().selectedIndexes()):
@@ -685,7 +675,10 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				else:
 					valid_indexes.append(index)
 
+
+
 		if len(valid_indexes):
+
 			if len(invalid_indexes):
 				message = "The following selected time stamps already have a segmentation result: %s. Perform preliminary segmentation on the remaining time stamps?" % str(invalid_indexes)[1:-1]
 				reply = QtGui.QMessageBox.question(self, "CellECT Preliminary Segmentation", message, QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
@@ -698,10 +691,24 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 
+		p = threading.Thread(target = self.run_preliminary_seg_thread, args = (valid_indexes, ))
+		p.start()
+
+
+
+	def run_preliminary_seg_thread(self, valid_indexes):
+
+
+		"""
+		Open gnome-terminal and run CellECT_seg_tool and sleep 1 sec in preliminary segmentation mode.
+		If propagate, then running sequentially, otherwise, runnign in parallel, backwards.
+		"""
+
+
 		for index in valid_indexes:
 
 			if self.checkBox_propagate.isChecked():
-				config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, index)
+				config_file_location =  path.join(  self.workspace_data.workspace_location ,"config_files","timestamp_%d_propagate.cnf" % index)
 
 				direction = 1
 				if self.radioButton_forward.isChecked():
@@ -710,11 +717,12 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				try:
 					propagate.PreparePropagateInput(self.workspace_data, index, direction )
 				except Exception as err:
-					QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
+					#QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", err.message)
+					print "Error:", err.message
 					return
 
 			else:
-				config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
+				config_file_location =  path.join (self.workspace_data.workspace_location, "config_files","timestamp_%d.cnf" % index)
 
 
 
@@ -768,8 +776,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 
 		if self.checkBox_propagate.isChecked():
-			config_file_location =  "%s/config_files/timestamp_%d_propagate.cnf" % (self.workspace_data.workspace_location, segmentation_index)
-
+			config_file_location =  path.join(self.workspace_data.workspace_location, "config_files", "timestamp_%d_propagate.cnf" %  segmentation_index)
 			direction = 1
 			if self.radioButton_forward.isChecked():
 				direction = -1
@@ -782,7 +789,7 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				return
 
 		else:
-			config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, segmentation_index)
+			config_file_location =  path.join( self.workspace_data.workspace_location, "config_files", "timestamp_%d.cnf" % segmentation_index)
 
 
 		use_metric = ""		
@@ -792,9 +799,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		else:
 
 			try:
-				training_data_location = "%s/training_data/positive_example.mat" % self.workspace_data.workspace_location
+				training_data_location = path.join(self.workspace_data.workspace_location,  "training_data","positive_example.mat" )
 				spio.loadmat(training_data_location)
-				training_data_location = '%s/training_data/negative_example.mat' % self.workspace_data.workspace_location
+				training_data_location = path.join( self.workspace_data.workspace_location, 'training_data','negative_example.mat' )
 				spio.loadmat(training_data_location)
 			except:
 				use_metric = "-m"

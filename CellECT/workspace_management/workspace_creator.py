@@ -8,6 +8,7 @@ from scipy import misc
 import os
 import pdb
 import numpy as np
+import os.path
 import random
 
 # Imports from this project
@@ -61,7 +62,7 @@ class PrepNuclei(object):
 				nuclei_mat[counter, :] = np.array(nuclei_coords)
 				counter += 1
 			
-			file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_nuclei.mat" % (self.ws_location, time)
+			file_name =  os.path.join(self.ws_location,  "init_watershed_all_time_stamps","time_stamp_%d_nuclei.mat" % time)
 			io.savemat( file_name, {"seeds": nuclei_mat.T})
 
 		
@@ -108,7 +109,7 @@ class PrepNuclei(object):
 	def estimate_interiors(self, ws_location, metadata):
 
 		for i in xrange(metadata.numt):
-			vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_0" % ws_location)["vol"]
+			vol = io.loadmat( os.path.join(ws_location, "init_watershed_all_time_stamps","vol_t_0"))["vol"]
 	
 			interior_estimator = cell_interior.CellInterior(vol)
 			self.nuclei_dict[i] = interior_estimator.run_cell_centroid_estimator()
@@ -153,7 +154,7 @@ class PrepImage(object):
 
 		for img in tif.iter_images():
 
-			filename = "%s/input_slices/%d.tif" % (ws_location, counter+1)
+			filename = os.path.join(ws_location, "input_slices", "%d.tif" %( counter+1))
 			misc.imsave(filename, img)
 
 			membrane_slice = False
@@ -176,14 +177,14 @@ class PrepImage(object):
 				maxim = mat.max()
 				if maxim:
 					mat *= 255./maxim
-				io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d.mat" % (ws_location, time_counter), {"vol": mat})
+				io.savemat(os.path.join(ws_location, "init_watershed_all_time_stamps","vol_t_%d.mat" % time_counter), {"vol": mat})
 
 			if z_counter_nuc >= self.metadata.numz:
 				z_counter_nuc = 0
 				maxim = mat_nuclei.max()
 				if maxim:
 					mat_nuclei *= 255./maxim
-				io.savemat("%s/init_watershed_all_time_stamps/vol_nuclei_t_%d.mat" % (ws_location, time_counter), {"vol_nuclei": mat_nuclei})
+				io.savemat(os.path.join(ws_location, "init_watershed_all_time_stamps", "vol_nuclei_t_%d.mat" % time_counter), {"vol_nuclei": mat_nuclei})
 
 			if z_counter_mem == 0 and z_counter_nuc == 0:
 				time_counter += 1
@@ -248,13 +249,13 @@ class WorkspaceCreator(object):
 
 			os.mkdir(self.ws_location)
 
-			os.mkdir("%s/config_files" % self.ws_location)
-			os.mkdir("%s/init_watershed_all_time_stamps" % self.ws_location)
-			os.mkdir("%s/input_slices" % self.ws_location)
-			os.mkdir("%s/segs_all_time_stamps" % self.ws_location)
-			os.mkdir("%s/tracker_config" % self.ws_location)
-			os.mkdir("%s/training_data" % self.ws_location)
-			os.mkdir("%s/temp" % self.ws_location)
+			os.mkdir(os.path.join (self.ws_location,"config_files"))
+			os.mkdir(os.path.join (self.ws_location,"init_watershed_all_time_stamps"))
+			os.mkdir(os.path.join (self.ws_location,"input_slices"))
+			os.mkdir(os.path.join (self.ws_location,"segs_all_time_stamps" ))
+			os.mkdir(os.path.join (self.ws_location,"tracker_config"))
+			os.mkdir(os.path.join (self.ws_location,"training_data"))
+			#os.mkdir("%s/temp" % self.ws_location)
 
 		except Exception as err:
 			raise err
@@ -264,11 +265,11 @@ class WorkspaceCreator(object):
 
 		import CellECT
 		try:
-			training_data_location = '%s/data/training/ascidian/positive_example.mat' % (CellECT.__path__[0])
+			training_data_location = os.path.join(CellECT.__path__[0],"data","training","ascidian","positive_example.mat")
 			io.loadmat(training_data_location)
-			training_data_location = '%s/data/training/ascidian/negative_example.mat' % (CellECT.__path__[0])
+			training_data_location = os.path.join(CellECT.__path__[0],"data","training","ascidian","negative_example.mat")
 			io.loadmat(training_data_location)
-			data_location = os.system('cp %s/data/training/ascidian/* %s/training_data/' % (CellECT.__path__[0], self.ws_location))
+			data_location = os.system('cp %s* %s' % (os.path.join(CellECT.__path__[0], "data", "training","ascidian", ""), os.path.join(self.ws_location, "training_data", "")))
 		except IOError as err:
 			err.message = "no_cellness"
 			raise err
@@ -286,31 +287,43 @@ class WorkspaceCreator(object):
 		for time in time_range:
 
 			for filetype in ("", "_propagate"):
-				config_file_name = "%s/config_files/timestamp_%d%s.cnf" % (self.ws_location, time, filetype)
+				config_file_name = os.path.join(self.ws_location, "config_files","timestamp_%d%s.cnf" % ( time, filetype))
 				with open(config_file_name, "w") as f:
-					f.write("volume_mat_path = init_watershed_all_time_stamps/vol_t_%d%s.mat\n" % (time,filetype))
+					path_var = os.path.join("init_watershed_all_time_stamps","vol_t_%d%s.mat" % (time,filetype))
+					f.write("volume_mat_path = %s\n" % path_var)
 					f.write("volume_mat_var = vol\n")
-					f.write("volume_nuclei_mat_path = init_watershed_all_time_stamps/vol_nuclei_t_%d.mat\n" % time)
+					path_var = os.path.join("init_watershed_all_time_stamps","vol_nuclei_t_%d.mat" % time)
+					f.write("volume_nuclei_mat_path = %s\n" % path_var)         
 					f.write("volume_nuclei_mat_var = vol_nuclei\n")
-					f.write("first_seg_mat_path =  init_watershed_all_time_stamps/init_ws_%d%s.mat\n" % (time,filetype))
+					path_var = os.path.join("init_watershed_all_time_stamps","init_ws_%d%s.mat" % (time,filetype))
+					f.write("first_seg_mat_path = %s\n" % path_var)      
 					f.write("first_seg_mat_var = ws\n")
-					f.write("nuclei_mat_path =  init_watershed_all_time_stamps/time_stamp_%d_nuclei%s.mat\n" % (time, filetype))
+					path_var = os.path.join("init_watershed_all_time_stamps","time_stamp_%d_nuclei%s.mat" % (time, filetype))
+					f.write("nuclei_mat_path = %s\n" % path_var)        
 					f.write("nuclei_mat_var = seeds\n")
-					f.write("bg_seeds_path =  init_watershed_all_time_stamps/time_stamp_%d_bg_seeds%s.mat\n" % (time, filetype))
+					path_var = os.path.join("init_watershed_all_time_stamps","time_stamp_%d_bg_seeds%s.mat" % (time, filetype))
+					f.write("bg_seeds_path = %s\n" % path_var)           
 					f.write("bg_seeds_var = seeds\n")
-					f.write("training_vol_mat_path =  training_data/positive_example.mat\n")
+					path_var = os.path.join("training_data","positive_example.mat")
+					f.write("training_vol_mat_path = %s\n" % path_var)         
 					f.write("training_vol_mat_var = vol\n")
-					f.write("training_vol_nuclei_mat_path = training_data/positive_example.mat\n")
+					path_var = os.path.join("training_data","positive_example.mat")
+					f.write("training_vol_nuclei_mat_path = %s\n" % path_var)        
 					f.write("training_vol_nuclei_mat_var = seeds\n")
-					f.write("training_positive_seg_mat_path = training_data/positive_example.mat\n")
+					path_var = os.path.join("training_data","positive_example.mat")
+					f.write("training_positive_seg_mat_path = %s\n" % path_var)        
 					f.write("training_positive_seg_mat_var = label_map\n")
-					f.write("training_positive_labels_mat_path = training_data/positive_example.mat\n")
+					path_var = os.path.join("training_data","positive_example.mat")
+					f.write("training_positive_labels_mat_path = %s\n" % path_var)    
 					f.write("training_positive_labels_mat_var = labels\n")
-					f.write("training_negative_seg_mat_path = training_data/negative_example.mat\n")
+					path_var = os.path.join("training_data","negative_example.mat")
+					f.write("training_negative_seg_mat_path = %s\n" % path_var)        
 					f.write("training_negative_seg_mat_var = L\n")
-					f.write("training_negative_labels_mat_path = training_data/negative_example.mat\n")
+					path_var = os.path.join("training_data","negative_example.mat")
+					f.write("training_negative_labels_mat_path = %s\n" % path_var)        
 					f.write("training_negative_labels_mat_var = labels\n")
-					f.write("save_location_prefix = segs_all_time_stamps/timestamp_%d_\n" % time)
+					path_var = os.path.join("segs_all_time_stamps","timestamp_%d_" % time)
+					f.write("save_location_prefix = %s\n" % path_var)           
 					f.write("has_bg = %d\n" % int(self.has_bg))
 					f.write("use_size = 1\n")
 					f.write("use_border_intensity = 1\n")
@@ -319,7 +332,8 @@ class WorkspaceCreator(object):
 					f.write("x_res = %f\n" % self.metadata.xres)
 					f.write("y_res = %f\n" % self.metadata.yres)
 					f.write("z_res = %f\n" % self.metadata.zres)
-					f.write("ap_axis_file =init_watershed_all_time_stamps/time_stamp_%d.csv\n" % time)
+					path_var = os.path.join("init_watershed_all_time_stamps","time_stamp_%d.csv" % time)
+					f.write("ap_axis_file = %s\n" % path_var)          
 
 	def build_workspace(self, ws_location, progressBar):
 		# called from new_workspace.py

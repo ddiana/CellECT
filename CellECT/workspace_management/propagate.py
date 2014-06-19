@@ -4,6 +4,7 @@ import re
 import numpy as np
 from scipy import io
 from os import path
+import os.path
 import os
 from scipy.ndimage.morphology import binary_erosion
 
@@ -28,7 +29,7 @@ class PreparePropagateInput(object):
 
 		# load only the head nuclei from the time point ahead, if there is such saved output
 
-		file_name = "%s/segs_all_time_stamps/timestamp_%d_segment_props.xml" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
+		file_name = os.path.join( self.ws_data.workspace_location, "segs_all_time_stamps","timestamp_%d_segment_props.xml" % (self.time_point+ self.direction))
 
 		if not path.isfile(file_name):
 			raise Exception("No saved data to propagate.")
@@ -45,7 +46,7 @@ class PreparePropagateInput(object):
 		bg_seeds = []
 		# if propagate segmentation result exists from before, delete it, so that seg tool recomputes.
 	
-		prev_seg_file_name = "%s/init_watershed_all_time_stamps/init_ws_%d_propagate.mat" % (self.ws_data.workspace_location ,self.time_point)
+		prev_seg_file_name = os.path.join(self.ws_data.workspace_location,"init_watershed_all_time_stamps","init_ws_%d_propagate.mat" % self.time_point)
 		os.system('[ -f "%s" ] && rm %s' % (prev_seg_file_name, prev_seg_file_name))
 
 
@@ -67,7 +68,7 @@ class PreparePropagateInput(object):
 
 		#nuclei_pts = self.prune_nuclei(nuclei_pts, union_find)
 
-		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_nuclei_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
+		file_name = os.path.join(self.ws_data.workspace_location, "init_watershed_all_time_stamps", "time_stamp_%d_nuclei_propagate.mat" %  self.time_point)
 
 		self.write_mat_file(file_name, nuclei_pts)
 
@@ -75,12 +76,12 @@ class PreparePropagateInput(object):
 		bg_mask = []
 
 		try:
-			file_name = "%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location ,self.time_point+ self.direction)
+			file_name = os.path.join(self.ws_data.workspace_location,  "segs_all_time_stamps","timestamp_%d_label_map.mat" % (self.time_point+ self.direction))
 			bg_mask = self.load_bg_mask_from_seg(file_name)
 		except:
 			pass
 
-		file_name = "%s/init_watershed_all_time_stamps/time_stamp_%d_bg_seeds_propagate.mat" % (self.ws_data.workspace_location, self.time_point)
+		file_name = os.path.join( self.ws_data.workspace_location, "init_watershed_all_time_stamps","time_stamp_%d_bg_seeds_propagate.mat" %  self.time_point)
 
 		io.savemat(file_name, {"seeds":bg_seeds, "bg_mask": bg_mask})
 
@@ -91,8 +92,8 @@ class PreparePropagateInput(object):
 	def write_vol_file(self,):
 
 
-		next_seg = io.loadmat("%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.ws_data.workspace_location, self.time_point + self.direction))["ws"]
-		current_vol = io.loadmat("%s/init_watershed_all_time_stamps/vol_t_%d.mat"  % (self.ws_data.workspace_location, self.time_point))["vol"]
+		next_seg = io.loadmat(os.path.join(self.ws_data.workspace_location,"segs_all_time_stamps","timestamp_%d_label_map.mat" % (self.time_point + self.direction)))["ws"]
+		current_vol = io.loadmat(os.path.join(self.ws_data.workspace_location,"init_watershed_all_time_stamps", "vol_t_%d.mat"  % self.time_point))["vol"]
 
 		from scipy.ndimage.morphology import distance_transform_edt
 
@@ -101,7 +102,7 @@ class PreparePropagateInput(object):
 		dt = dt / 2. + 0.5
 		current_vol = current_vol * dt
 
-		io.savemat("%s/init_watershed_all_time_stamps/vol_t_%d_propagate.mat"% (self.ws_data.workspace_location, self.time_point), {"vol":current_vol})
+		io.savemat(os.path.join (self.ws_data.workspace_location, "init_watershed_all_time_stamps", "vol_t_%d_propagate.mat"% self.time_point), {"vol":current_vol})
 
 
 

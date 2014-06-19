@@ -16,7 +16,7 @@ def call_silent(f, *args, **kw_args):
 	"Redirent stdout to null."
 
 	old_stdout = sys.stdout
-	sys.stdout = open('/dev/null', 'w')
+	sys.stdout = open(os.devnull, 'w')
 	r1 = f(*args, **kw_args)
 	sys.stdout.close()
 	sys.stdout = old_stdout
@@ -26,7 +26,7 @@ def call_silent_err(f, *args, **kw_args):
 	"Redirect stderr to null."
 
 	old_stderr = sys.stderr
-	sys.stderr = open('/dev/null', 'w')
+	sys.stderr = open(os.devnull, 'w')
 	r1 = f(*args, **kw_args)
 	sys.stderr.close()
 	sys.stderr = old_stderr
@@ -36,7 +36,7 @@ def call_silent_err(f, *args, **kw_args):
 def call_silent_process(f, *args, **kw_args):
 	"Redirect stdout to null, for a newly spawned process."
 
-	#devnull = open('/dev/null', 'w')
+	#devnull = open(os.devnull, 'w')
 	#oldstdout_fno = os.dup(sys.stdout.fileno())
 	#os.dup2(devnull.fileno(), 1)
 	#r1 = f(*args, **kw_args)
@@ -52,7 +52,7 @@ def call_silent_process(f, *args, **kw_args):
 def call_silent_process_err(f, *args, **kw_args):
 	"Redirect stdin to null, for a newly spawned process."
 
-	devnull = open('/dev/null', 'w')
+	devnull = open(os.devnull, 'w')
 	oldstderr_fno = os.dup(sys.stderr.fileno())
 	os.dup2(devnull.fileno(), 1)
 	r1 = f(*args, **kw_args)
@@ -63,7 +63,7 @@ def call_silent_process_err(f, *args, **kw_args):
 def call_silent_popen(f, *args, **kw_args):
 
 	old_stdout = sys.stdout
-	sys.stdout = open('/dev/null', 'w')
+	sys.stdout = open(os.devnull, 'w')
 	r1 = f(*args, **kw_args)
 	sys.stdout.close()
 	sys.stdout = old_stdout

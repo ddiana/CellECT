@@ -11,6 +11,7 @@ import sys
 from termcolor import colored
 import subprocess
 import tempfile
+import os.path
 
 # Imports from this project
 import CellECT.seg_tool.globals
@@ -41,7 +42,7 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	print "Running seeded watershed...."
 	has_bg = int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["has_bg"])
 
-	save_mat_file = "%s/watershed_input.mat" % path_to_temp
+	save_mat_file = os.path.join(path_to_temp, "watershed_input.mat")
 
 	sbx = [ x[0] for x in bg_seeds ]
 	sby = [ x[1] for x in bg_seeds ]
@@ -67,11 +68,10 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	t = time.time()
 	
 	
-	matlab_file_path = CellECT.__path__[0] + "/utils"
-	
+	matlab_file_path = os.path.join(CellECT.__path__[0] , "utils")	
 
 	with open(os.devnull, "wb") as devnull:
-		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s/watershed_input.mat', '%s/watershed_result.mat')" % (matlab_file_path, path_to_temp, path_to_temp)]) #, stdout=devnull, stderr=subprocess.STDOUT)
+		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s', '%s')" % (os.path.join(matlab_file_path), os.path.join(path_to_temp, "watershed_input.mat"), os.path.join(path_to_temp, "watershed_result.mat"))]) #, stdout=devnull, stderr=subprocess.STDOUT)
 
 
 #			if len(bg_seeds) >1:
@@ -115,9 +115,9 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	print ".......", time.time() - t, "sec"
 	
 	try:
-		ws = call_silent.call_silent_err(spio.loadmat,"%s/watershed_result.mat" % path_to_temp)["ws"]
-		os.system("rm %s/watershed_result.mat" % path_to_temp)
-		os.system("rm %s/watershed_input.mat" % path_to_temp)
+		ws = call_silent.call_silent_err(spio.loadmat, os.path.join(path_to_temp,"watershed_result.mat"))["ws"]
+		os.system("rm %s" % os.path.join(path_to_temp,"watershed_result.mat"))
+		os.system("rm %s" % os.path.join(path_to_temp, "watershed_input.mat"))
 		os.system("rmdir %s" % path_to_temp)
 	except IOError as err:
 		err.message = "Could not read watershed result from Matlab. Perhaps Matlab did not run?"

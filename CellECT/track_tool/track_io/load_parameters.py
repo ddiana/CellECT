@@ -5,6 +5,7 @@
 import re
 import pdb
 import os
+import os.path
 
 # Imports from this project
 import CellECT.track_tool.globals
@@ -37,7 +38,7 @@ def abs_path_to_workspace(config_file_path):
 	abs_path_to_config_file = os.path.abspath(config_file_path)
 
 	# config file is always in the config_files directory of the workspace directory
-	abs_path_to_workspace_dir = os.path.abspath(abs_path_to_config_file + "/../..") + "/"
+	abs_path_to_workspace_dir = os.path.join(os.path.abspath(os.path.join(abs_path_to_config_file , "..", "..")), "")
 	
 	if not os.path.isdir(abs_path_to_workspace_dir):
 		err = IOError("Could not find workspace directory.")
@@ -52,7 +53,7 @@ def abs_path_to_workspace(config_file_path):
 
 def make_abs_path(path_to_ws, relative_path):
 
-	return path_to_ws + "/" + relative_path
+	return os.path.join (path_to_ws , relative_path)
 
 def adjust_abs_path():
 

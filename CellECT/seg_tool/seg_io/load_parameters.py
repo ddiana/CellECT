@@ -153,7 +153,7 @@ def abs_path_to_workspace(config_file_path):
 	abs_path_to_config_file = os.path.abspath(config_file_path)
 
 	# config file is always in the config_files directory of the workspace directory
-	abs_path_to_workspace_dir = os.path.abspath(abs_path_to_config_file + "/../..") + "/"
+	abs_path_to_workspace_dir = os.path.abspath( os.path.join(abs_path_to_config_file , "..","..", ""))
 	
 	if not os.path.isdir(abs_path_to_workspace_dir):
 		err = IOError("Could not find workspace directory.")
@@ -174,7 +174,7 @@ def test_workspace_directory_structure(path_to_workspace):
 	"""
 
 	for directory in CellECT.seg_tool.globals.expected_workspace_directories:
-		assert os.path.isdir("%s/%s" % (path_to_workspace, directory)), colored("Bad woskspace structure. Directory %s not found in workspace at %s." % (directory, path_to_workspace), 'red')
+		assert os.path.isdir(os.path.join(path_to_workspace, directory)), colored("Bad woskspace structure. Directory %s not found in workspace at %s." % (directory, path_to_workspace), 'red')
 
 
 
@@ -184,7 +184,7 @@ def make_absolute_path(path_from_config_file):
 	convert path relative to workspace to absolute path
 	"""
 
-	return CellECT.seg_tool.globals.path_to_workspace + path_from_config_file
+	return os.path.join( CellECT.seg_tool.globals.path_to_workspace , path_from_config_file)
 
 
 def prepare_program_parameters(config_file_path):

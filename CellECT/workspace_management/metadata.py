@@ -230,6 +230,7 @@ class Metadata(object):
 	def populate_metadata_boxes(self, ui):
 
 
+	
 		ui.doubleSpinBox_xres.setValue(self.xres)
 
 		ui.doubleSpinBox_yres.setValue(self.yres)
@@ -246,7 +247,9 @@ class Metadata(object):
 
 		ui.spinBox_numt.setValue(self.numt)
 
+		temp = self.memch
 		ui.spinBox_numch.setValue(self.numch)
+		self.memch = temp
 
 
 		# change in this value will also set the list for membrane channel.

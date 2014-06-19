@@ -4,6 +4,7 @@
 # Imports
 import os
 import pdb
+import os.path
 import xml.etree.ElementTree as ET
 
 # Imports from this project
@@ -22,6 +23,7 @@ class WorkSpaceData(object):
 
 
 	def append_workspace(self,temp_ws):
+
 
 		if self.metadata.numx == temp_ws.metadata.numx and \
            self.metadata.numy == temp_ws.metadata.numy and \
@@ -59,7 +61,7 @@ class WorkSpaceData(object):
 
 		self.available_segs = set()
 		for i in xrange (self.metadata.numt):
-			file_name = "%s/segs_all_time_stamps/timestamp_%d_label_map.mat" % (self.workspace_location, i)
+			file_name = os.path.join(self.workspace_location, "segs_all_time_stamps","timestamp_%d_label_map.mat" % i)
    			if os.path.exists(file_name):
 				self.available_segs.add(i)
 
@@ -82,7 +84,7 @@ class WorkSpaceData(object):
 	
 		tree = ET.ElementTree(root)
 
-		file_name = "%s/workspace_data.cws" % self.workspace_location
+		file_name = os.path.join(self.workspace_location,"workspace_data.cws")
 		tree.write(file_name)
 
 		

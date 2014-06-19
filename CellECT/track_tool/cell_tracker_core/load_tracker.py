@@ -4,6 +4,7 @@
 # Imports
 import xml.etree.ElementTree as ET
 import pdb
+import os.path
 
 # Imports from this project
 from CellECT.seg_tool.nuclei_collection.nuclei_collection import Nucleus
@@ -159,7 +160,7 @@ def load_cell_tracker():
 	time_stamps = CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"]
 
 	for t in time_stamps:
-		cell_profiles = parse_file_at_timestamp( CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] +"/"+ "timestamp_" + str(t) +"_segment_props.xml",t)
+		cell_profiles = parse_file_at_timestamp( os.path.join(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] , "timestamp_" + str(t) +"_segment_props.xml"),t)
 		cell_profile_per_ts = cp.CellProfilesPerTimestamp(t,cell_profiles)
 		cell_tracker.add_cell_profiles_per_timestamp(cell_profile_per_ts)
 

@@ -10,6 +10,7 @@ import pylab
 import random
 import matplotlib
 from mpl_toolkits.mplot3d import Axes3D
+import os.path
 
 # Imports from this project
 import CellECT
@@ -41,7 +42,7 @@ class CellTrackerUI:
 	def __init__(self, cell_tracker):
 
 		self.cell_tracker =  cell_tracker
-		self.thumbnail_dir = CellECT.__path__[0] + "/track_tool/resources/gui_thumbnails/"
+		self.thumbnail_dir = os.path.join(CellECT.__path__[0] , "track_tool","resources","gui_thumbnails","")
 
 		colors = [(0,0,0)] + [(random.random(),random.random(),random.random()) for i in xrange(255)]
 		self.color_map = matplotlib.colors.LinearSegmentedColormap.from_list('new_map', colors, N=256)
@@ -395,12 +396,12 @@ class CellTrackerUI:
 
 		t += CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"][0]
 	
-		membrane_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_membrane_file_number_in_tif_sequence(t,z)+1)+".tif"
+		membrane_file_location = os.path.join(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"], str(self.get_membrane_file_number_in_tif_sequence(t,z)+1)+".tif")
 		membrane_file = sp.misc.imread(membrane_file_location)
 
 		nuclei_file = None
 		if CellECT.track_tool.globals.PARAMETER_DICT["number-channels"] > 1:
-			nuclei_file_location = CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"]+ "/"+str(self.get_nuclei_file_number_in_tif_sequence(t,z)+1)+".tif"
+			nuclei_file_location = os.path.join(CellECT.track_tool.globals.PARAMETER_DICT["tif-slices-path"], str(self.get_nuclei_file_number_in_tif_sequence(t,z)+1)+".tif")
 			nuclei_file = sp.misc.imread(nuclei_file_location)
 
 		if nuclei_file is None:
@@ -414,7 +415,7 @@ class CellTrackerUI:
 	def fetch_seg_at(self, t,z):
 
 		t += CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"][0]
-		filename = 	CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] + "/timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png"
+		filename = 	os.path.join(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"], "timestamp_"+str(t)+"_z_"+ str(z) + "_seg.png")
 		Seg = sp.misc.imread(filename)
 		return Seg
 
@@ -1142,7 +1143,7 @@ class CellTrackerUI:
 
 
 			ax1 = pylab.axes( [0.725, 0.85, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "01.png"))
 			pylab.imshow(im)
 			ax1.axis("off")
 
@@ -1153,7 +1154,7 @@ class CellTrackerUI:
 			button3.on_clicked(call_plot_stats)
 
 			ax3 = pylab.axes( [0.725, 0.75, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "03.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir,"03.png"))
 			pylab.imshow(im)
 			ax3.axis("off")
 
@@ -1164,7 +1165,7 @@ class CellTrackerUI:
 			button2.on_clicked(call_plot_nuclei_at_timestamp_with_tracklet_coloring)
 
 			ax2 = pylab.axes([0.725, 0.65, 0.2, 0.075] )
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "02.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir,"02.png"))
 			pylab.imshow(im)
 			ax2.axis("off")
 
@@ -1176,7 +1177,7 @@ class CellTrackerUI:
 			button4.on_clicked(call_plot_tracklets_one_slice)
 
 			ax4 = pylab.axes( [0.725, 0.55, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "04.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "04.png"))
 			pylab.imshow(im)
 			ax4.axis("off")
 
@@ -1188,7 +1189,7 @@ class CellTrackerUI:
 			button5.on_clicked(call_plot_color_tracklets_time_sequence)
 	
 			ax5 = pylab.axes( [0.725, 0.45, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "05.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "05.png"))
 			pylab.imshow(im)
 			ax5.axis("off")
 
@@ -1201,7 +1202,7 @@ class CellTrackerUI:
 			button6.on_clicked(call_cell_lineage_gui)
 
 			ax6 = pylab.axes( [0.725, 0.35, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "06.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "06.png"))
 			pylab.imshow(im)
 			ax6.axis("off")
 
@@ -1213,7 +1214,7 @@ class CellTrackerUI:
 			button7.on_clicked(call_plot_tracklets_in_slice_with_seg)
 
 			ax7 = pylab.axes( [0.725, 0.25, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "07.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "07.png"))
 			pylab.imshow(im)
 			ax7.axis("off")
 
@@ -1224,7 +1225,7 @@ class CellTrackerUI:
 			button8.on_clicked(enter_debug)
 
 			ax8 = pylab.axes( [0.725, 0.05, 0.2, 0.075])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "08.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "08.png"))
 			pylab.imshow(im)
 			ax8.axis("off")
 
@@ -1236,7 +1237,7 @@ class CellTrackerUI:
 
 
 			ax1 = pylab.axes( [0.725, 0.55, 0.2, 0.35])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "01.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "01.png"))
 			pylab.imshow(im)
 			ax1.axis("off")
 
@@ -1247,7 +1248,7 @@ class CellTrackerUI:
 			button3.on_clicked(call_plot_stats)
 
 			ax3 = pylab.axes( [0.725, 0.15, 0.2, 0.35])
-			im = sp.misc.imread(self.thumbnail_dir+ "/" + "03.png")
+			im = sp.misc.imread(os.path.join(self.thumbnail_dir, "03.png"))
 			pylab.imshow(im)
 			ax3.axis("off")
 
