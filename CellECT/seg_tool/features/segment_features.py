@@ -498,7 +498,6 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	#X, Y = np.meshgrid(range(vol.shape[0]), range(vol.shape[1]))
 
 
-
 	list_of_segments  = []
 
 	total = len(set_of_labels)
@@ -530,10 +529,12 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	# LEFT-RIGHT coordinate first
 	# UP-DOWN coordinate second
 
-	axis_pts = 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] 
+
+	if segment_collection.list_of_segments[0].name_of_parent == "test_volume":
+		axis_pts = 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] 
 	
-	list1, list2, list3 = zip (* axis_pts)
-	ap_axis = APaxis.APaxis(list1, list2, list3, x_res, y_res, z_res, label_map.shape, label_map>1)
+		list1, list2, list3 = zip (* axis_pts)
+		ap_axis = APaxis.APaxis(list1, list2, list3, x_res, y_res, z_res, label_map.shape, label_map>1)
 
 
 	if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]) and \
@@ -548,7 +549,6 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	segment_collection.make_contours_for_all_segments(label_map)
 
 	sum_time = 0
-
 
 	for segment in segment_collection.list_of_segments:
 
@@ -589,30 +589,32 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 			if should_compute_feature(segment.name_of_parent, "inner_point"):
 					segment.add_feature("inner_point", segment_inner_point(segment))
 
-
-			segment.add_feature("mid_slice_hu_moments", hu_moments(segment.get_mid_slice()))
-			segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
-			segment.add_feature("mid_slice_z", segment.mid_slice_z)
+			if segment.name_of_parent == "test_volume":
 
 
-			segment.add_feature("line_fit", fit_line(segment))
+				segment.add_feature("mid_slice_hu_moments", hu_moments(segment.get_mid_slice()))
+				segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
+				segment.add_feature("mid_slice_z", segment.mid_slice_z)
 
-			get_convex_hull_properties(segment)
 
-			get_border_to_nucleus_properties(segment)
+				segment.add_feature("line_fit", fit_line(segment))
+
+				get_convex_hull_properties(segment)
+
+				get_border_to_nucleus_properties(segment)
 	
-			ap_axis.add_segment_projection_properties(segment)
+				ap_axis.add_segment_projection_properties(segment)
 
 			
-			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
+				if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
 
-				t = time.time()
-				if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
-					segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
-					#segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
-					#segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
-					segment.add_feature("centroid_dist_from_margin", dist_metric.get_centroid_dist(segment))
-				sum_time += time.time() - t
+					t = time.time()
+					if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
+						segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+						#segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
+						#segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
+						segment.add_feature("centroid_dist_from_margin", dist_metric.get_centroid_dist(segment))
+					sum_time += time.time() - t
 
 
 
