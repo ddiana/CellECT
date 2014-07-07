@@ -498,6 +498,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	#X, Y = np.meshgrid(range(vol.shape[0]), range(vol.shape[1]))
 
 
+
 	list_of_segments  = []
 
 	total = len(set_of_labels)
@@ -530,7 +531,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	# UP-DOWN coordinate second
 
 
-	if segment_collection.list_of_segments[0].name_of_parent == "test_volume":
+	if name_of_parent == "test_volume":
 		axis_pts = 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["APaxis"] 
 	
 		list1, list2, list3 = zip (* axis_pts)
