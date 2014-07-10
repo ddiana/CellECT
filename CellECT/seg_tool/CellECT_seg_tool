@@ -82,6 +82,7 @@ def parse_input():
 	parser.add_option("-m", "--no_cellness_metric", action="store_true", dest="no_cellness_metric", default=False, help="Predict bad segments.")
 	parser.add_option("-b", "--bisque", action="store_true", dest="bisque", default=False, help="Run on bisque server.")
 	parser.add_option("-c", "--cleanup_seg", action="store_true", default=False, help="Load saved segmentation, clean up, resave.")
+	parser.add_option("-s", "--load_saved", action="store_true", default=False, help="Load latest saved segmentation if any.")
 
 	(options, args) = parser.parse_args()
 
@@ -89,11 +90,13 @@ def parse_input():
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"] = options.no_cellness_metric
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = options.bisque
 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["cleanup_seg"] = options.cleanup_seg
+	CellECT.seg_tool.globals.DEFAULT_PARAMETER["load_saved"] = options.load_saved
 
 	if options.cleanup_seg:
 		CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_interactive"] = True
 		CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"] = True
 		CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"] = False
+		CellECT.seg_tool.globals.DEFAULT_PARAMETER["load_saved"] = True
 
 	if options.filename == "":
 		config_file_path = ask_for_config_file()
@@ -163,7 +166,12 @@ def main():
 	#watershed = shuffle_labels(watershed)
 
 	print "Loading nuclei..."
-	nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_var"])
+	
+	nuclei_collection = nc.NucleusCollection()
+	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["load_saved"]:
+		nuclei_collection = nc.NucleusCollection(CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["nuclei_mat_var"])
+
+	
 	seed_collection = seedc.SeedCollection([])
 
 	bg_prior = None
@@ -194,32 +202,37 @@ def main():
 
 
 	print "Loading initial segmentation if any..."
-	try:
-		watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
-	except:
-		print "No initial segmentation found... Making initial segmentation."
 
-		if len(nuclei_collection.nuclei_list) == 0:
-			watershed = np.ones(vol.shape, "uint16")
-		else:
-			# input pts
-			init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
 
-			# load bg_prior if any 
+	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["load_saved"]:
+		try:		
+			watershed = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"])
+		except:
+	
+			print "No initial segmentation found... Making initial segmentation."
 
-			bg_prior = None
-			try:
-				bg_prior = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"], 'bg_mask')
-			except:
-				print "Could not load background mask."
+			if len(nuclei_collection.nuclei_list) == 0:
+				watershed = np.ones(vol.shape, "uint16")
+			else:
+				# input pts
+				init_pts = ws.make_list_of_seed_groups(nuclei_collection, seed_collection)
+
+				# load bg_prior if any 
+
 				bg_prior = None
+				try:
+					bg_prior = load_all.load_from_mat(CellECT.seg_tool.globals.DEFAULT_PARAMETER["bg_seeds_path"], 'bg_mask')
+				except:
+					print "Could not load background mask."
+					bg_prior = None
 
-			# make first seg
-			watershed = ws.run_watershed(vol, init_pts, bg_seeds, bg_prior)
-			# save it so that it does not need to be computed again
-			call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
+				# make first seg
+				watershed = ws.run_watershed(vol, init_pts, bg_seeds, bg_prior)
+				# save it so that it does not need to be computed again
+				call_silent.call_silent_err(spio.savemat, CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_path"], { CellECT.seg_tool.globals.DEFAULT_PARAMETER["first_seg_mat_var"]: watershed})
 
-
+	else:
+		watershed = np.ones(vol.shape, "uint16")
 
 	last_length_of_seeds_list = 0 
 
@@ -233,7 +246,7 @@ def main():
 	watershed_old = watershed
 
 	CellECT.seg_tool.globals.should_load_last_save
-	CellECT.seg_tool.globals.should_load_last_save = False
+	CellECT.seg_tool.globals.should_load_last_save = CellECT.seg_tool.globals.DEFAULT_PARAMETER["load_saved"]
 
 	split_predicted = None	
 
@@ -280,7 +293,6 @@ def main():
 
 
 	else:
-
 
 		while (ask_feedback or CellECT.seg_tool.globals.should_load_last_save):
 

@@ -654,6 +654,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 	
 
 
+		if self.checkBox_load_saved.isChecked():
+			QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Cannot load results in non-interactive mode.")
+			return
+
+
 		if len(self.listView.selectionModel().selectedIndexes()):
 			segmentation_indexes = [ index.row() for index in self.listView.selectionModel().selectedIndexes()]
 		else:
@@ -775,6 +780,11 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			return
 
 
+		if self.checkBox_propagate.isChecked() and self.checkBox_load_saved.isChecked():
+			QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "Please choose between propagating adjacent segmentation and loading existing results.")
+			return
+
+
 		if self.checkBox_propagate.isChecked():
 			config_file_location =  path.join(self.workspace_data.workspace_location, "config_files", "timestamp_%d_propagate.cnf" %  segmentation_index)
 			direction = 1
@@ -790,6 +800,9 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		else:
 			config_file_location =  path.join( self.workspace_data.workspace_location, "config_files", "timestamp_%d.cnf" % segmentation_index)
+
+	
+	
 
 
 		use_metric = ""		
@@ -808,8 +821,18 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "No training data available. Running without cellness metric.")
 
 
+		load_saved = ""
 
-		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s -f %s ; sleep %d"' %  (use_metric, config_file_location, sleep_time)
+		if self.checkBox_load_saved.isChecked():
+	
+			if not re.search("[.]*has segmentation",self.model.contents[segmentation_index]):
+				QtGui.QMessageBox.information(self, "CellECT Segmentation Tool", "No results are saved for this time point. Nothing to load.")
+				return
+
+
+			load_saved = "-s"
+
+		command = 'gnome-terminal -x sh -c "CellECT_seg_tool %s %s -f %s ; sleep %d"' %  (load_saved, use_metric, config_file_location, sleep_time)
 
 		p = threading.Thread(target = self.call_cellect_seg_tool_interactive, args=(command, segmentation_index))
 		p.start()
