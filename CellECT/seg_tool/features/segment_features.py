@@ -161,7 +161,7 @@ def histogram_in_mask(vol, mask):
 	hist = hist / np.float(hist.sum())
 	return hist
 
-def get_pca(segment):
+def get_pca_properties(segment):
 
 	X = []
 
@@ -172,7 +172,10 @@ def get_pca(segment):
 	pca = PCA(n_components=3)
 	result = pca.fit(X)
 
-	return result.components_
+	segment.add_feature("pca_eigenvectors", result.components_)
+	segment.add_feature("pca_eigenvalues", result.explained_variance_ratio_)
+
+
 
 
 
@@ -194,9 +197,9 @@ def get_min_oriented_bounding_box_properties(segment):
 	pts_pca1 = []
 	pts_pca2 = []
 
-	pca_0 = segment.feature_dict["pcs"][0]
-	pca_1 = segment.feature_dict["pcs"][1]
-	pca_2 = segment.feature_dict["pcs"][2]
+	pca_0 = segment.feature_dict["pca_eigenvectors"][0]
+	pca_1 = segment.feature_dict["pca_eigenvectors"][1]
+	pca_2 = segment.feature_dict["pca_eigenvectors"][2]
 
 	for pt in segment.contour_polygons_list:
 
@@ -223,31 +226,87 @@ def get_min_oriented_bounding_box_properties(segment):
 
 	segment_volume = segment.feature_dict["size"] * x_res * y_res * z_res
 
+	# spherecity
+
 	segment.add_feature("minimum_enclosing_sphere_radius_by_res", centroid_distances)
 
-	sphere_vol_ratio = (4/3. * np.pi * sphere_radius ** 3 )/ segment_volume
-	segment.add_feature("enclosing_sphere_vol_to_vol_ratio_by_res", segment_volume)
+	sphere_vol_ratio =  segment_volume / (4/3. * np.pi * sphere_radius ** 3 )
+	segment.add_feature("volume_by_res_to_enclosing_sphere_vol_ratio", sphere_vol_ratio)
 
 
 	equivalent_sphere_radius = (3 * segment_volume / 4. / np.pi)**(1./3)
 	equivalent_sphere_surface_area = 4 * np.pi * equivalent_sphere_radius**2
 
-	sphericity = segment.feature_dict["surface_by_res"] / equivalent_sphere_surface_area
+	sphericity = segment.feature_dict["surface_area_by_res"] / equivalent_sphere_surface_area
 
 	segment.add_feature("sphericity", sphericity)
 
+	# oriented box
 
 	segment.add_feature("minimum_oriented_bbx_side_length_by_res",  [bbx_pca0, bbx_pca1, bbx_pca2] )
 
 	segment.add_feature("volume_by_res", segment_volume)
 
-
 	ordered = sorted(segment.feature_dict["minimum_oriented_bbx_side_length_by_res"])
+
+	# elongation and flatness
 
 	segment.add_feature(["elongation" , 1 - float(ordered[2] ) / ordered[1])
 	segment.add_feature("flatness" , 1 - float(ordered[1] ) / ordered[0])
 
-	segment.add_feature("enclosing_box_vol_to_vol_ratio", bbx_pca0 * bbx_pca1 * bbx_pca2 / float(segment.feature_dict["volume_by_res"]))
+	# squareness
+
+	segment.add_feature("vol_by_res_to_enclosing_box_vol_ratio",  float(segment.feature_dict["volume_by_res"])/ bbx_pca0 * bbx_pca1 * bbx_pca2)
+
+	# cylinder
+
+	segment.add_feature("cylinder_radius_height_pca0", (min(dist_pca0), bbx_pca0))
+	segment.add_feature("cylinder_radius_height_pca1", (min(dist_pca1), bbx_pca1))
+	segment.add_feature("cylinder_radius_height_pca2", (min(dist_pca2), bbx_pca2))
+
+	cylinder_vol = lambda radius, height: np.pi * radius**2 * height
+	cylinder_area = lambda radius, height: 2* np.pi * radius * height + 2 * np.pi * radius**2
+
+	segment.add_feature("vol_cylinder_pca0", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca0"]))
+	segment.add_feature("vol_cylinder_pca1", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca1"]))
+	segment.add_feature("vol_cylinder_pca2", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca2"]))
+
+	segment.add_feature("surf_area_cylinder_pca0", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca0"]))
+	segment.add_feature("surf_area_cylinder_pca1", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca1"]))
+	segment.add_feature("surf_area_cylinder_pca2", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca2"]))
+
+	min_vol_pca = 0
+	min_vol = min([segment.feature_dict("vol_cylinder_pca0",segment.feature_dict("vol_cylinder_pca1",segment.feature_dict("vol_cylinder_pca2"])
+
+	if segment.feature_dict("vol_cylinder_pca1") >  segment.feature_dict("vol_cylinder_pca0") and  segment.feature_dict("vol_cylinder_pca1") >  segment.feature_dict("vol_cylinder_pca2") :
+		min_vol_pca = 1
+	
+	if segment.feature_dict("vol_cylinder_pca2") >  segment.feature_dict("vol_cylinder_pca0") and  segment.feature_dict("vol_cylinder_pca2") >  segment.feature_dict("vol_cylinder_pca1") :
+		min_vol_pca = 2
+
+
+	segment.add_feature("minimum_vol_cylinder_radius_height", min_vol_pca )
+	segment.add_feature("minimum_vol_cylinder_pca_axis", min_vol )
+
+	cylindricity_pca0 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca0")
+	cylindricity_pca1 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca1")
+	cylindricity_pca2 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca2")
+
+	segment.feature_dict("cylindricity", max([cylindricity_pca0, cylindricity_pca1, cylindricity_pca2]))
+
+
+	# entropy
+
+	pca_eigenvalues = segment.feature_dict["pca_eigenvalues"]
+
+	eig0 = pca_eigenvalues[0]/ sum(pca_eigenvalues)
+	eig1 = pca_eigenvalues[1]/ sum(pca_eigenvalues)
+	eig2 = pca_eigenvalues[2]/ sum(pca_eigenvalues)
+
+	entropy = 1. / np.log(3) *  (eig0 * np.log(eig0) + eig1 * np.log(eig1) + eig2 * np.log(eig2))
+
+	segment.feature_dict("entropy", entropy)
+	
 
 	
 
@@ -688,7 +747,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 
 
-				segment.add_feature("pca", get_pca(segment))
+				get_pca_properties(segment)
 				get_min_oriented_bounding_box_properties(segment)
 
 
