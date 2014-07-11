@@ -13,6 +13,7 @@ from collections import namedtuple
 from scipy.ndimage.morphology import binary_dilation
 import math
 import cv2
+from sklearn.decomposition import PCA
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import misc
@@ -160,7 +161,97 @@ def histogram_in_mask(vol, mask):
 	hist = hist / np.float(hist.sum())
 	return hist
 
+def get_pca(segment):
 
+	X = []
+
+	for pts in 	segment.contour_polygons_list:
+		X.extend(pts)
+
+	X = np.array(X)
+	pca = PCA(n_components=3)
+	result = pca.fit(X)
+
+	return result.components_
+
+
+
+def get_min_oriented_bounding_box_properties(segment):
+
+
+
+	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
+	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
+	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
+
+
+
+	xc = segment.feature_dict["centroid"][0]
+	yc = segment.feature_dict["centroid"][1]
+	zc = segment.feature_dict["centroid"][2]
+
+	pts_pca0 = []
+	pts_pca1 = []
+	pts_pca2 = []
+
+	pca_0 = segment.feature_dict["pcs"][0]
+	pca_1 = segment.feature_dict["pcs"][1]
+	pca_2 = segment.feature_dict["pcs"][2]
+
+	for pt in segment.contour_polygons_list:
+
+		new_pt = np.array([(pt[0] - xc)* x_res, (pt[1] - yc) * y_res, (pt[2] - zc) * z_res])
+
+		pts_pca0.append( np.dot (pca_0, new_pt) )
+		pts_pca1.append( np.dot (pca_1, new_pt) )
+		pts_pca2.append( np.dot (pca_2, new_pt) )
+
+
+	bbx_pca0 = max(pts_pca0) - min(pts_pca0)
+	bbx_pca1 = max(pts_pca1) - min(pts_pca1)
+	bbx_pca2 = max(pts_pca2) - min(pts_pca2)
+
+	dist_pca0 = np.abs(pts_pca0)
+	dist_pca1 = np.abs(pts_pca1)
+	dist_pca2 = np.abs(pts_pca2)
+	
+	centroid_distances = list(dist_pca0)
+	centroid_distances.extend(list(dist_pca1)
+	centroid_distances.extend(list(dist_pca2))
+
+	sphere_radius = max(centroid_distances)
+
+	segment_volume = segment.feature_dict["size"] * x_res * y_res * z_res
+
+	segment.add_feature("minimum_enclosing_sphere_radius_by_res", centroid_distances)
+
+	sphere_vol_ratio = (4/3. * np.pi * sphere_radius ** 3 )/ segment_volume
+	segment.add_feature("enclosing_sphere_vol_to_vol_ratio_by_res", segment_volume)
+
+
+	equivalent_sphere_radius = (3 * segment_volume / 4. / np.pi)**(1./3)
+	equivalent_sphere_surface_area = 4 * np.pi * equivalent_sphere_radius**2
+
+	sphericity = segment.feature_dict["surface_by_res"] / equivalent_sphere_surface_area
+
+	segment.add_feature("sphericity", sphericity)
+
+
+	segment.add_feature("minimum_oriented_bbx_side_length_by_res",  [bbx_pca0, bbx_pca1, bbx_pca2] )
+
+	segment.add_feature("volume_by_res", segment_volume)
+
+
+	ordered = sorted(segment.feature_dict["minimum_oriented_bbx_side_length_by_res"])
+
+	segment.add_feature(["elongation" , 1 - float(ordered[2] ) / ordered[1])
+	segment.add_feature("flatness" , 1 - float(ordered[1] ) / ordered[0])
+
+	segment.add_feature("enclosing_box_vol_to_vol_ratio", bbx_pca0 * bbx_pca1 * bbx_pca2 / float(segment.feature_dict["volume_by_res"]))
+
+	
+
+		
 
 def hist_dif(h1, h2):
 
@@ -393,6 +484,7 @@ def weighted_mean_from_hist(histogram):
 	return mean
 
 
+
 def fit_line(segment):
 
 
@@ -487,6 +579,8 @@ def get_border_to_nucleus_properties(segment):
 	segment.add_feature("border_to_nucleus_dist_mean", np.mean(distances))
 	segment.add_feature("border_to_nucleus_dist_std", np.std(distances))
 	segment.add_feature("distance_to_border_scale_factor", max_dist)
+
+		
 
 
 def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
@@ -592,6 +686,13 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 			if segment.name_of_parent == "test_volume":
 
+
+
+				segment.add_feature("pca", get_pca(segment))
+				get_min_oriented_bounding_box_properties(segment)
+
+
+				
 
 				segment.add_feature("mid_slice_hu_moments", hu_moments(segment.get_mid_slice()))
 				segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
