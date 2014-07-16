@@ -55,6 +55,7 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 
 	print path_to_temp
 
+
 	
 	try:
 		call_silent.call_silent_err(spio.savemat, save_mat_file, {"vol":vol, "seeds": init_pts, "has_bg": has_bg, "sbx": sbx, "sby": sby, "sbz": sbz, "bg_mask": bg_mask})
@@ -70,6 +71,8 @@ def run_watershed(vol, init_pts, bg_seeds, bg_mask):
 	
 	matlab_file_path = os.path.join(CellECT.__path__[0] , "utils")	
 
+
+	pdb.set_trace()
 	with open(os.devnull, "wb") as devnull:
 		subprocess.check_call( ["matlab", "-nodesktop", "-nosplash", "-r", "cd %s; run_seeded_watershed('%s', '%s')" % (os.path.join(matlab_file_path), os.path.join(path_to_temp, "watershed_input.mat"), os.path.join(path_to_temp, "watershed_result.mat"))]) #, stdout=devnull, stderr=subprocess.STDOUT)
 

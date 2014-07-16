@@ -141,7 +141,6 @@ class APaxis(object):
 		
 	def add_segment_projection_properties(self, segment):
 
-
 		centroid = segment.feature_dict["centroid_res"]
 
 		dist_to_axis = ((self.x - centroid[0])**2 + (self.y - centroid[1])**2 + (self.z - centroid[2])**2 ) ** 0.5
@@ -174,11 +173,11 @@ class APaxis(object):
 ###		
 #from mpl_toolkits.mplot3d import Axes3D
 #ax = pylab.axes(projection='3d')
-#ax.plot(ap_axis.x, ap_axis.y, ap_axis.z)
+#ax.plot(self.x, self.y, self.z)
 #pylab.hold(True)
-###ax.plot([self.x[closest_pos], centroid[0]], [self.y[closest_pos], centroid[1]], [self.z[closest_pos], centroid[2]], 'r')
-##pylab.axis('equal')
-###pylab.show()
+#ax.plot([self.x[closest_pos], centroid[0]], [self.y[closest_pos], centroid[1]], [self.z[closest_pos], centroid[2]], 'r')
+#pylab.axis('equal')
+#pylab.show()
 ##			pdb.set_trace()
 
 		segment.add_feature("angle_with_AP_axis", angle)

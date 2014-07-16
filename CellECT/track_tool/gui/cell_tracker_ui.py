@@ -198,11 +198,35 @@ class CellTrackerUI:
 		self.plot_size_histograms_at_timestamp()
 
 		#"dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin" ]
-		self.plot_feature_scatter_plot("size", "dist_to_AP_axis", "position_along_AP_axis", "Size, Distance to AP axis, Position along AP axis", "size", "distance to AP", "percent along AP")
-		self.plot_feature_scatter_plot("size", "dist_to_AP_axis", None, "Size Vs Distance to AP axis", "size", "distance to AP", None)
-		self.plot_feature_scatter_plot("size", "position_along_AP_axis", None, "Size Vs Position along AP axis", "size", "percent along AP", None)
-		self.plot_feature_scatter_plot("size", "angle_with_AP_axis", None, "Size Vs Angle with AP axis", "size", "angle with AP", None)
-		self.plot_feature_scatter_plot("position_along_AP_axis", "dist_to_AP_axis", "angle_with_AP_axis", "Position relative to AP axis", "percent along axis", "dist to axis", "angle with axis")
+		#self.plot_feature_scatter_plot("size", "dist_to_AP_axis", "position_along_AP_axis", "Size, Distance to AP axis, Position along AP axis", "size", "distance to AP", "percent along AP")
+		#self.plot_feature_scatter_plot("size", "dist_to_AP_axis", None, "Size Vs Distance to AP axis", "size", "distance to AP", None)
+		#self.plot_feature_scatter_plot("size", "position_along_AP_axis", None, "Size Vs Position along AP axis", "size", "percent along AP", None)
+		#self.plot_feature_scatter_plot("size", "angle_with_AP_axis", None, "Size Vs Angle with AP axis", "size", "angle with AP", None)
+		#self.plot_feature_scatter_plot("position_along_AP_axis", "dist_to_AP_axis", "angle_with_AP_axis", "Position relative to AP axis", "percent along axis", "dist to axis", "angle with axis")
+		
+		self.plot_feature_scatter_plot("position_along_AP_axis", "sphericity", None, "Position relative to AP axis", "percent along axis",  "sphericity", None)
+		self.plot_feature_scatter_plot("dist_to_AP_axis", "sphericity", None, "Position relative to AP axis", "distance to axis",  "sphericity", None)
+		self.plot_feature_scatter_plot("centroid_dist_from_margin", "sphericity", None, "Position relative to AP axis", "distance to margin",  "sphericity", None)
+
+		self.plot_feature_scatter_plot("position_along_AP_axis", "cylindricity", None, "Position relative to AP axis", "percent along axis",  "cylindricity", None)
+		self.plot_feature_scatter_plot("dist_to_AP_axis", "cylindricity", None, "Position relative to AP axis", "distance to axis",  "cylindricity", None)
+		self.plot_feature_scatter_plot("centroid_dist_from_margin", "cylindricity", None, "Position relative to AP axis", "distance to margin",  "cylindricity", None)
+
+		self.plot_feature_scatter_plot("position_along_AP_axis", "volume_by_res", None, "Position relative to AP axis", "percent along axis",  "volume_by_res", None)
+		self.plot_feature_scatter_plot("dist_to_AP_axis", "volume_by_res", None, "Position relative to AP axis", "distance to axis",  "volume_by_res", None)
+		self.plot_feature_scatter_plot("centroid_dist_from_margin", "volume_by_res", None, "Position relative to AP axis", "distance to margin",  "volume_by_res", None)
+
+		self.plot_feature_scatter_plot("position_along_AP_axis", "flatness", None, "Position relative to AP axis", "percent along axis",  "flatness", None)
+		self.plot_feature_scatter_plot("dist_to_AP_axis", "flatness", None, "Position relative to AP axis", "distance to axis",  "flatness", None)
+		self.plot_feature_scatter_plot("centroid_dist_from_margin", "flatness", None, "Position relative to AP axis", "distance to margin",  "flatness", None)
+
+		self.plot_feature_scatter_plot("position_along_AP_axis", "elongation", None, "Position relative to AP axis", "percent along axis",  "elongation", None)
+		self.plot_feature_scatter_plot("dist_to_AP_axis", "elongation", None, "Position relative to AP axis", "distance to axis",  "elongation", None)
+		self.plot_feature_scatter_plot("centroid_dist_from_margin", "elongation", None, "Position relative to AP axis", "distance to margin",  "elongation", None)
+
+		self.plot_feature_scatter_plot("volume_by_res", "sphericity", None, "Position relative to AP axis", "volume",  "sphericity", None)
+		self.plot_feature_scatter_plot("surface_area_by_res", "sphericity", None, "Position relative to AP axis", "surface area",  "sphericity", None)
+	
 
 		self.plot_dist_to_nucleus_hists()
 

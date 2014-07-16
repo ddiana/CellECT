@@ -36,6 +36,8 @@ if size(bg_mask,1)==0
     bg_mask = zeros(size(start_pts_mask));
 end
 
+bg_mask = cast(bg_mask, class(vol));
+
 radius = 40;
 
 [mx, my, mz] = ndgrid(1 : radius*2 +2 , 1:radius*2 +2, 1:radius*2 +2);
@@ -172,6 +174,9 @@ has_bg = (size(background_seeds,1)>0) | (bg_mask_sum>0);
 % 
 % 	ws = watershed(vol);
 % end
+
+bg_mask = cast(bg_mask, class(start_pts_mask));
+
 
 if (number_seeds < 1)
     ws = ones(size(vol));

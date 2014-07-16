@@ -105,7 +105,7 @@ def parse_file_at_timestamp(file_name, timestamp):
 
 
 
-		features_of_interest = ["dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin"] #, "border_to_nucleus_dist_std" , "centroid_dist_from_margin"]
+		features_of_interest = ["sphericity","volume_by_res", "entropy", "cylindricity", "flatness", "elongation","volume_by_res_to_enclosing_sphere_vol_ratio", "surface_area_by_res", "dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size", "centroid_dist_from_margin"]
 
 
 		for feat in features_of_interest:

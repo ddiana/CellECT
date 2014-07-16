@@ -45,8 +45,21 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 	
 	for i in xrange(len(classified_segments[0])):
 	
-		for voxel in collection_of_segments.list_of_segments[i].list_of_voxel_tuples:
-			uncertainty_map[voxel] = classified_segments[2][i]
+#		t = time.time()
+#		for voxel in collection_of_segments.list_of_segments[i].list_of_voxel_tuples:
+#			uncertainty_map[voxel] = classified_segments[2][i]
+#		print "uncert v1:", time.time() - t
+
+#		#####
+#		
+		
+		segment = collection_of_segments.list_of_segments[i]
+		bbx = segment.bounding_box
+		
+		crop_uncert = uncertainty_map[bbx.xmin:bbx.xmax+1, bbx.ymin:bbx.ymax+1, bbx.zmin:bbx.zmax+1]
+		mask = segment.mask
+		crop_uncert = crop_uncert * (mask) * classified_segments[2][i] + crop_uncert * (1-mask)
+		
 
 
 	minval = uncertainty_map.min()
@@ -219,7 +232,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 		pylab.close()
 
 	def save_current_status_callback(event):
-		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed, bg_seeds, bg_prior)
+		save_all.save_current_status(nuclei_collection, seed_collection, segment_collection, seed_segment_collection, watershed, bg_seeds, bg_prior, vol)
 
 	def add_boundary(im_slice, seg_slice):
 		mask = np.array(seg_slice == 0)

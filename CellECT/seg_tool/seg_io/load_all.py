@@ -28,6 +28,7 @@ def load_last_save():
 		nuclei_collection = load_xml.load_nuclei_from_xml()
 		seed_collection = load_xml.load_seeds_from_xml()
 		watershed = io.loadmat(file_name)["ws"]
+		vol = io.loadmat(file_name)["vol"]
 		bg_seeds = load_xml.load_bg_seeds_xml()
 	except Exception as err:
 		print colored("Error: %s" % err.message, "red")
@@ -42,7 +43,7 @@ def load_last_save():
 	except:
 		print "No background prior."
 
-	return nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior
+	return nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior, vol
 
 
 

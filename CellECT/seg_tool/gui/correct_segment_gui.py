@@ -39,11 +39,13 @@ def display_segment_to_correct(vol, label_map, segment):
 
 	#x,y,z = zip(*segment.list_of_voxel_tuples)	
 
-	zsum = reduce(lambda a,b: a[2] + b[2], self.list_of_voxel_tuples)		
+	#zsum = reduce(lambda a,b: a[2] + b[2], self.list_of_voxel_tuples)		
 
 	box_bounds = segment.bounding_box
 
-	z_mean = int(zsum / len(segment.list_of_voxel_tuples))
+	z_mean = (box_bounds.zmax - box_bounds.zmin)/2 + box_bounds.zmin
+
+	#z_mean = int(zsum / len(segment.list_of_voxel_tuples))
 	
 	
 	pattern = np.zeros( (box_bounds.xmax - box_bounds.xmin, box_bounds.ymax - box_bounds.ymin, box_bounds.zmax - box_bounds.zmin))	

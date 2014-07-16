@@ -14,6 +14,10 @@ from scipy.ndimage.morphology import binary_dilation
 import math
 import cv2
 from sklearn.decomposition import PCA
+import pylab
+
+from scipy.spatial import Delaunay
+from scipy.spatial import ConvexHull
 
 # Imports from this project
 from CellECT.seg_tool.seg_utils import misc
@@ -45,34 +49,40 @@ class DistanceFromMargin(object):
 		self.x_scale = x_res / self.min_res
 		self.y_scale = y_res / self.min_res
 		self.z_scale = z_res / self.min_res
-		self.x_step =  self.min_res / x_res
-		self.y_step =  self.min_res / y_res
-		self.z_step =  self.min_res / z_res
+		self.x_step =  np.floor(1/self.x_scale)
+		self.y_step =  np.floor(1/self.y_scale)
+		self.z_step =  np.floor(1/self.z_scale)
 		self.dist = ndimage.distance_transform_edt(ws[::self.x_step, ::self.y_step, ::self.z_step] != 1)
 
 
-	def get_min_dist_for_segment(self, segment):
 		
-		# min dist is on the boundary, using boundary pixels.
-		dists = []
-		for i in xrange(len(segment.contour_polygons_list)):
-			dists.extend([self.dist[self.rescale_coords(coords)] for coords in segment.contour_polygons_list[i]])
-		
-		return min(dists)
+
+#	def get_min_dist_for_segment(self, segment):
+#		
+#		# min dist is on the boundary, using boundary pixels.
+
+#		dists = []
+#		for i in xrange(len(segment.contour_polygons_list)):
+#			dists.extend([self.dist[self.rescale_coords(coords)] for coords in segment.contour_polygons_list[i]])
+#		
+#		return min(dists)
 
 #	def get_mean_dist_for_segment(self, segment):
 #		return sum((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples)) / len(segment.list_of_voxel_tuples)
 
 	def get_centroid_dist(self, segment):
 
-		return self.dist[self.rescale_coords(segment.feature_dict["centroid"])]
+		try:
+			return self.dist[self.rescale_coords(segment.feature_dict["centroid"])] * max([self.x_res, self.y_res, self.z_res])
+		except:
+			pdb.set_trace()
 
 #	def get_max_dist_for_segment(self, segment):
 
 #		return max((self.dist[self.rescale_coords(coords)] for coords in segment.list_of_voxel_tuples))
 
 	def rescale_coords(self, coords):
-		return (int(coords[0]*self.x_scale), int(coords[1]*self.y_scale), int(coords[2]*self.z_scale))
+		return (int(np.floor(coords[0]/self.x_step)), int(np.floor(coords[1]/self.y_step)), int(np.floor(coords[2]/self.z_step)))
 
 
 def segment_inner_point(segment):
@@ -155,7 +165,8 @@ def histogram_in_mask(vol, mask):
 	new_vol = vol * mask - (1 - mask)	
 	bins = [-1]
 	num_bins = 20
-	bins.extend(255./num_bins * x for x in xrange(num_bins))
+	max_val = 256  # way over 255
+	bins.extend([float(max_val)/(num_bins) * x for x in xrange(num_bins+1)])
 	hist = histogram(new_vol, bins = bins)[0]
 	hist = hist[1:]
 	hist = hist / np.float(hist.sum())
@@ -163,12 +174,8 @@ def histogram_in_mask(vol, mask):
 
 def get_pca_properties(segment):
 
-	X = []
 
-	for pts in 	segment.contour_polygons_list:
-		X.extend(pts)
-
-	X = np.array(X)
+	X = np.array(zip(*segment.border_coords_by_res)).T
 	pca = PCA(n_components=3)
 	result = pca.fit(X)
 
@@ -182,16 +189,10 @@ def get_pca_properties(segment):
 def get_min_oriented_bounding_box_properties(segment):
 
 
-
 	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
 	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
 	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
 
-
-
-	xc = segment.feature_dict["centroid"][0]
-	yc = segment.feature_dict["centroid"][1]
-	zc = segment.feature_dict["centroid"][2]
 
 	pts_pca0 = []
 	pts_pca1 = []
@@ -201,13 +202,21 @@ def get_min_oriented_bounding_box_properties(segment):
 	pca_1 = segment.feature_dict["pca_eigenvectors"][1]
 	pca_2 = segment.feature_dict["pca_eigenvectors"][2]
 
-	for pt in segment.contour_polygons_list:
+#	for pt in segment.:
 
-		new_pt = np.array([(pt[0] - xc)* x_res, (pt[1] - yc) * y_res, (pt[2] - zc) * z_res])
+#		new_pt = np.array([(pt[0] - xc)* x_res, (pt[1] - yc) * y_res, (pt[2] - zc) * z_res])
 
-		pts_pca0.append( np.dot (pca_0, new_pt) )
-		pts_pca1.append( np.dot (pca_1, new_pt) )
-		pts_pca2.append( np.dot (pca_2, new_pt) )
+#		pts_pca0.append( np.dot (pca_0, new_pt) )
+#		pts_pca1.append( np.dot (pca_1, new_pt) )
+#		pts_pca2.append( np.dot (pca_2, new_pt) )
+
+	input_pts = np.array(segment.border_coords_by_res)
+	means = np.mean(input_pts)
+	input_pts = np.subtract(input_pts, means)
+
+	pts_pca0 = np.dot(input_pts, pca_0) 		#[np.dot (pca_0, x) for x in segment.border_coords_by_res]
+	pts_pca1 = np.dot(input_pts, pca_1)	#[np.dot (pca_1, x) for x in segment.border_coords_by_res]
+	pts_pca2 = np.dot(input_pts, pca_2)		#[np.dot (pca_2, x) for x in segment.border_coords_by_res]
 
 
 	bbx_pca0 = max(pts_pca0) - min(pts_pca0)
@@ -218,19 +227,23 @@ def get_min_oriented_bounding_box_properties(segment):
 	dist_pca1 = np.abs(pts_pca1)
 	dist_pca2 = np.abs(pts_pca2)
 	
-	centroid_distances = list(dist_pca0)
-	centroid_distances.extend(list(dist_pca1)
-	centroid_distances.extend(list(dist_pca2))
+#	centroid_distances = list(dist_pca0)
+#	centroid_distances.extend(list(dist_pca1))
+#	centroid_distances.extend(list(dist_pca2))
 
-	sphere_radius = max(centroid_distances)
+	sphere_radius = segment.feature_dict["distance_to_border_scale_factor"] * min([x_res, y_res, z_res])
 
 	segment_volume = segment.feature_dict["size"] * x_res * y_res * z_res
 
+	segment.add_feature("volume_by_res", segment_volume)
+
+	segment.add_feature("surface_area_by_res", len(segment.isotropic_border_coords) * min([x_res, y_res, z_res])**2)
+
 	# spherecity
 
-	segment.add_feature("minimum_enclosing_sphere_radius_by_res", centroid_distances)
+	segment.add_feature("minimum_enclosing_sphere_radius_by_res", sphere_radius)
 
-	sphere_vol_ratio =  segment_volume / (4/3. * np.pi * sphere_radius ** 3 )
+	sphere_vol_ratio =  segment_volume  / (4/3. * np.pi * sphere_radius ** 3 )
 	segment.add_feature("volume_by_res_to_enclosing_sphere_vol_ratio", sphere_vol_ratio)
 
 
@@ -244,25 +257,25 @@ def get_min_oriented_bounding_box_properties(segment):
 	# oriented box
 
 	segment.add_feature("minimum_oriented_bbx_side_length_by_res",  [bbx_pca0, bbx_pca1, bbx_pca2] )
+	segment.add_feature("minimum_oriented_bbx_volume", bbx_pca0 * bbx_pca1 * bbx_pca2)
 
-	segment.add_feature("volume_by_res", segment_volume)
 
 	ordered = sorted(segment.feature_dict["minimum_oriented_bbx_side_length_by_res"])
 
 	# elongation and flatness
 
-	segment.add_feature(["elongation" , 1 - float(ordered[2] ) / ordered[1])
+	segment.add_feature("elongation" , 1 - float(ordered[2] ) / ordered[1])
 	segment.add_feature("flatness" , 1 - float(ordered[1] ) / ordered[0])
 
 	# squareness
 
-	segment.add_feature("vol_by_res_to_enclosing_box_vol_ratio",  float(segment.feature_dict["volume_by_res"])/ bbx_pca0 * bbx_pca1 * bbx_pca2)
+	segment.add_feature("vol_by_res_to_enclosing_box_vol_ratio",  float(segment.feature_dict["volume_by_res"])/ (bbx_pca0 * bbx_pca1 * bbx_pca2))
 
 	# cylinder
 
-	segment.add_feature("cylinder_radius_height_pca0", (min(dist_pca0), bbx_pca0))
-	segment.add_feature("cylinder_radius_height_pca1", (min(dist_pca1), bbx_pca1))
-	segment.add_feature("cylinder_radius_height_pca2", (min(dist_pca2), bbx_pca2))
+	segment.add_feature("cylinder_radius_height_pca0", (max(dist_pca0), bbx_pca0))
+	segment.add_feature("cylinder_radius_height_pca1", (max(dist_pca1), bbx_pca1))
+	segment.add_feature("cylinder_radius_height_pca2", (max(dist_pca2), bbx_pca2))
 
 	cylinder_vol = lambda radius, height: np.pi * radius**2 * height
 	cylinder_area = lambda radius, height: 2* np.pi * radius * height + 2 * np.pi * radius**2
@@ -276,23 +289,23 @@ def get_min_oriented_bounding_box_properties(segment):
 	segment.add_feature("surf_area_cylinder_pca2", cylinder_vol(*segment.feature_dict["cylinder_radius_height_pca2"]))
 
 	min_vol_pca = 0
-	min_vol = min([segment.feature_dict("vol_cylinder_pca0",segment.feature_dict("vol_cylinder_pca1",segment.feature_dict("vol_cylinder_pca2"])
+	min_vol = min([segment.feature_dict["vol_cylinder_pca0"], segment.feature_dict["vol_cylinder_pca1"],segment.feature_dict["vol_cylinder_pca2"]])
 
-	if segment.feature_dict("vol_cylinder_pca1") >  segment.feature_dict("vol_cylinder_pca0") and  segment.feature_dict("vol_cylinder_pca1") >  segment.feature_dict("vol_cylinder_pca2") :
+	if segment.feature_dict["vol_cylinder_pca1"] <  segment.feature_dict["vol_cylinder_pca0"] and  segment.feature_dict["vol_cylinder_pca1"] <  segment.feature_dict["vol_cylinder_pca2"] :
 		min_vol_pca = 1
 	
-	if segment.feature_dict("vol_cylinder_pca2") >  segment.feature_dict("vol_cylinder_pca0") and  segment.feature_dict("vol_cylinder_pca2") >  segment.feature_dict("vol_cylinder_pca1") :
+	if segment.feature_dict["vol_cylinder_pca2"] <  segment.feature_dict["vol_cylinder_pca0"] and  segment.feature_dict["vol_cylinder_pca2"] <  segment.feature_dict["vol_cylinder_pca1"] :
 		min_vol_pca = 2
 
 
-	segment.add_feature("minimum_vol_cylinder_radius_height", min_vol_pca )
-	segment.add_feature("minimum_vol_cylinder_pca_axis", min_vol )
+	segment.add_feature("minimum_vol_cylinder_radius_height", min_vol )
+	segment.add_feature("minimum_vol_cylinder_pca_axis", min_vol_pca )
 
-	cylindricity_pca0 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca0")
-	cylindricity_pca1 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca1")
-	cylindricity_pca2 = segment.feature_dict("volume_by_res") / segment.feature_dict("vol_cylinder_pca2")
+	cylindricity_pca0 = segment.feature_dict["volume_by_res"] / segment.feature_dict["vol_cylinder_pca0"]
+	cylindricity_pca1 = segment.feature_dict["volume_by_res"] / segment.feature_dict["vol_cylinder_pca1"]
+	cylindricity_pca2 = segment.feature_dict["volume_by_res"] / segment.feature_dict["vol_cylinder_pca2"]
 
-	segment.feature_dict("cylindricity", max([cylindricity_pca0, cylindricity_pca1, cylindricity_pca2]))
+	segment.add_feature("cylindricity", max([cylindricity_pca0, cylindricity_pca1, cylindricity_pca2]))
 
 
 	# entropy
@@ -305,8 +318,9 @@ def get_min_oriented_bounding_box_properties(segment):
 
 	entropy = 1. / np.log(3) *  (eig0 * np.log(eig0) + eig1 * np.log(eig1) + eig2 * np.log(eig2))
 
-	segment.feature_dict("entropy", entropy)
+	segment.add_feature("entropy", entropy)
 	
+
 
 	
 
@@ -362,28 +376,21 @@ def add_nucleus_to_segments(segment_collection, nuclei_collection, label_map):
 			nucleus = nuclei_collection.find_closest_nucleus_to_segment(segment)
 			segment.add_nucleus(nucleus)
 			
-
-def get_fourier_shape_descriptor(segment):
-
-	pass
 	
-#	midx = sum([x[0] for x in segment.mid_slice_contour]) / len(segment.mid_slice_contour)
-#	midy = sum([x[1] for x in segment.mid_slice_contour]) / len(segment.mid_slice_contour)
-#	polygon = [(x[0] - midx, x[1] - midy) for x in segment.mid_slice_contour]
-
-#	maxx = min([x[0] for x in polygon])
-#	maxy = min([x[1] for x in polygon])
-#	
 	
 
 def hu_moments(mid_slice):
 	
-	moments = cv2.moments(mid_slice.astype("uint8"), True)
+	if mid_slice.sum() <3:
+		mid_slice = binary_dilation(mid_slice)
+
+ 	moments = cv2.moments(mid_slice.astype("uint8"), True)
 	hu_moments = cv2. HuMoments(moments)
-	hu_moments = -np.sign(hu_moments)*np.log10(np.abs(hu_moments))
+#	pdb.set_trace()
+#	hu_moments = -np.sign(hu_moments)*np.log10(np.abs(hu_moments))
+
 
 	return [x[0] for x in hu_moments]
-
 
 
 
@@ -547,7 +554,6 @@ def weighted_mean_from_hist(histogram):
 def fit_line(segment):
 
 
-
 	pts = np.nonzero(segment.mask)
 	pts = np.array(pts).T
 
@@ -561,8 +567,44 @@ def fit_line(segment):
 
 	return line
 
+def tetrahedron_volume(a, b, c, d):
 
-def get_convex_hull_properties(segment):
+	return np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
+
+def get_convex_hull_3d(segment):
+
+#	t = time.time()
+	pts = segment.border_coords_by_res
+#	dt = Delaunay(pts)
+#	tets = dt.points[dt.simplices]
+#	vol = np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1], tets[:, 2], tets[:, 3]))
+
+#	print "v1", time.time() - t
+
+#	t = time.time()
+#	hull = ConvexHull(pts)
+#	list_of_pts_indices = np.unique(hull.simplices)
+#	new_pts = [pts[i] for i in list_of_pts_indices]
+#	dt = Delaunay(new_pts)
+#	tets = dt.points[dt.simplices]
+#	vol = np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1], tets[:, 2], tets[:, 3]))
+#	print "v1", time.time() - t
+#	
+	#t = time.time()
+	ch = ConvexHull(pts)
+	vertex =  np.array([0])
+	simplices = np.column_stack((np.repeat(vertex, ch.nsimplex), ch.simplices))
+	tets = ch.points[simplices]
+	vol = np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1], tets[:, 2], tets[:, 3]))
+	#print "v2", time.time() -t
+
+	#print vol, vol1
+
+	segment.add_feature("convex_hull_volume", vol)
+	segment.add_feature("vol_to_hull_vol_ratio", segment.feature_dict["volume_by_res"] / vol)
+	
+
+def get_convex_hull_properties_in_slice(segment):
 
 
 	cnt = np.array(segment.get_mid_slice_contour())
@@ -593,6 +635,18 @@ def get_convex_hull_properties(segment):
 
 	
 
+def get_nuclei_channel_features(segment, vol_nuclei):
+
+	box_bounds = segment.bounding_box
+	cropped_vol = vol_nuclei[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1]
+
+	hist = histogram_in_mask(cropped_vol, segment.mask) * segment.mask.sum()
+
+	segment.add_feature("nuclei_channel_intensity_hist", hist)
+	segment.add_feature("nuclei_channel_volume_with_highest_intensity", sum(hist[-2:]) * segment.xres * segment.yres * segment.zres)	
+
+
+
 def init_neighbor_props_for_segment(segment):
 
 	if not segment.feature_dict.has_key("percent_border_with_neighbor"):
@@ -610,39 +664,40 @@ def init_neighbor_props_for_segment(segment):
 
 def get_border_to_nucleus_properties(segment):
 
-	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
-	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
-	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
 
+	pts = np.array(segment. isotropic_border_coords)
+	res = min([segment.xres, segment.yres, segment.zres])
+	centroid = np.floor(np.mean(pts,0))
 
-	pts = []
+	centroid_with_offset = np.floor(np.mean(segment.border_coords,0) + np.array([segment.bounding_box.xmin, segment.bounding_box.ymin, segment.bounding_box.zmin]))
 
-	for ls in segment.contour_polygons_list:
-		pts.extend(ls)
+	centroid_by_res = centroid_with_offset * np.array([segment.xres, segment.yres, segment.zres])
 
-	centroid = reduce(lambda x,y: (x[0]+y[0], x[1] +y[1], x[2] + y[2]),pts)
-	centroid = (centroid[0] * x_res /len(pts), centroid[1] * y_res /len(pts), centroid[2] * z_res /len(pts))
+#	if centroid_with_offset[2] == 26:
+#		pdb.set_trace()
 
-	calc_dist = lambda x,y, x_res, y_res, z_res: ((x[0]*x_res - y[0])**2 + (x[1]*y_res - y[1])**2 + (x[2]*z_res - y[2])**2 ) ** 0.5
-		
-	distances = [calc_dist(x, centroid, x_res, y_res, z_res) for x in pts]
-	max_dist = max(distances)
-	distances = [x/max_dist for x in distances]
+	dists =  ((pts[:,0] - centroid[0])**2 + (pts[:,1] - centroid[1])**2 + (pts[:,2] - centroid[2])**2 ) **0.5
+	max_dist = dists.max()
+	dists = dists/max_dist	
 
-	bins = np.arange(0, 1, 0.05)
-	dist_hist = histogram(distances, bins = bins) [0]
+	bins = np.arange(0, 1.05, 0.05)
+	dist_hist = histogram(dists, bins = bins) [0]
 
-	segment.add_feature("centroid_res", centroid)
-	segment.add_feature("centroid", (int(centroid[0]/x_res),int(centroid[1]/y_res), int(centroid[2]/z_res) ))
+	
+	segment.add_feature("centroid_res", tuple(centroid_by_res))
 	segment.add_feature("border_to_nucleus_dist_hist", dist_hist)
-	segment.add_feature("border_to_nucleus_dist_mean", np.mean(distances))
-	segment.add_feature("border_to_nucleus_dist_std", np.std(distances))
+	segment.add_feature("border_to_nucleus_dist_mean", np.mean(dists))
+	segment.add_feature("border_to_nucleus_dist_std", np.std(dists))
 	segment.add_feature("distance_to_border_scale_factor", max_dist)
 
+
+	pts = np.array(segment.border_coords)
+	segment.add_feature("centroid", tuple(centroid_with_offset.astype("int")))
+
 		
 
 
-def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection):
+def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nuclei_collection, vol_nuclei= None):
 
 	"""
 	Make segment collection and add features to all the segments.
@@ -661,9 +716,12 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	print message
 	logging.info(message)
 
+	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
+	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
+	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
 
 	t1 = time.time()
-	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent)
+	segment_collection = segc.SegmentCollection(set_of_labels, label_map, name_of_parent, x_res, y_res, z_res)
 	t2 = time.time()
 	print "....... %.3f sec                         " %(t2 - t1)
 	logging.info ("... %.3f sec" % (t2-t1))
@@ -675,9 +733,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	logging.info(message)
 
 	dist_metric = None
-	x_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["x_res"])
-	y_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["y_res"])
-	z_res = float(CellECT.seg_tool.globals.DEFAULT_PARAMETER["z_res"])
+
 #[[270, 200,15],[280, 400, 14], [280, 600,14], [290, 700,13]]
 
 	# LEFT-RIGHT coordinate first
@@ -709,9 +765,11 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 		try:
 			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 				if should_compute_feature(segment.name_of_parent, "size"):
-					segment.add_feature("size", len(segment.list_of_voxel_tuples))
+					segment.add_feature("size", segment.mask.sum())
+					#segment.add_feature("size", len(segment.list_of_voxel_tuples))
 
 
+#			t = time.time()
 			if segment.name_of_parent == "test_volume":		
 
 
@@ -723,8 +781,11 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 					init_neighbor_props_for_segment(segment2)
 					add_neighbor_border_properties(segment,segment2, vol )	
 
+#			print "neighbors", time.time() -t
+
 			box_bounds = segment.bounding_box
 				
+#			t = time.time()
 			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_intensity"]):
 
 				if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_ratio"):
@@ -737,7 +798,7 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 					segment.add_feature("border_intensity_hist", histogram_in_mask(vol[box_bounds.xmin:box_bounds.xmax+1, box_bounds.ymin:box_bounds.ymax+1, box_bounds.zmin:box_bounds.zmax+1], segment.border_mask))
 				if should_compute_feature(segment.name_of_parent, "border_to_interior_intensity_hist_dif"):
 					segment.add_feature("border_to_interior_intensity_hist_dif", hist_dif(segment.feature_dict["border_intensity_hist"], segment.feature_dict["interior_intensity_hist"]))
-
+#			print "border", time.time() -t
 
 	
 			if should_compute_feature(segment.name_of_parent, "inner_point"):
@@ -746,13 +807,11 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 			if segment.name_of_parent == "test_volume":
 
 
-
-				get_pca_properties(segment)
-				get_min_oriented_bounding_box_properties(segment)
+				get_nuclei_channel_features(segment, vol_nuclei)
 
 
-				
-
+	
+#				t = time.time()
 				segment.add_feature("mid_slice_hu_moments", hu_moments(segment.get_mid_slice()))
 				segment.add_feature("mid_slice_best_contour", segment.get_mid_slice_contour())
 				segment.add_feature("mid_slice_z", segment.mid_slice_z)
@@ -760,45 +819,41 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 				segment.add_feature("line_fit", fit_line(segment))
 
-				get_convex_hull_properties(segment)
-
+				get_convex_hull_properties_in_slice(segment)
+#				print "mid slice", time.time() - t
+				
+#				t = time.time()
 				get_border_to_nucleus_properties(segment)
+#				print "dist_hist:", time.time() - t
 	
+#				t = time.time()
 				ap_axis.add_segment_projection_properties(segment)
+#				print "ap", time.time() - t				
 
+#				t = time.time()
+				get_pca_properties(segment)
+
+				get_min_oriented_bounding_box_properties(segment)
+#				print "pca", time.time() - t
+
+#				t = time.time()
+				# TOO SLOW...... UNCOMMENT IF NEEDED				
+				get_convex_hull_3d(segment)
+#				print "hull", time.time() - t
 			
+		
+
 				if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_dist_from_margin"]):
 
 					t = time.time()
 					if should_compute_feature(segment.name_of_parent, "distance_from_margin"):
-						segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
+						#segment.add_feature("min_distance_from_margin", dist_metric.get_min_dist_for_segment(segment))
 						#segment.add_feature("mean_distance_from_margin", dist_metric.get_mean_dist_for_segment(segment))
 						#segment.add_feature("max_distance_from_margin", dist_metric.get_max_dist_for_segment(segment))
 						segment.add_feature("centroid_dist_from_margin", dist_metric.get_centroid_dist(segment))
 					sum_time += time.time() - t
 
-
-
-
-#			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_border_distance"]):
-#				dist_vector = segment_border_to_nucleus(segment)
-#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance"):
-#					segment.add_feature("border_to_nucleus_distance",dist_vector)
-#		
-#				dist_hist = np.histogram(dist_vector,  bins = range(1,100,10) )
-#				# if the segment is tiny:
-#				if dist_hist[0].sum() == 0:
-#					dist_hist = dist_hist[0]
-#					dist_hist[0] = 1.0
-#				else:
-#					dist_hist = dist_hist[0] / float (np.sum(dist_hist[0]))
-#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_hist"):
-#					segment.add_feature("border_to_nucleus_distance_hist", dist_hist)
-#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_mean"):
-#					segment.add_feature("border_to_nucleus_distance_mean", sum(dist_vector) / float(len(dist_vector)))
-#				if should_compute_feature(segment.name_of_parent, "border_to_nucleus_distance_std"):
-#					segment.add_feature("border_to_nucleus_distance_std", np.std(dist_vector))
-
+#				print "........"
 		except:
 			pdb.set_trace()
 		
