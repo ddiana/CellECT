@@ -105,7 +105,7 @@ class CellTrackerUI:
 			bins = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_bins[1:]
 			hist = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_vals
 			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
-			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.autumn(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("Cell size histogram bins")
@@ -140,7 +140,7 @@ class CellTrackerUI:
 			if not feat3 is None:
 				feat3_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat3] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
 
-			colors.extend( [ pylab.cm.winter(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.autumn(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		if not feat3 is None:
 			ax.scatter(feat1_vals, feat2_vals, feat3_vals, c = colors)
@@ -177,11 +177,11 @@ class CellTrackerUI:
 			for idx in  xrange(1,len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles)):
 				cp_item = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx]
 				hist = cp_item.dict_of_features["border_to_nucleus_dist_hist"]
-				hist = np.array(hist) / float(max(hist))
+				hist = np.array(hist) / float(np.sum(hist))
 				hists = np.vstack((hists, hist))
 
 			hist = hists.mean(0)
-			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0, color=pylab.cm.autumn(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("")
@@ -192,10 +192,325 @@ class CellTrackerUI:
 
 
 
+	def plot_groups_at_time_point(self,t, feat1, feat2):
+
+
+		markers = ['ro', 'go', 'bo', 'yo', 'ko', 'mo', 'co']
+
+		cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+
+
+
+		fig = pylab.figure( facecolor='white')
+
+		counter = -1
+
+		for group_name in self.groups.keys():
+
+			counter +=1
+			gr = self.groups[group_name][t]
+
+			feat1_vals = []
+			feat2_vals = []
+			
+			for idx in gr:
+				feat1_vals.append(cp_list[idx].dict_of_features[feat1])
+				feat2_vals.append(cp_list[idx].dict_of_features[feat2])
+
+			pylab.plot(feat1_vals, feat2_vals, markers[counter], label = group_name)
+
+			pylab.hold(True)
+
+		fig.canvas.set_window_title("Time point %s" % t)
+
+		pylab.legend(loc="best")
+		pylab.xlabel(feat1)
+		pylab.ylabel(feat2)
+		pylab.grid()
+
+
+
+	def shape_hist_for_groups_at_time_point(self, t):
+
+
+		markers = ['r-', 'g-', 'b-', 'y-', 'k-', 'm-', 'c-']
+
+
+		num_time_points = len(self.cell_tracker.list_of_cell_profiles_per_timestamp)
+
+		fig = pylab.figure( facecolor='white')
+
+		counter = -1
+
+		for group_name in self.groups.keys():
+
+			bin_count = len(self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles[0].dict_of_features["border_to_nucleus_dist_hist"])
+			feat_average = np.zeros((1,bin_count))
+
+			counter +=1
+
+			gr = self.groups[group_name][t]
+			cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+	
+			for idx in gr:
+				feat_average += cp_list[idx].dict_of_features["border_to_nucleus_dist_hist"]
+		
+			feat_average = feat_average /float(feat_average.sum())
+
+	
+			pylab.plot(range(bin_count), feat_average.T, markers[counter], label = group_name, linewidth = 2)
+
+			pylab.hold(True)
+
+		fig.canvas.set_window_title("Distance of border to nucleus at t=%d" % t)
+
+		pylab.legend(loc="best")
+		pylab.xlabel("Bin index")
+		pylab.ylabel("p.d.f.")
+		pylab.grid()
+
+
+
+	def plot_group_average_per_time(self,feat):
+
+
+		markers = ['ro-', 'go-', 'bo-', 'yo-', 'ko-', 'mo-', 'co-']
+
+
+
+		num_time_points = len(self.cell_tracker.list_of_cell_profiles_per_timestamp)
+
+		fig = pylab.figure( facecolor='white')
+
+		counter = -1
+
+		for group_name in self.groups.keys():
+
+
+			feat_average = []
+
+			counter +=1
+	
+			for t in xrange(num_time_points):
+
+				gr = self.groups[group_name][t]
+				cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+	
+				sum_val = 0
+				for idx in gr:
+					sum_val += cp_list[idx].dict_of_features[feat]
+
+				feat_average.append(sum_val/float(len(cp_list)))
+	
+			pylab.plot(range(num_time_points), feat_average, markers[counter], label = group_name, linewidth = 2)
+
+			pylab.hold(True)
+
+		fig.canvas.set_window_title("%s over time" % feat)
+
+		pylab.legend(loc="best")
+		pylab.xlabel("Time point")
+		pylab.ylabel(feat)
+		pylab.grid()
+
+
+
+
+
+
+
+	def tissue_groups(self):
+
+
+		group_names = ["notochord_group", "muscle_group", "skin_group", "head_group"]
+		num_time_points = len(self.cell_tracker.list_of_cell_profiles_per_timestamp)
+
+		self.groups = {}
+		for name in group_names:
+			self.groups[name] = dict((x,set()) for x in xrange(num_time_points))
+	
+		for t in xrange(num_time_points):
+			for c in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles)):
+
+				cp = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles[c]
+
+				# notochord_group:
+				if cp.dict_of_features["dist_to_AP_axis"] < 10 and cp.dict_of_features["position_along_AP_axis"] > 50:
+					self.groups["notochord_group"][t].add(c)
+
+				# muscle_group:
+				if cp.dict_of_features["dist_to_AP_axis"] < 30 and cp.dict_of_features["dist_to_AP_axis"]>10 and cp.dict_of_features["position_along_AP_axis"] > 50 and cp.dict_of_features["centroid_dist_from_margin"]>10:
+					self.groups["muscle_group"][t].add(c)
+
+				# skin_group
+				if cp.dict_of_features["centroid_dist_from_margin"] <10:
+					self.groups["skin_group"][t].add(c)
+
+				# head_group
+				if cp.dict_of_features["position_along_AP_axis"] < 50 and cp.dict_of_features["centroid_dist_from_margin"] >10 :#and cp.dict_of_features["dist_to_AP_axis"] < 20 :
+					self.groups["head_group"][t].add(c)
+
+
+	def plot_shape_hists_per_group(self):
+
+
+
+
+		fig = pylab.figure( facecolor='white')
+		fig.canvas.set_window_title("Cell shape histograms per tissue over time")
+
+		color_idx = np.linspace(0, 1, len(self.cell_tracker.list_of_cell_profiles_per_timestamp))
+
+		ax1 = fig.add_subplot(141)
+		ax2 = fig.add_subplot(142)
+		ax3 = fig.add_subplot(143)
+		ax4 = fig.add_subplot(144)
+
+		num_bins = len(self.cell_tracker.list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles[0].dict_of_features["border_to_nucleus_dist_hist"])
+
+		bins = np.arange(0,1, 1/float(num_bins))
+
+		ax_list = [ax1, ax2, ax3, ax4]
+
+		counter = -1
+
+		for group_name in self.groups.keys():
+
+			bin_count = len(self.cell_tracker.list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles[0].dict_of_features["border_to_nucleus_dist_hist"])
+			feat_average = np.zeros((1,bin_count))
+
+			counter +=1
+
+			ax = ax_list[counter]
+
+			for colorshift, t in zip(color_idx, xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp))):
+				gr = self.groups[group_name][t]
+
+
+				cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+	
+				for idx in gr:
+					feat_average += cp_list[idx].dict_of_features["border_to_nucleus_dist_hist"]
+		
+					feat_average = feat_average /float(feat_average.sum())
+
+	
+				ax.plot(range(bin_count), feat_average.T,color=pylab.cm.autumn(colorshift) , label = group_name, linewidth = 2)
+
+			ax.set_title(group_name)
+			ax.set_xlabel("Cell size histogram bins")
+			ax.set_ylabel("Normalized distribution")
+		fig.canvas.set_window_title("Histogram of cell sizes for each time stamp")
+
+
+
+	
+
+
+
+
+	def global_feature_plots(self,):
+
+
+
+		markers = ['ro-', 'go-', 'bo-', 'yo-', 'ko-', 'mo-', 'co-']
+
+		num_time_points = len(self.cell_tracker.list_of_cell_profiles_per_timestamp)
+
+		fig = pylab.figure( facecolor='white')
+
+		ax1 = fig.add_subplot(131)
+		ax2 = fig.add_subplot(132)
+		ax3 = fig.add_subplot(133)
+
+
+		counter = -1
+
+
+
+		vol_sum = []
+		vol_avg = []
+		num_segs = []
+
+		counter +=1
+	
+		for t in xrange(num_time_points):
+			cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+	
+			sum_val = 0
+			for cp in cp_list:
+				sum_val += cp.dict_of_features["volume_by_res"]
+
+			vol_sum.append(sum_val)
+			vol_avg.append(sum_val/float(len(cp_list)))
+			num_segs.append(len(cp_list))
+	
+		title_list = ["Total volume over time", "Total cells over time","Avg cell vol over time"]		
+		ax_list = [ax1, ax2, ax3]
+		val_list = [vol_sum, num_segs, vol_avg]
+		feat_list = ["cubic microns", "count", "cubic microns"]
+
+		for i in xrange(len(ax_list)):
+			ax_list[i].plot(range(num_time_points), val_list[i], markers[counter], linewidth = 2)
+			ax_list[i].set_title( title_list[i])
+			ax_list[i].hold(True)
+				
+			#ax_list[i].legend(loc="best")
+			ax_list[i].set_xlabel("Time point")
+			ax_list[i].set_ylabel(feat_list[i])
+			ax_list[i].grid()
+
+		fig.canvas.set_window_title("Global values over time" )
+
+
+
+
+	def groups_in_space(self, t):
+
+		markers = ['ro', 'go', 'bo', 'yo', 'ko', 'mo', 'co']
+
+		cp_list = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles
+
+
+
+		fig = pylab.figure( facecolor='white')
+
+		ax = fig.add_subplot(111, projection='3d')
+
+		counter = -1
+
+		for group_name in self.groups.keys():
+
+			counter +=1
+			gr = self.groups[group_name][t]
+
+			x_vals = []
+			y_vals = []
+			z_vals = []
+			
+			for idx in gr:
+				x_vals.append(cp_list[idx].dict_of_features["centroid_res"][0])
+				y_vals.append(cp_list[idx].dict_of_features["centroid_res"][1])
+				z_vals.append(cp_list[idx].dict_of_features["centroid_res"][2])
+
+
+			pylab.plot(x_vals, y_vals, z_vals, markers[counter], label = group_name)
+
+			pylab.hold(True)
+
+		fig.canvas.set_window_title("Groups at time point %d " %t)
+
+		pylab.legend(loc="best")
+		ax.set_xlabel("x")
+		ax.set_ylabel("y")
+		ax.set_zlabel("z")
+		pylab.grid()
+
+
 	def plot_stats(self):
 
 	
-		self.plot_size_histograms_at_timestamp()
+#		self.plot_size_histograms_at_timestamp()
 
 		#"dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin" ]
 		#self.plot_feature_scatter_plot("size", "dist_to_AP_axis", "position_along_AP_axis", "Size, Distance to AP axis, Position along AP axis", "size", "distance to AP", "percent along AP")
@@ -204,31 +519,61 @@ class CellTrackerUI:
 		#self.plot_feature_scatter_plot("size", "angle_with_AP_axis", None, "Size Vs Angle with AP axis", "size", "angle with AP", None)
 		#self.plot_feature_scatter_plot("position_along_AP_axis", "dist_to_AP_axis", "angle_with_AP_axis", "Position relative to AP axis", "percent along axis", "dist to axis", "angle with axis")
 		
-		self.plot_feature_scatter_plot("position_along_AP_axis", "sphericity", None, "Position relative to AP axis", "percent along axis",  "sphericity", None)
-		self.plot_feature_scatter_plot("dist_to_AP_axis", "sphericity", None, "Position relative to AP axis", "distance to axis",  "sphericity", None)
-		self.plot_feature_scatter_plot("centroid_dist_from_margin", "sphericity", None, "Position relative to AP axis", "distance to margin",  "sphericity", None)
+#		self.plot_feature_scatter_plot("position_along_AP_axis", "sphericity", None, "Position relative to AP axis", "percent along axis",  "sphericity", None)
+#		self.plot_feature_scatter_plot("dist_to_AP_axis", "sphericity", None, "Position relative to AP axis", "distance to axis",  "sphericity", None)
+#		self.plot_feature_scatter_plot("centroid_dist_from_margin", "sphericity", None, "Position relative to AP axis", "distance to margin",  "sphericity", None)
 
-		self.plot_feature_scatter_plot("position_along_AP_axis", "cylindricity", None, "Position relative to AP axis", "percent along axis",  "cylindricity", None)
-		self.plot_feature_scatter_plot("dist_to_AP_axis", "cylindricity", None, "Position relative to AP axis", "distance to axis",  "cylindricity", None)
-		self.plot_feature_scatter_plot("centroid_dist_from_margin", "cylindricity", None, "Position relative to AP axis", "distance to margin",  "cylindricity", None)
+#		self.plot_feature_scatter_plot("position_along_AP_axis", "cylindricity", None, "Position relative to AP axis", "percent along axis",  "cylindricity", None)
+#		self.plot_feature_scatter_plot("dist_to_AP_axis", "cylindricity", None, "Position relative to AP axis", "distance to axis",  "cylindricity", None)
+#		self.plot_feature_scatter_plot("centroid_dist_from_margin", "cylindricity", None, "Position relative to AP axis", "distance to margin",  "cylindricity", None)
 
-		self.plot_feature_scatter_plot("position_along_AP_axis", "volume_by_res", None, "Position relative to AP axis", "percent along axis",  "volume_by_res", None)
-		self.plot_feature_scatter_plot("dist_to_AP_axis", "volume_by_res", None, "Position relative to AP axis", "distance to axis",  "volume_by_res", None)
-		self.plot_feature_scatter_plot("centroid_dist_from_margin", "volume_by_res", None, "Position relative to AP axis", "distance to margin",  "volume_by_res", None)
+#		self.plot_feature_scatter_plot("position_along_AP_axis", "volume_by_res", None, "Position relative to AP axis", "percent along axis",  "volume_by_res", None)
+#		self.plot_feature_scatter_plot("dist_to_AP_axis", "volume_by_res", None, "Position relative to AP axis", "distance to axis",  "volume_by_res", None)
+#		self.plot_feature_scatter_plot("centroid_dist_from_margin", "volume_by_res", None, "Position relative to AP axis", "distance to margin",  "volume_by_res", None)
 
-		self.plot_feature_scatter_plot("position_along_AP_axis", "flatness", None, "Position relative to AP axis", "percent along axis",  "flatness", None)
-		self.plot_feature_scatter_plot("dist_to_AP_axis", "flatness", None, "Position relative to AP axis", "distance to axis",  "flatness", None)
-		self.plot_feature_scatter_plot("centroid_dist_from_margin", "flatness", None, "Position relative to AP axis", "distance to margin",  "flatness", None)
+#		self.plot_feature_scatter_plot("position_along_AP_axis", "flatness", None, "Position relative to AP axis", "percent along axis",  "flatness", None)
+#		self.plot_feature_scatter_plot("dist_to_AP_axis", "flatness", None, "Position relative to AP axis", "distance to axis",  "flatness", None)
+#		self.plot_feature_scatter_plot("centroid_dist_from_margin", "flatness", None, "Position relative to AP axis", "distance to margin",  "flatness", None)
 
-		self.plot_feature_scatter_plot("position_along_AP_axis", "elongation", None, "Position relative to AP axis", "percent along axis",  "elongation", None)
-		self.plot_feature_scatter_plot("dist_to_AP_axis", "elongation", None, "Position relative to AP axis", "distance to axis",  "elongation", None)
-		self.plot_feature_scatter_plot("centroid_dist_from_margin", "elongation", None, "Position relative to AP axis", "distance to margin",  "elongation", None)
+#		self.plot_feature_scatter_plot("position_along_AP_axis", "elongation", None, "Position relative to AP axis", "percent along axis",  "elongation", None)
+#		self.plot_feature_scatter_plot("dist_to_AP_axis", "elongation", None, "Position relative to AP axis", "distance to axis",  "elongation", None)
+#		self.plot_feature_scatter_plot("centroid_dist_from_margin", "elongation", None, "Position relative to AP axis", "distance to margin",  "elongation", None)
 
-		self.plot_feature_scatter_plot("volume_by_res", "sphericity", None, "Position relative to AP axis", "volume",  "sphericity", None)
-		self.plot_feature_scatter_plot("surface_area_by_res", "sphericity", None, "Position relative to AP axis", "surface area",  "sphericity", None)
+#		self.plot_feature_scatter_plot("volume_by_res", "sphericity", None, "Position relative to AP axis", "volume",  "sphericity", None)
+#		self.plot_feature_scatter_plot("surface_area_by_res", "sphericity", None, "Position relative to AP axis", "surface area",  "sphericity", None)
 	
 
-		self.plot_dist_to_nucleus_hists()
+		last_time_point = len(self.cell_tracker.list_of_cell_profiles_per_timestamp) -1
+
+		self.tissue_groups()
+
+		self.plot_groups_at_time_point(0, "flatness", "volume_by_res")
+		self.plot_groups_at_time_point(last_time_point, "flatness", "volume_by_res")
+
+		self.plot_groups_at_time_point(0, "elongation", "volume_by_res")
+		self.plot_groups_at_time_point(last_time_point, "elongation", "volume_by_res")
+
+		self.plot_group_average_per_time("volume_by_res")
+		self.plot_group_average_per_time("elongation")
+		self.plot_group_average_per_time("flatness")
+		self.plot_group_average_per_time("sphericity")
+		self.plot_group_average_per_time("cylindricity")
+		self.plot_group_average_per_time("vol_to_hull_vol_ratio")
+		self.plot_group_average_per_time("surface_area_by_res")
+		self.plot_group_average_per_time("entropy")
+
+
+		self.global_feature_plots()
+
+		self.groups_in_space(0)
+		self.groups_in_space(last_time_point)
+
+
+		self.shape_hist_for_groups_at_time_point(0)
+		self.shape_hist_for_groups_at_time_point(last_time_point)
+#		self.plot_dist_to_nucleus_hists()
+
+		self. plot_shape_hists_per_group()
 
 		pylab.show()		
 
@@ -257,7 +602,7 @@ class CellTrackerUI:
 			x_vals.extend( [ cell_profile.nucleus.x for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles] )
 			y_vals.extend( [ cell_profile.nucleus.y for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
 			z_vals.extend( [ cell_profile.nucleus.z for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
-			colors.extend( [ pylab.cm.winter(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.autumn(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		ax.scatter(x_vals, y_vals, z_vals, s=20, c = colors)
 		ax.set_xlabel('X axis')
@@ -295,7 +640,7 @@ class CellTrackerUI:
 				x2 = cp2.nucleus.x
 				y2 = cp2.nucleus.y
 		
-				ax.plot([y,y2], [x, x2], color =  pylab.cm.winter(color_idx[t1]), linewidth = 2 )
+				ax.plot([y,y2], [x, x2], color =  pylab.cm.autumn(color_idx[t1]), linewidth = 2 )
 				plot_tracklet_recursively(inc_node, ax)
 		
 

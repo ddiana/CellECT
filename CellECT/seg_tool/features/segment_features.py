@@ -250,7 +250,7 @@ def get_min_oriented_bounding_box_properties(segment):
 	equivalent_sphere_radius = (3 * segment_volume / 4. / np.pi)**(1./3)
 	equivalent_sphere_surface_area = 4 * np.pi * equivalent_sphere_radius**2
 
-	sphericity = segment.feature_dict["surface_area_by_res"] / equivalent_sphere_surface_area
+	sphericity = equivalent_sphere_surface_area / segment.feature_dict["surface_area_by_res"] 
 
 	segment.add_feature("sphericity", sphericity)
 
@@ -264,8 +264,8 @@ def get_min_oriented_bounding_box_properties(segment):
 
 	# elongation and flatness
 
-	segment.add_feature("elongation" , 1 - float(ordered[2] ) / ordered[1])
-	segment.add_feature("flatness" , 1 - float(ordered[1] ) / ordered[0])
+	segment.add_feature("elongation" , 1- float(ordered[1] ) / ordered[2])
+	segment.add_feature("flatness" , 1- float(ordered[0] ) / ordered[1] )
 
 	# squareness
 
@@ -316,7 +316,7 @@ def get_min_oriented_bounding_box_properties(segment):
 	eig1 = pca_eigenvalues[1]/ sum(pca_eigenvalues)
 	eig2 = pca_eigenvalues[2]/ sum(pca_eigenvalues)
 
-	entropy = 1. / np.log(3) *  (eig0 * np.log(eig0) + eig1 * np.log(eig1) + eig2 * np.log(eig2))
+	entropy = -  (eig0 * np.log2(eig0) + eig1 * np.log2(eig1) + eig2 * np.log2(eig2))
 
 	segment.add_feature("entropy", entropy)
 	
