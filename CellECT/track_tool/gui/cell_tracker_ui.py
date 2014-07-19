@@ -105,7 +105,7 @@ class CellTrackerUI:
 			bins = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_bins[1:]
 			hist = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_vals
 			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
-			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.autumn(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.seismic(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("Cell size histogram bins")
@@ -140,7 +140,7 @@ class CellTrackerUI:
 			if not feat3 is None:
 				feat3_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat3] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
 
-			colors.extend( [ pylab.cm.autumn(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.seismic(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		if not feat3 is None:
 			ax.scatter(feat1_vals, feat2_vals, feat3_vals, c = colors)
@@ -181,7 +181,7 @@ class CellTrackerUI:
 				hists = np.vstack((hists, hist))
 
 			hist = hists.mean(0)
-			pylab.plot(bins, hist , linewidth=3.0, color=pylab.cm.autumn(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0, color=pylab.cm.seismic(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("")
@@ -300,7 +300,7 @@ class CellTrackerUI:
 				for idx in gr:
 					sum_val += cp_list[idx].dict_of_features[feat]
 
-				feat_average.append(sum_val/float(len(cp_list)))
+				feat_average.append(sum_val/float(len(self.groups[group_name][t])))
 	
 			pylab.plot(range(num_time_points), feat_average, markers[counter], label = group_name, linewidth = 2)
 
@@ -335,19 +335,19 @@ class CellTrackerUI:
 				cp = self.cell_tracker.list_of_cell_profiles_per_timestamp[t].list_of_cell_profiles[c]
 
 				# notochord_group:
-				if cp.dict_of_features["dist_to_AP_axis"] < 10 and cp.dict_of_features["position_along_AP_axis"] > 50:
+				if cp.dict_of_features["dist_to_AP_axis"] < 10 and cp.dict_of_features["position_along_AP_axis"] > 60:
 					self.groups["notochord_group"][t].add(c)
 
 				# muscle_group:
-				if cp.dict_of_features["dist_to_AP_axis"] < 30 and cp.dict_of_features["dist_to_AP_axis"]>10 and cp.dict_of_features["position_along_AP_axis"] > 50 and cp.dict_of_features["centroid_dist_from_margin"]>10:
+				if cp.dict_of_features["dist_to_AP_axis"] < 20 and cp.dict_of_features["dist_to_AP_axis"]>5 and cp.dict_of_features["position_along_AP_axis"] > 60 and cp.dict_of_features["centroid_dist_from_margin"]>10:
 					self.groups["muscle_group"][t].add(c)
 
 				# skin_group
-				if cp.dict_of_features["centroid_dist_from_margin"] <10:
+				if cp.dict_of_features["centroid_dist_from_margin"] <15:
 					self.groups["skin_group"][t].add(c)
 
 				# head_group
-				if cp.dict_of_features["position_along_AP_axis"] < 50 and cp.dict_of_features["centroid_dist_from_margin"] >10 :#and cp.dict_of_features["dist_to_AP_axis"] < 20 :
+				if cp.dict_of_features["position_along_AP_axis"] < 50 and cp.dict_of_features["centroid_dist_from_margin"] >5 and cp.dict_of_features["dist_to_AP_axis"] < 20 :
 					self.groups["head_group"][t].add(c)
 
 
@@ -392,10 +392,10 @@ class CellTrackerUI:
 				for idx in gr:
 					feat_average += cp_list[idx].dict_of_features["border_to_nucleus_dist_hist"]
 		
-					feat_average = feat_average /float(feat_average.sum())
+					feat_average = feat_average /float( np.sum(feat_average))
 
 	
-				ax.plot(range(bin_count), feat_average.T,color=pylab.cm.autumn(colorshift) , label = group_name, linewidth = 2)
+				ax.plot(range(bin_count), feat_average.T,color=pylab.cm.seismic(colorshift) , label = group_name, linewidth = 2)
 
 			ax.set_title(group_name)
 			ax.set_xlabel("Cell size histogram bins")
@@ -569,8 +569,8 @@ class CellTrackerUI:
 		self.groups_in_space(last_time_point)
 
 
-		self.shape_hist_for_groups_at_time_point(0)
-		self.shape_hist_for_groups_at_time_point(last_time_point)
+#		self.shape_hist_for_groups_at_time_point(0)
+#		self.shape_hist_for_groups_at_time_point(last_time_point)
 #		self.plot_dist_to_nucleus_hists()
 
 		self. plot_shape_hists_per_group()
@@ -602,7 +602,7 @@ class CellTrackerUI:
 			x_vals.extend( [ cell_profile.nucleus.x for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles] )
 			y_vals.extend( [ cell_profile.nucleus.y for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
 			z_vals.extend( [ cell_profile.nucleus.z for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
-			colors.extend( [ pylab.cm.autumn(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.seismic(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		ax.scatter(x_vals, y_vals, z_vals, s=20, c = colors)
 		ax.set_xlabel('X axis')
@@ -640,7 +640,7 @@ class CellTrackerUI:
 				x2 = cp2.nucleus.x
 				y2 = cp2.nucleus.y
 		
-				ax.plot([y,y2], [x, x2], color =  pylab.cm.autumn(color_idx[t1]), linewidth = 2 )
+				ax.plot([y,y2], [x, x2], color =  pylab.cm.seismic(color_idx[t1]), linewidth = 2 )
 				plot_tracklet_recursively(inc_node, ax)
 		
 

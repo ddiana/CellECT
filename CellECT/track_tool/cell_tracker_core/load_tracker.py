@@ -167,8 +167,6 @@ def load_cell_tracker():
 		cell_tracker.add_cell_profiles_per_timestamp(cell_profile_per_ts)
 
 
-	pdb.set_trace()
-
 	if CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:
 		cell_tracker.build_lineage()
 	
