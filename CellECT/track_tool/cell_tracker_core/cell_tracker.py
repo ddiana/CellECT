@@ -10,7 +10,6 @@ import re
 #from openopt import LP
 import pdb
 import copy
-from munkres import Munkres
 from numpy import exp
 import cv2
 
@@ -224,7 +223,7 @@ class CellTracker(object):
 
 	def get_hungarian_association(self, cp, cp_list_1, cp_list_2):
 
-
+		from munkres import Munkres
 
 		if len(cp_list_2) ==0:
 			return None

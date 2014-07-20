@@ -328,7 +328,7 @@ class Segment(object):
 
 	def make_segment_contours(self, label_map):
 
-
+		
 		"Add the polygon contours for every segment as a list of points"
 
 		cropped_mask = self.mask #label_map[self.bounding_box.xmin : self.bounding_box.xmax, self.bounding_box.ymin : self.bounding_box.ymax, self.bounding_box.zmin:self.bounding_box.zmax] == self.label
@@ -336,7 +336,9 @@ class Segment(object):
 		for z in xrange(cropped_mask.shape[2]):
 			plane = copy.deepcopy(cropped_mask[:,:,z]).astype('uint8')
 			offset = (self.bounding_box.ymin,self.bounding_box.xmin)
-			contour_output = cv2.findContours(plane , cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_SIMPLE, offset = offset)
+
+			contour_output = cv2.findContours(plane.copy() , cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_SIMPLE, offset = offset)
+			
 			for idx in xrange(len( contour_output[0])):
 				
 				polygon = [(contour_output[0][idx][i][0][1], contour_output[0][idx][i][0][0], z + self.bounding_box.zmin) for i in xrange(len(contour_output[0][idx]))]
@@ -388,7 +390,7 @@ class Segment(object):
 
 			mid_slice = copy.deepcopy(self.get_mid_slice())
 
-			contour_output = cv2.findContours(mid_slice.astype('uint8'),cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
+			contour_output = cv2.findContours(mid_slice.astype('uint8').copy(),cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_SIMPLE,offset = (self.bounding_box.ymin,self.bounding_box.xmin))
 
 			#idx = np.argmax([len(x) for x in contour_output[0]])
 

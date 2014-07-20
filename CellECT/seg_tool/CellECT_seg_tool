@@ -10,7 +10,6 @@ import CellECT.seg_tool.module_info
 import pdb
 import numpy as np
 import scipy.io as spio
-from PyML import VectorDataSet
 import sys
 from termcolor import colored
 import os
