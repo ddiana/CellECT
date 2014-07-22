@@ -89,6 +89,47 @@ class CellTrackerUI:
 
 
 
+	def plot_feature_histograms_over_time(self, feat):
+
+		fig = pylab.figure(figsize=(7,3), facecolor='white')
+		fig.canvas.set_window_title("Hist over time: %s" % feat)
+
+		color_idx = np.linspace(0, 1, len(self.cell_tracker.list_of_cell_profiles_per_timestamp))
+	
+		bins = self.cell_tracker.list_of_cell_profiles_per_timestamp[0].feature_histograms[feat][1]
+
+		# histogram of cell sizes
+		for colorshift, i in zip(color_idx, xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp))):
+
+			hist = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].feature_histograms[feat][0]
+			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
+			pylab.plot(bins[:-1], hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
+			pylab.hold(True)
+		
+		pylab.xlabel("Histogram bins")
+		pylab.ylabel("p.d.f.")
+		pylab.grid()
+		fig.canvas.set_window_title("Histogram over time: %s" % feat)
+	
+
+
+	def plot_2dhist_at_timestamp(self, feature_pair, t):
+
+		feat1 = feature_pair[0]
+		feat2 = feature_pair[1]
+
+		fig = pylab.figure(figsize=(6,5), facecolor='white')
+		fig.canvas.set_window_title("Hist %s Vs %s at t=%d" % (feat1, feat2, t))
+
+		hist, bins1, bins2 = self. cell_tracker.list_of_cell_profiles_per_timestamp[t].feature_histograms[feature_pair]
+		
+		pylab.imshow(hist, extent = [min(bins1), max(bins1), min(bins2), max(bins2)], cmap="Blues",  aspect='auto')
+
+		pylab.colorbar()
+		pylab.xlabel(feat1)
+		pylab.ylabel(feat2)
+		pylab.grid()
+
 	def plot_size_histograms_at_timestamp(self):
 		"""
 		plot of histogram of cell sizes, color coded from green to blue based on timestamp
@@ -105,7 +146,7 @@ class CellTrackerUI:
 			bins = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_bins[1:]
 			hist = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].size_hist_vals
 			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
-			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.seismic(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("Cell size histogram bins")
@@ -140,7 +181,7 @@ class CellTrackerUI:
 			if not feat3 is None:
 				feat3_vals.extend( [self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles[idx].dict_of_features[feat3] for idx in xrange(len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))]	)
 
-			colors.extend( [ pylab.cm.seismic(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.winter(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		if not feat3 is None:
 			ax.scatter(feat1_vals, feat2_vals, feat3_vals, c = colors)
@@ -181,7 +222,7 @@ class CellTrackerUI:
 				hists = np.vstack((hists, hist))
 
 			hist = hists.mean(0)
-			pylab.plot(bins, hist , linewidth=3.0, color=pylab.cm.seismic(colorshift), label="t = "+str(ts))
+			pylab.plot(bins, hist , linewidth=3.0, color=pylab.cm.winter(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("")
@@ -347,7 +388,7 @@ class CellTrackerUI:
 					self.groups["skin_group"][t].add(c)
 
 				# head_group
-				if cp.dict_of_features["position_along_AP_axis"] < 50 and cp.dict_of_features["centroid_dist_from_margin"] >5 and cp.dict_of_features["dist_to_AP_axis"] < 20 :
+				if cp.dict_of_features["position_along_AP_axis"] < 50 and cp.dict_of_features["centroid_dist_from_margin"] >5 and cp.dict_of_features["dist_to_AP_axis"] < 25:
 					self.groups["head_group"][t].add(c)
 
 
@@ -395,7 +436,7 @@ class CellTrackerUI:
 					feat_average = feat_average /float( np.sum(feat_average))
 
 	
-				ax.plot(range(bin_count), feat_average.T,color=pylab.cm.seismic(colorshift) , label = group_name, linewidth = 2)
+				ax.plot(range(bin_count), feat_average.T,color=pylab.cm.winter(colorshift) , label = group_name, linewidth = 2)
 
 			ax.set_title(group_name)
 			ax.set_xlabel("Cell size histogram bins")
@@ -509,8 +550,15 @@ class CellTrackerUI:
 
 	def plot_stats(self):
 
+
+		last_time_point = len(self.cell_tracker.list_of_cell_profiles_per_timestamp) -1
+
+		has_groups = True
+		if has_groups:
+
+
 	
-#		self.plot_size_histograms_at_timestamp()
+		#self.plot_size_histograms_at_timestamp()
 
 		#"dist_to_AP_axis", "angle_with_AP_axis", "position_along_AP_axis", "size",  "min_distance_from_margin" ]
 		#self.plot_feature_scatter_plot("size", "dist_to_AP_axis", "position_along_AP_axis", "Size, Distance to AP axis, Position along AP axis", "size", "distance to AP", "percent along AP")
@@ -543,37 +591,58 @@ class CellTrackerUI:
 #		self.plot_feature_scatter_plot("surface_area_by_res", "sphericity", None, "Position relative to AP axis", "surface area",  "sphericity", None)
 	
 
-		last_time_point = len(self.cell_tracker.list_of_cell_profiles_per_timestamp) -1
+			self.tissue_groups()
 
-		self.tissue_groups()
+			self.plot_groups_at_time_point(0, "flatness", "volume_by_res")
+			self.plot_groups_at_time_point(last_time_point, "flatness", "volume_by_res")
 
-		self.plot_groups_at_time_point(0, "flatness", "volume_by_res")
-		self.plot_groups_at_time_point(last_time_point, "flatness", "volume_by_res")
+			self.plot_groups_at_time_point(0, "elongation", "volume_by_res")
+			self.plot_groups_at_time_point(last_time_point, "elongation", "volume_by_res")
 
-		self.plot_groups_at_time_point(0, "elongation", "volume_by_res")
-		self.plot_groups_at_time_point(last_time_point, "elongation", "volume_by_res")
+			self.plot_group_average_per_time("volume_by_res")
+			self.plot_group_average_per_time("elongation")
+			self.plot_group_average_per_time("flatness")
+			self.plot_group_average_per_time("sphericity")
+			self.plot_group_average_per_time("cylindricity")
+			self.plot_group_average_per_time("vol_to_hull_vol_ratio")
+			self.plot_group_average_per_time("surface_area_by_res")
+			self.plot_group_average_per_time("entropy")
 
-		self.plot_group_average_per_time("volume_by_res")
-		self.plot_group_average_per_time("elongation")
-		self.plot_group_average_per_time("flatness")
-		self.plot_group_average_per_time("sphericity")
-		self.plot_group_average_per_time("cylindricity")
-		self.plot_group_average_per_time("vol_to_hull_vol_ratio")
-		self.plot_group_average_per_time("surface_area_by_res")
-		self.plot_group_average_per_time("entropy")
+			self.groups_in_space(0)
+			self.groups_in_space(last_time_point)
+
+			self. plot_shape_hists_per_group()
+
+
+		self. plot_feature_histograms_over_time("volume_by_res")
+		self. plot_feature_histograms_over_time("surface_area_by_res")
+		self. plot_feature_histograms_over_time("flatness")
+		self. plot_feature_histograms_over_time("elongation")
+		self. plot_feature_histograms_over_time("sphericity")
+		self. plot_feature_histograms_over_time("entropy")
+
+		#self.plot_feature_scatter_plot("centroid_dist_from_margin", "flatness", None, "Feature by position", "distance to margin",  "flatness", None)
+		#self.plot_feature_scatter_plot("centroid_dist_from_margin", "volume_by_res", None, "Feature by position", "distance to margin",  "volume", None)
+
+
+		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "volume_by_res"), 0)
+		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "volume_by_res"), last_time_point)
+
+
+		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), 0)
+		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), last_time_point)
 
 
 		self.global_feature_plots()
 
-		self.groups_in_space(0)
-		self.groups_in_space(last_time_point)
 
 
-#		self.shape_hist_for_groups_at_time_point(0)
-#		self.shape_hist_for_groups_at_time_point(last_time_point)
-#		self.plot_dist_to_nucleus_hists()
 
-		self. plot_shape_hists_per_group()
+##		self.shape_hist_for_groups_at_time_point(0)
+##		self.shape_hist_for_groups_at_time_point(last_time_point)
+##		self.plot_dist_to_nucleus_hists()
+
+
 
 		pylab.show()		
 
@@ -602,7 +671,7 @@ class CellTrackerUI:
 			x_vals.extend( [ cell_profile.nucleus.x for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles] )
 			y_vals.extend( [ cell_profile.nucleus.y for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
 			z_vals.extend( [ cell_profile.nucleus.z for cell_profile in self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles])
-			colors.extend( [ pylab.cm.seismic(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
+			colors.extend( [ pylab.cm.winter(colorshift) for i in xrange (len(self.cell_tracker.list_of_cell_profiles_per_timestamp[i].list_of_cell_profiles))])
 
 		ax.scatter(x_vals, y_vals, z_vals, s=20, c = colors)
 		ax.set_xlabel('X axis')
@@ -640,7 +709,7 @@ class CellTrackerUI:
 				x2 = cp2.nucleus.x
 				y2 = cp2.nucleus.y
 		
-				ax.plot([y,y2], [x, x2], color =  pylab.cm.seismic(color_idx[t1]), linewidth = 2 )
+				ax.plot([y,y2], [x, x2], color =  pylab.cm.winter(color_idx[t1]), linewidth = 2 )
 				plot_tracklet_recursively(inc_node, ax)
 		
 

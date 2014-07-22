@@ -606,14 +606,15 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 			#config_file_location =  "%s/config_files/timestamp_%d.cnf" % (self.workspace_data.workspace_location, index)
 		
-			if self.checkBox_propagate.isChecked():
-			# if propagate is checked, then run sequentially, otherwise, run in parallel.
-				self.call_cellect_seg_cleanup(config_file_location, index)
+#			if self.checkBox_propagate.isChecked():
+#			# if propagate is checked, then run sequentially, otherwise, run in parallel.
+#				self.call_cellect_seg_cleanup(config_file_location, index)
 
-			else:  # spawn a new thread
-				p = threading.Thread(target = self.call_cellect_seg_cleanup, args=(config_file_location, index))
-				p.start()
+#			else:  # spawn a new thread
+#				p = threading.Thread(target = self.call_cellect_seg_cleanup, args=(config_file_location, index))
+#				p.start()
 
+			self.call_cellect_seg_cleanup(config_file_location, index)
 			
 			print config_file_location
 
@@ -741,6 +742,8 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 			else:  # spawn a new thread
 				p = threading.Thread(target = self.call_cellect_seg_tool_preliminary, args=(config_file_location, index))
 				p.start()
+
+
 
 			
 			print config_file_location

@@ -14,6 +14,7 @@ from CellECT.track_tool.cell_tracker_core import cell_tracker as ct
 import CellECT.track_tool.globals
 import CellECT.seg_tool.globals
 import CellECT.seg_tool.seg_utils.bounding_box as bbx
+from CellECT.seg_tool.seg_utils.misc import print_progress
 
 """
 Initialize cell tracker.
@@ -161,11 +162,20 @@ def load_cell_tracker():
 	cell_tracker = ct.CellTracker()
 	time_stamps = CellECT.track_tool.globals.PARAMETER_DICT["time-stamps"]
 
+	print "Loading segmentation data."
+
+	counter = 0
 	for t in time_stamps:
+
+
 		cell_profiles = parse_file_at_timestamp( os.path.join(CellECT.track_tool.globals.PARAMETER_DICT["segs-path"] , "timestamp_" + str(t) +"_segment_props.xml"),t)
 		cell_profile_per_ts = cp.CellProfilesPerTimestamp(t,cell_profiles)
 		cell_tracker.add_cell_profiles_per_timestamp(cell_profile_per_ts)
 
+		counter += 1
+		print_progress(counter, len(time_stamps))
+
+	cell_tracker.compute_stats()
 
 	if CellECT.track_tool.globals.PARAMETER_DICT["with_tracker"]:
 		cell_tracker.build_lineage()

@@ -169,6 +169,84 @@ class CellTracker(object):
 				self.graph.add_node(node_name)
 
 
+	def determine_histogram_max_bin(self, feat):
+
+
+		feat_sum = 0
+		for cp in self. list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles:
+			feat_sum += cp.dict_of_features[feat]	
+		feat_avg = feat_sum / float(len(self.list_of_cell_profiles_per_timestamp[0].list_of_cell_profiles))
+
+		max_val = feat_avg * 2
+
+		return max_val
+
+	def get_feature_hist_over_time(self, feat):
+
+
+		num_bins = 25
+		min_val = 0
+		max_val = self. determine_histogram_max_bin(feat)
+
+
+		for t in xrange(len(self.list_of_cell_profiles_per_timestamp)):
+		
+			cpt = self.list_of_cell_profiles_per_timestamp[t]
+
+
+			vals_list = [x.dict_of_features[feat] for x in cpt.list_of_cell_profiles]
+			hist = np.histogram( vals_list, num_bins, (min_val, max_val) )
+
+			bins = hist[1]
+			hist = hist[0] / float( np.sum(hist[0]))
+			self.list_of_cell_profiles_per_timestamp[t].feature_histograms[feat] = (hist, bins)
+
+
+	def get_feature_hist_over_time_2d(self, feature_pair):
+
+		feat1 = feature_pair[0]
+		feat2 = feature_pair[1]
+
+		num_bins = 10
+		min_val = 0
+		feat_sum = 0
+		max_val1 = self.determine_histogram_max_bin(feat1)
+		max_val2 = self.determine_histogram_max_bin(feat2)
+
+
+
+		for t in xrange(len(self.list_of_cell_profiles_per_timestamp)):
+		
+			cpt = self.list_of_cell_profiles_per_timestamp[t]
+
+			vals_list1 = [x.dict_of_features[feat1] for x in cpt.list_of_cell_profiles]
+			vals_list2 = [x.dict_of_features[feat2] for x in cpt.list_of_cell_profiles]
+
+			hist = np.histogram2d( vals_list1, vals_list2, num_bins, [[min_val, max_val1], [min_val, max_val2]] )
+
+			bins1 = hist[1]
+			bins2 = hist[2]
+			hist = hist[0] / float( np.sum(hist[0]))
+			self.list_of_cell_profiles_per_timestamp[t].feature_histograms[(feat1, feat2)] = (hist, bins1, bins2)
+
+
+
+	def compute_stats(self):
+
+		self.get_feature_hist_over_time( "volume_by_res" )
+		self.get_feature_hist_over_time( "flatness" )
+		self.get_feature_hist_over_time( "elongation" )
+		self.get_feature_hist_over_time( "sphericity" )
+		self.get_feature_hist_over_time( "surface_area_by_res" )
+		self.get_feature_hist_over_time( "entropy" )
+
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "sphericity"))
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "flatness"))
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "elongation"))
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "entropy"))
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "volume_by_res"))
+		self.get_feature_hist_over_time_2d( ("centroid_dist_from_margin", "surface_area_by_res"))
+
 
 
 	def cost_for_pair(self, cp1, cp2):

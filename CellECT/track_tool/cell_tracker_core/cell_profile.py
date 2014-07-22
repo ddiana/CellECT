@@ -50,16 +50,19 @@ class CellProfilesPerTimestamp(object):
 
 		self.list_of_cell_profiles = copy.deepcopy(input_list_of_cell_profiles)
 		self.time_stamp = time_stamp
-		self.get_stats()
+		self.feature_histograms = {}
+#		self.get_stats(100000)
 
 		self.seg_label_to_cp_list_index = dict((cp.label, index) for index, cp in enumerate(self.list_of_cell_profiles) )		
 
-	def get_stats(self):
+	def get_stats(self, max_size):
 
 		sizes_list = [x.size for x in self.list_of_cell_profiles]
-		hist = np.histogram( sizes_list, 25, (100,10000) )
+		hist = np.histogram( sizes_list, 25, (0, max_size) )
 		self.size_hist_bins = hist[1]
+
 		self.size_hist_vals = hist[0] / float(np.sum(hist[0]))
+
 		self.size_mean = np.mean(sizes_list)
 		self.size_stdev = np.std(sizes_list)
 
