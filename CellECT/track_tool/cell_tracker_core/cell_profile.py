@@ -51,6 +51,7 @@ class CellProfilesPerTimestamp(object):
 		self.list_of_cell_profiles = copy.deepcopy(input_list_of_cell_profiles)
 		self.time_stamp = time_stamp
 		self.feature_histograms = {}
+		self.feature_histograms2d = {}
 #		self.get_stats(100000)
 
 		self.seg_label_to_cp_list_index = dict((cp.label, index) for index, cp in enumerate(self.list_of_cell_profiles) )		

@@ -41,6 +41,18 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 
 	# classified_segments = [ (label, class_prediction, discriminant_value ) ]
 
+	minval = 0
+	maxval =0
+
+	if len(classified_segments[2]):
+		minval = min (classified_segments[2])
+		maxval = max(classified_segments[2])
+
+	values = np.array(classified_segments[2])
+	values -= minval
+	values += maxval - minval
+
+
 	uncertainty_map = np.zeros(watershed.shape)
 	
 	for i in xrange(len(classified_segments[0])):
@@ -56,22 +68,24 @@ def get_segment_uncertainty_map(watershed, collection_of_segments, classified_se
 		segment = collection_of_segments.list_of_segments[i]
 		bbx = segment.bounding_box
 		
-		crop_uncert = uncertainty_map[bbx.xmin:bbx.xmax+1, bbx.ymin:bbx.ymax+1, bbx.zmin:bbx.zmax+1]
+
 		mask = segment.mask
-		crop_uncert = crop_uncert * (mask) * classified_segments[2][i] + crop_uncert * (1-mask)
-		
+		uncertainty_map[bbx.xmin:bbx.xmax+1, bbx.ymin:bbx.ymax+1, bbx.zmin:bbx.zmax+1] = mask * values[i] + uncertainty_map[bbx.xmin:bbx.xmax+1, bbx.ymin:bbx.ymax+1, bbx.zmin:bbx.zmax+1] * (1-mask)
+	
+#	pdb.set_trace()
+#	minval = min (classified_segments)
 
+#	minval = uncertainty_map.min()
 
-	minval = uncertainty_map.min()
-	uncertainty_map -= minval
-	uncertainty_map = (uncertainty_map != abs(minval)) * (uncertainty_map.max() - uncertainty_map)
+#	uncertainty_map -= minval
+#	uncertainty_map = (uncertainty_map != abs(minval)) * (uncertainty_map.max() - uncertainty_map)
 	
 #	uncertainty_map = (uncertainty_map == 0) * np.min(uncertainty_map) + (uncertainty_map !=0) * uncertainty_map
 #	uncertainty_map += np.min(uncertainty_map)
 #	uncertainty_map /= float(np.max(uncertainty_map))
 #	uncertainty_map *= 255
 	
-	
+
 
 	return uncertainty_map
 
@@ -184,7 +198,7 @@ def show_uncertainty_map_and_get_feedback(vol, watershed, segment_collection, cl
 	pylab.subplots_adjust(bottom=0.25)
 	min_var_cmap_uncert = uncertainty_map.min()
 	max_var_cmap_uncert = uncertainty_map.max()
-	l2 =  pylab.imshow(uncertainty_map[:,:,z0], interpolation="nearest", cmap = "PRGn", vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert, picker = True)   #cax = l2
+	l2 =  pylab.imshow(uncertainty_map[:,:,z0], interpolation="nearest", cmap = "spectral", vmin= min_var_cmap_uncert, vmax = max_var_cmap_uncert*1.04, picker = True)   #cax = l2
 	pylab.axis()#[0, vol2.shape[0], 0, vol2.shape[1]])
 	ax2.set_title("Uncertainty Map")
 

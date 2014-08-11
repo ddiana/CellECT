@@ -103,7 +103,7 @@ class CellTrackerUI:
 
 			hist = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].feature_histograms[feat][0]
 			ts = self.cell_tracker.list_of_cell_profiles_per_timestamp[i].time_stamp
-			pylab.plot(bins[:-1], hist , linewidth=3.0,color=pylab.cm.winter(colorshift), label="t = "+str(ts))
+			pylab.plot(bins[:-1], hist , linewidth=3.0,color=pylab.cm.jet(colorshift), label="t = "+str(ts))
 			pylab.hold(True)
 		
 		pylab.xlabel("Histogram bins")
@@ -491,6 +491,8 @@ class CellTrackerUI:
 		val_list = [vol_sum, num_segs, vol_avg]
 		feat_list = ["cubic microns", "count", "cubic microns"]
 
+#		pdb.set_trace()
+
 		for i in xrange(len(ax_list)):
 			ax_list[i].plot(range(num_time_points), val_list[i], markers[counter], linewidth = 2)
 			ax_list[i].set_title( title_list[i])
@@ -629,11 +631,11 @@ class CellTrackerUI:
 		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "volume_by_res"), last_time_point)
 
 
-		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), 0)
-		self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), last_time_point)
+		#self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), 0)
+		#self.plot_2dhist_at_timestamp(("centroid_dist_from_margin", "flatness"), last_time_point)
 
 
-		self.global_feature_plots()
+		#self.global_feature_plots()
 
 
 

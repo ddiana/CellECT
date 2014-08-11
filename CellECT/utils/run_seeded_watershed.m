@@ -17,9 +17,9 @@ h = h / max(h(:));
 [mx, my, mz] = ndgrid(1 : 5, 1:5, 1:5);
 sphere_mask = ((mx - 3 ) .^2 + (my-3).^2 + (mz- 3).^2  <5);
 
-
-p = path;
-path(p, [pwd, '/fast_marching']);
+% 
+% p = path;
+% path(p, [pwd, '/fast_marching']);
 
 bg_mask = [];
 

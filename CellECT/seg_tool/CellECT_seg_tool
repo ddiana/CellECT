@@ -118,18 +118,18 @@ def main():
 	print "Loading config parameters..."
 	loader.read_program_parameters(config_file_path)
 
-	## LOADING TRAINING DATA AND TRAINING CLASSIFIER ###########################
+#	## LOADING TRAINING DATA AND TRAINING CLASSIFIER ###########################
 
 	cellness_metric = cellness.CellnessMetric()
-	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
+#	if not CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
-		print colored("================================================================================",'red')
-		print colored("              Loading training data and training cellness metric:", 'red')
-		print colored("================================================================================",'red')
-	
-		
-		cellness.load_generic_training_data(cellness_metric)
-		cellness_metric.train()
+#		print colored("================================================================================",'red')
+#		print colored("              Loading training data and training cellness metric:", 'red')
+#		print colored("================================================================================",'red')
+#	
+#		
+#		cellness.load_generic_training_data(cellness_metric)
+#		cellness_metric.apply()
 
 
 	## LOADING DATA FOR CURRENT VOLUME #########################################
@@ -253,6 +253,8 @@ def main():
 
 	made_changes = False
 
+
+
 	if CellECT.seg_tool.globals.DEFAULT_PARAMETER["cleanup_seg"]:
 
 		nuclei_collection, seed_collection, watershed, bg_seeds, bg_prior, vol = load_all.load_last_save()
@@ -292,6 +294,11 @@ def main():
 
 	else:
 
+		incorrect_segments = set()
+
+		# used to determine the new labels of correct segments from previous iter
+		correct_segment_centroids = set()
+
 		while (ask_feedback or CellECT.seg_tool.globals.should_load_last_save):
 
 
@@ -321,6 +328,8 @@ def main():
 
 			if not 	CellECT.seg_tool.globals.DEFAULT_PARAMETER["no_cellness_metric"]:
 
+
+				
 			
 				#test_data_svm = call_silent.call_silent_process(VectorDataSet, test_data)
 
@@ -330,9 +339,16 @@ def main():
 				class_prediction = []
 				discriminant_value = []
 
-			
-				for segment in collection_of_ws_segments.list_of_segments:
-					prd, disc = cellness_metric.test_segment(segment)
+				correct_labels_this_round = []
+				for centroid in correct_segment_centroids:
+					new_label = watershed[centroid[0], centroid[1], centroid[2]]
+					if new_label >1:  # until i make sure the label map is exactly the same for the correct segments
+						correct_labels_this_round.append(new_label)
+				cellness_metric.apply_metric(collection_of_ws_segments, correct_labels_this_round)
+
+				for seg_idx in xrange( len(collection_of_ws_segments.list_of_segments)):
+					segment = collection_of_ws_segments.list_of_segments[seg_idx]
+					prd, disc = cellness_metric.test_segment(seg_idx)
 					class_prediction.append(prd)
 					discriminant_value.append(disc)
 				#class_prediction, discriminant_value = cellness.classify_segments(generic_classifier,test_data) #test_data_svm)
@@ -355,6 +371,8 @@ def main():
 
 			correct_labels = set()
 			correct_segments = set()
+
+
 
 			if CellECT.seg_tool.globals.DEFAULT_PARAMETER["bisque"]:
 				# TODO: bisque UI
@@ -388,16 +406,22 @@ def main():
 
 					# split predict too slow, not using this anymore.
 					#split_predicted = split_pred.SplitPredict(vol,watershed, collection_of_ws_segments)
+
+					
+
+
 					all_user_feedback, to_merge_predicted, to_delete_predicted = main_gui.show_uncertainty_map_and_get_feedback( vol, watershed, collection_of_ws_segments, classified_segments, nuclei_collection, seed_collection, seed_segment_collection, watershed_old, correct_labels, bg_seeds, bg_prior, vol_nuclei=vol_nuclei)
 
 
 					for label in correct_labels:
 
 						idx = collection_of_ws_segments.segment_label_to_list_index_dict[label]
-						correct_segments.add(collection_of_ws_segments.list_of_segments[idx])
+						correct_segment_centroids.add(collection_of_ws_segments.list_of_segments[idx].feature_dict["centroid"])
 
-					cellness_metric.add_training_examples(correct_segments, ["Correct" for label in correct_labels], False)
-					cellness_metric.train()
+#					cellness_metric.add_training_examples(correct_segments, ["Correct" for label in correct_labels], False)
+
+
+					#cellness_metric.apply_metric(collection_of_ws_segments) #, correct_labels, incorrect_labels)
 
 			## USE FEEDBACK ########################################################
 
@@ -457,9 +481,17 @@ def main():
 
 					watershed_old = watershed
 
-					cellness_metric.add_training_examples(list(incorrect_segments), ["Incorrect" for i in xrange(len(incorrect_segments))], True )
 
-					cellness_metric.train()
+
+					incorrect_labels = [x.label for x in incorrect_segments]
+					cellness_metric.add_examples_by_label(collection_of_ws_segments,correct_labels, incorrect_labels)
+
+
+
+
+#					cellness_metric.add_training_examples(list(incorrect_segments), ["Incorrect" for i in xrange(len(incorrect_segments))], True )
+
+#					cellness_metric.train(collection_of_ws_segments, , [segment.label for segment in incorrect_segments])
 
 
 					## Rerun Watershed if necessary ################################
@@ -472,7 +504,7 @@ def main():
 					#watershed = lm_tools.recolor_label_map_correctly (watershed, nuclei_collection, seed_collection, collection_of_ws_segments, seed_segment_collection)
 
 				else:
-					ask_feedback = False
+					ask_feedback = True
 
 
 

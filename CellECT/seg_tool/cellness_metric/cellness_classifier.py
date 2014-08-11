@@ -14,6 +14,11 @@ import os
 from termcolor import colored
 import sys
 import copy
+from sklearn.cluster import MeanShift
+from sklearn.neighbors import KNeighborsClassifier
+from pygraph.algorithms.minmax import shortest_path
+from sklearn.semi_supervised import label_propagation
+from pygraph.classes.graph import graph
 
 # Imports from this project
 from CellECT.seg_tool.seg_io import load_all
@@ -45,14 +50,27 @@ class CellnessMetric(object):
 		self.positive_examples_specific = []
 		self.negative_examples_specific = []
 
+
+		self.positive_examples = []
+		self.negative_examples = []
+
 		self.mean_per_dim_specific = []
 		self.std_per_dim_specific = []
 		self.mean_per_dim_generic = []
 		self.std_per_dim_generic = []
+	
+		self.hist_of_feature = {}
+		self.bins_of_feature = {}
 
+		self.data_pos = None
+		self.data_neg = None
+
+		self.feature_set = []
 
 		self.generic_classifier = None
 		self.specific_classifier = None
+
+		self.feedback_correct_score = None
 
 	def add_training_examples(self,list_of_segments, list_of_labels, generic_only = True):
 
@@ -92,14 +110,292 @@ class CellnessMetric(object):
 					vector.append (segment.feature_dict[feature_name])
 		return vector
 
-	def train(self):
+
+	def determine_histogram_max_bin(self, feat, segment_collection):
+
+
+		feat_sum = 0
+		for seg in segment_collection.list_of_segments:
+			feat_sum += seg.feature_dict[feat]	
+		feat_avg = feat_sum / float(len(segment_collection.list_of_segments))
+
+		max_val = feat_avg * 2
+
+		return max_val
+
+	def get_spatial_histogram(self, feature_set, segment_collection):
+
+
+		num_bins = 5
+		min_val = 0
+		feat_sum = 0
+
+
+		#max_val_AP_dist = self.determine_histogram_max_bin("dist_to_AP_axis", segment_collection)
+		#max_val_AP_pos = self.determine_histogram_max_bin("position_along_AP_axis", segment_collection)
+		#max_val_dist_margin = self. determine_histogram_max_bin("centroid_dist_from_margin", segment_collection)
+
+		#max_val_feat = [ self. determine_histogram_max_bin(feat, segment_collection) for feat in feature_set]
+
+
+		vals_ap_pos = [x.feature_dict["position_along_AP_axis"] for x in segment_collection.list_of_segments]
+		vals_ap_dist = [x.feature_dict["dist_to_AP_axis"] for x in segment_collection.list_of_segments]
+		vals_dist_margin = [x.feature_dict["centroid_dist_from_margin"] for x in segment_collection.list_of_segments]
+		
+		counter = 0
+
+		for feat in feature_set:
+			vals = [x.feature_dict[feat] for x in segment_collection.list_of_segments]
+
+			vals_vector = np.array(zip ([vals, vals_ap_pos, vals_ap_dist, vals_dist_margin])).squeeze().T
+
+			
+
+			hist, bins = np.histogramdd( vals_vector, bins = [num_bins, num_bins, num_bins, num_bins]) #,   range =[ min_val, max_val_feat, min_val, max_val_AP_pos, min_val, max_val_AP_dist, min_val, max_val_dist_margin] )
+
+
+			self.hist_of_feature[feat] = hist / float (hist.max())
+			self.bins_of_feature[feat] = bins[0]
+			
+			if counter ==0:
+
+				self.bins_of_feature["position_along_AP_axis"]= bins[1]
+				self.bins_of_feature["dist_to_AP_axis"] =bins[2]
+				self.bins_of_feature["centroid_dist_from_margin"] = bins[3]
+			counter += 1			
+		
+
+
+	
+	def get_cluster_centers(self, segment_collection):
+
+		self. normalized_features  = np.zeros((len(self.feature_set), len(segment_collection.list_of_segments)))
+		
+	
+		counter = 0
+		for feat in self.feature_set:
+
+			vals = np.array([x.feature_dict[feat] for x in segment_collection.list_of_segments])
+			self.normalized_features[counter,:] = (vals - vals.mean()	)/ vals.std()
+
+			counter += 1
+
+		ms = MeanShift()
+		ms.fit(self.normalized_features.T)
+		
+		self.cluster_labels = ms.labels_
+		self.cluster_centers = ms.cluster_centers_
+
+
+		self.knn = KNeighborsClassifier()
+		self.knn.fit (self.normalized_features.T, self.cluster_labels)		
+
+
+
+	def get_dissimilarity_to_neighbors(self, segment_collection):
+
+		# HIGH VALUES FOR GOOD SEGMENTS
+		# between 0 and 1
+	
+		num_segs = len(segment_collection.list_of_segments)
+		self. neighbor_dissimilarity = np.zeros((num_segs, num_segs))
+
+
+
+		for i in xrange( num_segs ):
+
+			seg = segment_collection.list_of_segments[i]
+			neighbors = [x[0] for x in seg.feature_dict["mean_intensity_border_with_neighbor"]]
+
+			for n_label in neighbors:
+				n = segment_collection.segment_label_to_list_index_dict[n_label]
+				if self.neighbor_dissimilarity[i,n] ==0:
+					val = self. get_dissimilarity(i, n)
+					self.neighbor_dissimilarity[i,n] = val
+					self.neighbor_dissimilarity[n,i] = val
+
+
+		self.avg_neighbor_dissimilarity = []
+		for i in xrange(num_segs):
+			val = np.mean(filter(lambda x: x>0, self. neighbor_dissimilarity[i,:]))
+			if np.isnan(val):
+				val = 0
+			self.avg_neighbor_dissimilarity .append(val)
+		
+
+		self.avg_neighbor_dissimilarity = 1- np.array(self.avg_neighbor_dissimilarity ) / max(self.avg_neighbor_dissimilarity)
+
+
+
+
+	def get_dissimilarity(self, idx1, idx2):
+
+		
+		feature_dist = np.linalg.norm(self.normalized_features[:,idx1] - self.normalized_features[:,idx2])
+
+		idx1_probab = self.knn.predict_proba(self.normalized_features[:,idx1])[0]
+		idx2_probab = self.knn.predict_proba(self.normalized_features[:,idx2])[0]
+
+
+		# expected cluster distance
+		cluster_dist = 0 
+		if len(idx1_probab)>1:
+			for i in xrange(len(idx2_probab)-1):
+				for j in xrange(i+1, len(idx2_probab)):
+					cluster_dist = idx1_probab[j] * idx2_probab[i] * np.linalg.norm( self.cluster_centers[i] - self. cluster_centers[j])
+
+		cluster_dist = 0
+
+		return feature_dist + cluster_dist
+		
+	def select_features(self, segment_collection):
+
+		if len(self.feature_set)>0:
+			return
+
+		all_features = ["volume_by_res", "flatness", "elongation", "sphericity", "cylindricity", "entropy", "vol_by_res_to_enclosing_box_vol_ratio"]
+		self.get_spatial_histogram(all_features, segment_collection)
+
+		self.entropy_of_histogram = {}	
+
+		for feat in all_features:
+
+			self.entropy_of_histogram[feat] = - sum((x*np.log(x) for x in filter(lambda y: y>0,self.hist_of_feature[feat].flatten())))	
+
+		thresh = np.median(self.entropy_of_histogram.values())
 
 		
 
-		self.train_generic()
-		self.train_specific()
+		for feat in self.entropy_of_histogram.keys():
+			if self.entropy_of_histogram[feat] <= thresh:
+				self.feature_set.append(feat)
+
+		print "Using features:", self.feature_set
+
+	def apply_metric(self, segment_collection = None, correct_labels=None): #, correct_labels = [], incorrect_labels = []):
+
+		if segment_collection is not None:
+			self.select_features(segment_collection)
+			
+			self.get_cluster_centers(segment_collection)
+			self.get_dissimilarity_to_neighbors(segment_collection)
+			self.get_intrinsic_scores(segment_collection)
 
 
+			self.feedback_score(segment_collection, correct_labels)
+
+#			#self.get_model_scores(segment_collection, feature_set)
+
+
+			self.propagate_labels(segment_collection)
+
+
+	def add_examples_by_label(self, segment_collection, positive_labels, negative_labels):		
+		
+
+		idx_pos = [segment_collection.segment_label_to_list_index_dict[x] for x in positive_labels]
+		idx_neg = [segment_collection.segment_label_to_list_index_dict[x] for x in negative_labels]
+		
+		
+		data_pos = np.vstack([[self.convexity[i], self.avg_border_with_neighbors_scores[i], self.border_to_interior[i], self.avg_neighbor_dissimilarity[i]] for i in idx_pos])
+		data_neg = np.vstack([[self.convexity[i], self.avg_border_with_neighbors_scores[i], self.border_to_interior[i], self.avg_neighbor_dissimilarity[i]] for i in idx_neg])
+
+		if self.data_pos is not None:
+			self.data_pos = np.vstack([self.data_pos, data_pos])
+
+		else:
+			self.data_pos = data_pos
+
+		if self.data_neg is not None:
+			self.data_neg = np.vstack([self.data_neg, data_neg])
+		else:
+			self.data_neg = data_neg
+
+
+	def propagate_labels(self, segment_collection): #, positive_labels, negative_labels):
+
+#		if len (positive_labels) == 0 or len(negative_examples==0):
+#			self.label_propagation_score = [0] * len(segment_collection)
+#			self.predictor_validity = 0
+#			return
+
+#		idx_pos = [segment_collection.segment_label_to_list_index_dict[x] for x in positive_labels]
+#		idx_neg = [segment_collection.segment_label_to_list_index_dict[x] for x in negative_labels]
+#
+		num_pos = 0
+		if self.data_pos is not None:
+			num_pos = len(self.data_pos)
+
+		num_neg = 0
+		if self.data_neg is not None:
+			num_neg = len(self.data_neg)
+
+		if num_pos == 0 or num_neg == 0:
+			self.label_propagation_score = [0] * len(segment_collection.list_of_segments)
+			self.predictor_validity = 0	
+			return
+		
+
+		new_data = np.vstack([self.convexity, self.avg_border_with_neighbors_scores, self.border_to_interior, self.avg_neighbor_dissimilarity]).T
+	
+		all_data = new_data
+		if self.data_pos is not None:
+			all_data = np.vstack([new_data,self.data_pos])
+
+		if self.data_neg is not None:
+			all_data = np.vstack([all_data, self.data_neg])
+	
+		labels = np.ones((all_data.shape[0]))* -1
+		labels[range(self.data_pos.shape[0])] = 1
+		labels[range(self.data_pos.shape[0],self.data_neg.shape[0]+ self.data_pos.shape[0])] = 0			
+
+		predictor = label_propagation.LabelSpreading().fit(all_data,labels)
+
+
+		self.predictor_validity = (2*min (num_pos, num_neg) / float (num_pos + num_neg)) * ((1./ (1+ np.exp(-0.1 * (num_pos + num_neg))) - 0.5) *2)
+
+		self.label_propagation_score = [predictor.label_distributions_[i][0] for i in xrange (len(labels))]
+
+
+	def feedback_score(self, segment_collection, correct_labels):
+
+		# HIGH VALUES FOR GOOD
+		# 0 to 1
+
+		try:
+			self.build_graph(segment_collection)
+			min_dist_all = {}
+			for label in correct_labels:
+
+				min_dist =  shortest_path(self.graph, label)[1]
+
+				if len(min_dist_all.keys()) >0:
+
+					for x in min_dist.keys():
+						min_dist_all[x] = max ((min_dist_all[x], np.exp(-min_dist[x])))
+				else:
+					
+					for x in min_dist.keys():
+						min_dist_all[x] = np.exp( -min_dist[x])
+
+			self.feedback_correct_score = [0] * len(segment_collection.list_of_segments)
+
+	#		hist, bins = np.histogram(self.avg_neighbor_dissimilarity)
+	#		max_loc = np.argmax(hist)
+	#		sigma = 10 # (bins[max_loc] + bins[max_loc+1]) / 2. 
+
+
+			if len(correct_labels)>0:
+				max_val = max (min_dist_all.values())
+				for label in min_dist_all.keys():
+					seg_idx = segment_collection.segment_label_to_list_index_dict[label]
+
+					#new_val = np.exp(-min_dist_all[label]**2./(2.*sigma**2.))
+					self.feedback_correct_score[seg_idx] = min_dist_all[label]
+		
+		except Exception as err:
+			pdb.set_trace()
+			
 
 	def normalize_train_data(self, data_vector, clf_type = "generic"):
 		"""
@@ -218,10 +514,188 @@ class CellnessMetric(object):
 		return data_vector
 
 	
-		
+
+	def avg_border_with_neighbor(self, segment):
+
+		# changed mean to min		
+
+		vals = [x[1] for x in segment.feature_dict["mean_intensity_border_with_neighbor"]]
+
+
+		boundary_intensity_score = 0
+		if len(vals):
+
+			boundary_intensity_score = np.min(vals)
+		else:
+			vals = segment.feature_dict["border_intensity_hist"]
+			boundary_intensity_score = sum([vals[i] * (i+ 0.5)/20.* 255 for i in xrange(20)])
+
+		#boundary_to_interior = segment.feature_dict["border_to_interior_intensity_hist_dif"]
+
+		return boundary_intensity_score
+
 		
 	
-	def test_segment(self, segment):
+
+
+	def build_graph(self, segment_collection):
+
+		
+		self.graph = graph()
+
+		rescaled_neighbor_dissimilarity = self.neighbor_dissimilarity / float (self.neighbor_dissimilarity.max())
+
+		self.graph.add_nodes([x.label for x in segment_collection.list_of_segments])
+
+		for segment in segment_collection.list_of_segments:
+			x = segment.label
+	
+			x_idx = segment_collection.segment_label_to_list_index_dict[x]
+
+			for y in (tup[0] for tup in segment.feature_dict["mean_intensity_border_with_neighbor"]):
+
+				if not self.graph.has_edge((x, y)):
+
+					y_idx = segment_collection.segment_label_to_list_index_dict[y]
+	
+					weight = -np.log((1- rescaled_neighbor_dissimilarity[x_idx, y_idx]))
+
+					self.graph.add_edge((x,y), weight )
+
+		
+
+	def get_intrinsic_scores(self, segment_collection):
+		
+		# HIGH VALUES FOR GOOD SEGMENTS
+		# between 0 and 1
+	
+		self.avg_border_with_neighbors_scores = [0] * len(segment_collection.list_of_segments)
+		self.border_to_interior = [0] * len(segment_collection.list_of_segments)
+		self.convexity =  [0] * len(segment_collection.list_of_segments)
+
+		for i in xrange(len(segment_collection.list_of_segments)):
+
+
+			segment = segment_collection.list_of_segments[i]
+			self.avg_border_with_neighbors_scores[i] = self.avg_border_with_neighbor(segment)
+			self.border_to_interior[i] = segment.feature_dict["border_to_interior_intensity_hist_dif"]
+
+			self.convexity[i] = segment.feature_dict["vol_to_hull_vol_ratio"]
+
+		self.avg_border_with_neighbors_scores = np.array(self.avg_border_with_neighbors_scores) / 255.
+		self.border_to_interior = 1 - np.array(self.border_to_interior) / max(self.border_to_interior)
+
+		
+
+
+	def find_bin_index(self, bins, value):
+
+		idx = 0
+		while value > [idx]:
+			idx += 1
+		idx -=1
+		if idx <0:
+			idx =0
+		return idx
+		
+
+	def get_model_scores(self, segment_collection):
+
+		pdb.set_trace()
+
+#		self.model_prob_per_feature = {}
+
+#		num_segs = len (segment_collection.list_of_segments)
+
+#		for feat in feature_set:
+#			self.model_prob_per_feature[feat] = [0] * num_segs
+
+#		
+#		for i in xrange(num_segs):
+#			segment = segment_collection.list_of_segments[i]
+
+#			ap_dist = segment.feature_dict["dist_to_AP_axis"]
+#			ap_pos = segment.feature_dict["position_along_AP_axis"]
+#			margin_dist = segment. feature_dict["centroid_dist_from_margin"]
+
+#			min_idx_ap_pos = self.find_bin_index(self.bins_of_feature["position_along_AP_axis"], ap_pos - 10)
+#			min_idx_ap_dist = self.find_bin_index(self.bins_of_feature["position_along_AP_axis"], ap_dist - diameter)
+#			min_idx_margin_dist = self.find_bin_index(self.self.bins_of_feature["centroid_dist_from_margin"], margin_dist - diameter)
+#			
+
+#			max_idx_ap_pos = self.find_bin_index(self.bins_of_feature["position_along_AP_axis"], ap_pos + 10)
+#			max_idx_ap_dist = self.find_bin_index(self.bins_of_feature["position_along_AP_axis"], ap_dist + diameter)
+#			max_idx_margin_dist = self.find_bin_index(self.self.bins_of_feature["centroid_dist_from_margin"], margin_dist + diameter)
+#			
+
+
+#			for feat in feature_set:
+
+#				min_idx_feat = self.find_bin_index(self.self.bins_of_feature[feat], feat * 0.8)
+#				max_idx_feat = 	self.find_bin_index(self.self.bins_of_feature[feat], feat * 1.2)
+
+#				hist = self. hist_of_feature[feat]
+#				common_cube = hist[min_idx_feat: max_idx_feat+1, min_idx_ap_pos: max_idx_ap_pos, min_idx_ap_dist:max_idx_ap_dist, min_idx_margin_dist:max_idx_margin_dist].sum()
+#				strip1 = hist[:, min_idx_ap_pos: max_idx_ap_pos, min_idx_ap_dist:max_idx_ap_dist, min_idx_margin_dist:max_idx_margin_dist].sum()
+
+
+#				prob = common_cube / (strip1 + strip2 + strip2 -2 * common_cube)
+
+#			idx_ap_dist = 0
+#			while ap_dist > self.bins_of_feature["dist_to_AP_axis"][idx_ap_dist]:
+#				idx_ap_dist += 1
+#			idx_ap_dist -= 1
+#			
+#			idx_margin_dist = 0
+#			while margin_dist > self.bins_of_feature["centroid_dist_from_margin"][idx_margin_dist]:
+#				idx_margin_dist += 1
+#			idx_margin_dist -=1
+
+#		
+#			diameter = segment.feature_dict["minimum_enclosing_sphere_radius_by_res"] * 2
+#	
+#			min_ap_pos = (ap_pos - diameter)
+
+
+
+#				feat_val = segment.feature_dict[feat]
+
+#				idx_feat = 0
+#				while feat_val > self.bins_of_feature[feat][idx_feat]:
+#					idx_feat += 1
+#				idx_feat -=1
+
+
+#				prob = self. hist_of_feature[feat][ idx_feat,idx_ap_pos, idx_ap_dist, idx_margin_dist]
+
+#				self.model_prob_per_feature[feat][i] = prob
+
+		pdb.set_trace()
+
+		
+	def test_segment(self, seg_idx):
+
+		#score =  #self.label_propagation_score[seg_idx] #self.feedback_correct_score[seg_idx] # self.avg_neighbor_dissimilarity[seg_idx] + self. border_to_interior[seg_idx] + self. convexity[seg_idx ] + self. avg_border_with_neighbors_scores[seg_idx]
+		
+		score = 0
+#		score += self.avg_neighbor_dissimilarity[seg_idx]
+#		score += self.avg_border_with_neighbors_scores[seg_idx]
+#		score += self.border_to_interior[seg_idx]
+#		score += self.convexity[seg_idx]
+		score += self.feedback_correct_score[seg_idx]
+
+		score /= 5.
+
+		score = 1-score
+
+		final_score = self.predictor_validity * self.label_propagation_score[seg_idx] + (1-self.predictor_validity) * score
+		print final_score
+				
+		#self.model_prob_per_feature["flatness"][seg_idx]
+
+		return "Correct", final_score
+	
+	def test_segment1(self, segment):
 
 		generic_feat = self.extract_features_from_segment(segment,"generic" )
 		specific_feat = self.extract_features_from_segment(segment, "specific")	
