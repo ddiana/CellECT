@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Sat Oct 24 10:54:12 2015
+# Created: Sat Oct 24 14:34:14 2015
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -555,9 +555,6 @@ class Ui_MainWindow(object):
         self.actionRun_Segmentation_Tool = QtGui.QAction(MainWindow)
         self.actionRun_Segmentation_Tool.setIcon(icon1)
         self.actionRun_Segmentation_Tool.setObjectName("actionRun_Segmentation_Tool")
-        self.actionRun_Tracking_Tool = QtGui.QAction(MainWindow)
-        self.actionRun_Tracking_Tool.setIcon(icon2)
-        self.actionRun_Tracking_Tool.setObjectName("actionRun_Tracking_Tool")
         self.actionPreliminary_Segmentation = QtGui.QAction(MainWindow)
         self.actionPreliminary_Segmentation.setIcon(icon)
         self.actionPreliminary_Segmentation.setObjectName("actionPreliminary_Segmentation")
@@ -575,7 +572,6 @@ class Ui_MainWindow(object):
         self.menuWorkspace.addSeparator()
         self.menuWorkspace.addAction(self.actionPreliminary_Segmentation)
         self.menuWorkspace.addAction(self.actionRun_Segmentation_Tool)
-        self.menuWorkspace.addAction(self.actionRun_Tracking_Tool)
         self.menuWorkspace.addAction(self.actionAnalysis_2)
         self.menuWorkspace.addSeparator()
         self.menuWorkspace.addAction(self.actionExit)
@@ -591,7 +587,6 @@ class Ui_MainWindow(object):
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionPreliminary_Segmentation)
         self.toolBar.addAction(self.actionRun_Segmentation_Tool)
-        self.toolBar.addAction(self.actionRun_Tracking_Tool)
         self.toolBar.addAction(self.actionAnalysis_2)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.actionHelp)
@@ -645,7 +640,6 @@ class Ui_MainWindow(object):
         self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
         self.actionGitHub_Repo.setText(QtGui.QApplication.translate("MainWindow", "GitHub Repo", None, QtGui.QApplication.UnicodeUTF8))
         self.actionRun_Segmentation_Tool.setText(QtGui.QApplication.translate("MainWindow", "Interactive Segmentation", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRun_Tracking_Tool.setText(QtGui.QApplication.translate("MainWindow", "CellLineage", None, QtGui.QApplication.UnicodeUTF8))
         self.actionPreliminary_Segmentation.setText(QtGui.QApplication.translate("MainWindow", "Non-interactive Segmentation", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAppend_Workspace.setText(QtGui.QApplication.translate("MainWindow", "Append Workspace", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAppend_Workspace.setToolTip(QtGui.QApplication.translate("MainWindow", "Append Workspace", None, QtGui.QApplication.UnicodeUTF8))

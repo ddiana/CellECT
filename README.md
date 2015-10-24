@@ -9,6 +9,12 @@ CellECT is a tool for cell analysis in 3-D confocal microscopy membrane volumes.
 ![CellECT: Cell Evolutio Capturing Tool](https://raw.github.com/ddiana/CellECT/master/CellECT/doc/md_figures/CellECT.png "CellECT: Cell Evolution Capturing Tool")
 
 
+Demo Video
+----------
+
+[![CellECT Demo Video](https://raw.github.com/ddiana/CellECT/master/CellECT/doc/md_figures/youtube.png)](https://www.youtube.com/watch?v=Hx4E29oYSwg "CellECT Demo Video")
+
+
 Installation
 ------------
 

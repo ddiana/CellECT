@@ -979,7 +979,6 @@
     <addaction name="separator"/>
     <addaction name="actionPreliminary_Segmentation"/>
     <addaction name="actionRun_Segmentation_Tool"/>
-    <addaction name="actionRun_Tracking_Tool"/>
     <addaction name="actionAnalysis_2"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -1026,7 +1025,6 @@
    <addaction name="separator"/>
    <addaction name="actionPreliminary_Segmentation"/>
    <addaction name="actionRun_Segmentation_Tool"/>
-   <addaction name="actionRun_Tracking_Tool"/>
    <addaction name="actionAnalysis_2"/>
    <addaction name="separator"/>
    <addaction name="actionHelp"/>
@@ -1108,15 +1106,6 @@
    </property>
    <property name="text">
     <string>Interactive Segmentation</string>
-   </property>
-  </action>
-  <action name="actionRun_Tracking_Tool">
-   <property name="icon">
-    <iconset resource="app_icons.qrc">
-     <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
-   </property>
-   <property name="text">
-    <string>CellLineage</string>
    </property>
   </action>
   <action name="actionPreliminary_Segmentation">
