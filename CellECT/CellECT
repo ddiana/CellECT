@@ -158,7 +158,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 
 		# connect actions to functions
 		self.actionRun_Segmentation_Tool.triggered.connect(self.run_CellECT_seg_tool)
-		self.actionRun_Tracking_Tool.triggered.connect( self.run_CellECT_track_tool)
 		self.actionGitHub_Repo.triggered.connect( self.goto_repo)
 		self.actionOpen_Workspace.triggered.connect( self.open_workspace)
 		self.actionAbout.triggered.connect(self.show_about)
@@ -173,7 +172,6 @@ class MainWindow(QtGui.QMainWindow, mainGui.Ui_MainWindow):
 		# connect buttons
 		self.btn_preliminary_seg.clicked.connect(self.run_preliminary_seg)
 		self.btn_seg_tool.clicked.connect(self.run_CellECT_seg_tool)
-		self.btn_track_tool.clicked.connect(self.run_CellECT_track_tool)
 		self.btn_select_all.clicked.connect(self.listView.selectAll)
 		self.btn_save_metadata.clicked.connect(self.save_metadata_to_file)
 		self.btn_analysis.clicked.connect(self.run_CellECT_analysis_tool)

@@ -823,23 +823,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="btn_track_tool">
-              <property name="text">
-               <string>Cell Lineage</string>
-              </property>
-              <property name="icon">
-               <iconset resource="app_icons.qrc">
-                <normaloff>:/icons/track_tool.png</normaloff>:/icons/track_tool.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>35</width>
-                <height>35</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QPushButton" name="btn_analysis">
               <property name="text">
                <string>Analysis</string>

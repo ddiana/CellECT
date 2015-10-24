@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'layout.ui'
 #
-# Created: Wed Jul  9 17:41:55 2014
+# Created: Sat Oct 24 10:54:12 2015
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -431,14 +431,9 @@ class Ui_MainWindow(object):
         self.btn_seg_tool.setIconSize(QtCore.QSize(35, 35))
         self.btn_seg_tool.setObjectName("btn_seg_tool")
         self.horizontalLayout_5.addWidget(self.btn_seg_tool)
-        self.btn_track_tool = QtGui.QPushButton(self.centralwidget)
+        self.btn_analysis = QtGui.QPushButton(self.centralwidget)
         icon2 = QtGui.QIcon()
         icon2.addPixmap(QtGui.QPixmap(":/icons/track_tool.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btn_track_tool.setIcon(icon2)
-        self.btn_track_tool.setIconSize(QtCore.QSize(35, 35))
-        self.btn_track_tool.setObjectName("btn_track_tool")
-        self.horizontalLayout_5.addWidget(self.btn_track_tool)
-        self.btn_analysis = QtGui.QPushButton(self.centralwidget)
         self.btn_analysis.setIcon(icon2)
         self.btn_analysis.setIconSize(QtCore.QSize(35, 35))
         self.btn_analysis.setObjectName("btn_analysis")
@@ -628,7 +623,6 @@ class Ui_MainWindow(object):
         self.label_6.setText(QtGui.QApplication.translate("MainWindow", "Navigate z-depth:", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_preliminary_seg.setText(QtGui.QApplication.translate("MainWindow", "Non-interactive Seg", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_seg_tool.setText(QtGui.QApplication.translate("MainWindow", "Interactive Seg", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_track_tool.setText(QtGui.QApplication.translate("MainWindow", "Cell Lineage", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_analysis.setText(QtGui.QApplication.translate("MainWindow", "Analysis", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_clean_seg.setText(QtGui.QApplication.translate("MainWindow", "Clean Seg", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_set_input.setText(QtGui.QApplication.translate("MainWindow", "Set Input", None, QtGui.QApplication.UnicodeUTF8))
