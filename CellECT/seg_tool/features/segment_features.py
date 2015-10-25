@@ -762,7 +762,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 	sum_time = 0
 
 	for segment in segment_collection.list_of_segments:
-
+		if segment.mask.sum() < 5:
+			continue
 		try:
 			if int(CellECT.seg_tool.globals.DEFAULT_PARAMETER["use_size"]):
 				if should_compute_feature(segment.name_of_parent, "size"):
@@ -807,8 +808,8 @@ def get_segments_with_features(vol, label_map, set_of_labels, name_of_parent, nu
 
 			if segment.name_of_parent == "test_volume":
 
-
-				get_nuclei_channel_features(segment, vol_nuclei)
+				if vol_nuclei != None:
+					get_nuclei_channel_features(segment, vol_nuclei)
 
 
 	

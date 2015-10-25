@@ -300,13 +300,13 @@ class CellnessMetric(object):
 		data_pos = np.vstack([[self.convexity[i], self.avg_border_with_neighbors_scores[i], self.border_to_interior[i], self.avg_neighbor_dissimilarity[i]] for i in idx_pos])
 		data_neg = np.vstack([[self.convexity[i], self.avg_border_with_neighbors_scores[i], self.border_to_interior[i], self.avg_neighbor_dissimilarity[i]] for i in idx_neg])
 
-		if self.data_pos is not None:
+		if self.data_pos is not None and data_pos is not None:
 			self.data_pos = np.vstack([self.data_pos, data_pos])
 
 		else:
 			self.data_pos = data_pos
 
-		if self.data_neg is not None:
+		if self.data_neg is not None and data_neg is not None:
 			self.data_neg = np.vstack([self.data_neg, data_neg])
 		else:
 			self.data_neg = data_neg
